@@ -44,5 +44,5 @@ jobs:
             gh release create "$tag" "$zip" \
               --target "$GITHUB_SHA" \
               --title "Player Magick $tag" \
-              --notes "Foundry VTT v14 / WoD20 Player Magick. Default assigned Mage character, wider compact Sphere casting UI, optional world Macro launcher, and no automatic hotbar assignments. Independent of the separate Paradox module. Local automated tests passed; live Foundry verification pending. Upgrade: back up your installed module and world, then install this versioned ZIP; restore the prior module folder to roll back."
+              --notes "Foundry VTT v14 / WoD20 Player Magick. Persistent per-player Mage selection, localized native WoD20 spell labels for independent Dice Improvements Paradox-die detection, and no automatic hotbar assignments or duplicate Paradox accounting. Local automated tests passed; live Foundry verification pending. Upgrade: back up your installed module and world, then install this versioned ZIP; restore the prior module folder to roll back."
           fi

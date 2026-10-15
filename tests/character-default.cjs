@@ -23,9 +23,16 @@ class FakeDialog {
 }
 const mod = {api:null};
 const bindings = {};
+const preferences = new Map();
+const registrations = [];
+const settings = {
+  register: (mod,key,details) => registrations.push({mod,key,details}),
+  get: (mod,key) => preferences.get(`${mod}.${key}`) || '',
+  set: async (mod,key,value) => { preferences.set(`${mod}.${key}`,value); return value; }
+};
 const context = {
   Hooks:{once:(key, fn)=>hooks[key]=fn,on:(key,fn)=>hooks[key]=fn},
-  game:{system:{id:'worldofdarkness'},modules:{get:()=>mod},actors,
+  game:{system:{id:'worldofdarkness'},settings,modules:{get:()=>mod},actors,
     user:{isGM:false,character:assigned}, keybindings:{register:(_mod,_key,opts)=>{bindings.open=opts;}}},
   canvas:{tokens:{controlled:[{actor:tokenActor}]}},
   ui:{notifications:{warn:m=>warnings.push(m),error:m=>{throw Error(m)}}},
@@ -40,6 +47,7 @@ const clickTarget = { closest(selector) { return selector === '.wpa-change-chara
   vm.runInNewContext(script + "\n;globalThis.__resolveActor=resolveActor;", context);
   hooks.init(); hooks.ready();
   assert.match(bindings.open.name,/Player Magick/);
+  assert.equal(registrations[0].details.scope,'user','preferred Mage is stored for each Foundry user');
   await mod.api.openPanel();
   assert.equal(dialogs.length, 1);
   assert.match(dialogs[0].options.window.title,/Player Magick.*Assigned Mage/,'Assigned Mage wins over selected token');
@@ -51,15 +59,21 @@ const clickTarget = { closest(selector) { return selector === '.wpa-change-chara
   await dialogs[0].onclick({target:clickTarget});
   assert.equal(dialogs[0].closed,true);
   assert.match(dialogs[1].options.window.title,/Token Mage/);
+  assert.equal(settings.get('wod20-player-actions','preferredActorUuid'),tokenActor.uuid,'user preference persisted');
   assert.equal(dialogs.length, 2);
-  // Opening again defaults back to the assigned character.
+  // Reload/open again: last chosen character wins over the assigned Mage.
   await mod.api.openPanel();
-  assert.match(dialogs[2].options.window.title,/Assigned Mage/);
+  assert.match(dialogs[2].options.window.title,/Token Mage/);
   // Explicit actor UUID remains bound for established shortcuts.
   assert.equal(context.__resolveActor(tokenActor.uuid),tokenActor);
+  assert.equal(context.__resolveActor(),tokenActor, 'remembered character takes precedence');
+  // Previously saved but no longer owned: fall back to assigned character.
+  tokenActor.isOwner=false;
   assert.equal(context.__resolveActor(),assigned);
-  // Without a user-assigned character, token selection still works as fallback.
+  tokenActor.isOwner=true;
+  // Without a remembered or assigned character, token selection still works.
+  preferences.clear();
   context.game.user.character = null;
   assert.equal(context.__resolveActor(),tokenActor);
-  console.log('PASS: Player Magick label; default assigned character; Change Character; explicit shortcut binding; token fallback.');
+  console.log('PASS: user-scoped remembered character wins over assigned; permission fallback; explicit macro binding; token fallback.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

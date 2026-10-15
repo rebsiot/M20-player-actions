@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.5 (2026-10-15)  
+**Release:** v0.1.6 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -9,7 +9,7 @@ A focused, player-facing Mage: The Ascension 20th Anniversary casting interface 
 ## What the player sees
 
 1. Open **Actors > Player Magick** or press **Shift+J**.
-2. The panel defaults to the character assigned in Foundry User Configuration (`game.user.character`), whether or not a token is selected. If no usable assigned character exists, an owned selected token is used; otherwise the player can select from characters they own.
+2. **First launch:** use the character assigned in Foundry User Configuration (`game.user.character`), regardless of token selection. **After Change Character:** remember the player's manually selected Actor across future opens and reconnects, using a hidden Foundry v14 `user`-scope setting (per user, per world). If that Actor is deleted or the player loses ownership, fall back to the assigned character, then an owned selected token, or the chooser.
 3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. A secondary **Change Character** control appears on the panel and in the casting header.
 4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the calculated difficulty and roll using WoD20's native dice roller.
 
@@ -19,9 +19,11 @@ The casting window scales up to 1020 px wide on a suitable desktop and shrinks w
 
 **One world Macro called `Player Magick` is created once by the GM, available in the Macro Directory. No hotbar installation is performed.** Players can drag that launcher Macro onto their hotbars if they want. The panel no longer exposes per-Rote Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but no new per-Rote macros are offered from the UI. Hotbar workflows may return in a separate later enhancement.
 
-## Independent of Paradox
+## Paradox-die detection compatibility (separate ownership)
 
-Player Magick does not read or update Paradox, register a Paradox hook, call the separate Paradox module, or enforce Paradox effects. It casts through WoD20's existing `DiceRollContainer` / `DiceRoller` and produces the native `magic` roll-card type; any other enabled module's reaction to native chat events is outside this module's ownership. We have not changed the native roll/chat contract from v0.1.3.
+Player Magick **does not** read, roll, update, or account for Paradox and does not register a Paradox hook or depend on a Paradox module. It uses WoD20's native `DiceRollContainer` and `DiceRoller` for one Arete roll per cast. In **v0.1.6**, the resulting native `magic` chat card includes the WoD20 localized spell label `wod.spheres.coincidentalspell`, `wod.spheres.vulgarspell`, or `wod.spheres.vulgarspellwitness`, matching the native spell labels detected by `wod20-dice-improvements` v0.2.0 (and the earlier original Paradox listener). v0.1.5 used only `Reality: coincidental/vulgar/witnessed`, which those listeners did not recognize.
+
+**To use the Dice Improvements Paradox-die feature:** enable `wod20-dice-improvements` v0.2.0 or later and disable the old `wod20-paradox` module, per Dice Improvements' documented migration instructions. Its listener reads the native chat message and existing temporary Paradox; **0 Paradox means no Paradox dice**, and Paradox resolution remains entirely in that separate module. No additional Paradox dice are rolled by Player Magick. This interaction has been contract/mock-tested, not live-tested.
 
 ## Requirements
 
@@ -39,7 +41,7 @@ Player Magick does not read or update Paradox, register a Paradox hook, call the
 
 ## Roll and resource behavior
 
-- The module does **not** implement a new dice engine or calculate Paradox.
+- The module does **not** implement a new dice engine or calculate Paradox; it supplies WoD20 spell classification text for external listeners.
 - Spell rolls use the WoD20 native roller, action origin `magic`, and current Arete. Configured native Willpower spending remains handled by WoD20.
 - Casting difficulty continues to use the v0.1.3 formula: highest selected Sphere +3 coincidental, +4 vulgar without Sleepers, +5 vulgar with Sleepers; user situational modifier and optional Quintessence reduction; final difficulty clamped to 3–10.
 - If specified, Quintessence is deducted **after** the native roll finishes, using the supported Advantage/Actor data location; no deduction occurs simply by opening the interface.
@@ -52,9 +54,9 @@ Restore your backup of the `wod20-player-actions` module directory or the origin
 
 ## Testing and known limits
 
-Tests run: JS syntax verification; source-level mock tests for assigned-character resolution, explicit Actor binding for previous macros, casting UI, native roll routing, Power delegation, and no automatic hotbar changes; responsive Chromium rendering at 1440px and 820px viewport widths.
+Tests run: JS syntax verification and six Node-based mock/contract tests including per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. Layout carried forward from v0.1.5 (Chromium fixture previously checked at 1440px and 820px).
 
-**Live Foundry v14: not yet tested.** The screenshots/render checks are browser fixtures rather than an installed Foundry UI. No independent Paradox test was performed (nor required to test this UI-only release).
+**Live Foundry v14: not yet tested.** The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.4.md`.
 

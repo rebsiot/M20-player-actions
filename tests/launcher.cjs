@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');
 const src=fs.readFileSync(path.join(__dirname,'../scripts/player-actions.js'),'utf8');
 const hooks={};const macros=[];let assigned=0;
-const game={system:{id:'worldofdarkness'},user:{isGM:true,assignHotbarMacro(){assigned++;}},modules:{get:()=>({api:null})},macros:{find:fn=>macros.find(fn)}};
+const game={system:{id:'worldofdarkness'},settings:{register:()=>{},get:()=>'',set:async()=>{}},user:{isGM:true,assignHotbarMacro(){assigned++;}},modules:{get:()=>({api:null})},macros:{find:fn=>macros.find(fn)}};
 const ctx={Hooks:{once:(event,fn)=>hooks[event]=fn,on:()=>{}},game,Macro:{create:async data=>{const m={...data,getFlag:(ns,k)=>data.flags?.[ns]?.[k]};macros.push(m);return m;}},canvas:{tokens:{controlled:[]}},ui:{actors:null,notifications:{}},document:{querySelector:()=>null},foundry:{utils:{escapeHTML:String}},CONST:{DOCUMENT_OWNERSHIP_LEVELS:{OBSERVER:2},KEYBINDING_PRECEDENCE:{NORMAL:1}},console};
 game.keybindings={register:()=>{}};
 (async()=>{vm.runInNewContext(src,ctx);hooks.init();hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1);assert.equal(macros[0].name,'Player Magick');assert.match(macros[0].command,/api\.openPanel\(\)/);assert.equal(macros[0].ownership.default,2);assert.equal(assigned,0);hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1,'reload must not duplicate');game.user.isGM=false;hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1,'player cannot create macro');console.log('PASS: one player-readable optional launcher, no auto hotbar assignment, no duplicates');})().catch(e=>{console.error(e);process.exitCode=1});

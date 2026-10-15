@@ -23,7 +23,7 @@ class FakeDialog {
 const mod={api:null};
 const ctx={
   Hooks:{once:(name,fn)=>hooks[name]=fn,on:(name,fn)=>hooks[name]=fn},
-  game:{system:{id:'worldofdarkness'},modules:{get:()=>mod},actors:[actor],
+  game:{system:{id:'worldofdarkness'},settings:{register:()=>{},get:()=>'',set:async()=>{}},modules:{get:()=>mod},actors:[actor],
     user:{isGM:false,character:actor,assignHotbarMacro:async()=>{hotbarAssigned++;}},
     keybindings:{register:(_module,key,options)=>hooks.keybinding=options}},
   Macro:{create:async()=>{macrosCreated++;}},
@@ -55,6 +55,6 @@ const ctx={
   assert.match(dialogs[1].window.title,/Cast Rote: Healing/);
   assert.equal(macrosCreated,0);
   assert.equal(hotbarAssigned,0);
-  assert.doesNotMatch(script,/Paradox|wod20-paradox/,'module neither references nor invokes the Paradox module');
+  assert.doesNotMatch(script,/getAdvantage\(['"]paradox['"]\)|system\.paradox|setFlag\(['"]wod20-(?:paradox|dice-improvements)/i,'no independent Paradox storage or duplicate listener');
   console.log('PASS: Player Magick; no macro/hotbar side effects; assigned character; old Rote shortcuts preserved; Paradox independent.');
 })().catch(e=>{console.error(e);process.exitCode=1});

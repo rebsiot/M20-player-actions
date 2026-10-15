@@ -1,5 +1,13 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.6 — 2026-10-15
+- **Fixed:** Remember the last character explicitly chosen via **Change Character** in a Foundry v14 user-scoped setting (per player, per world; survives logout and changing devices). Before any explicit choice, use the assigned Foundry character as before. Validate ownership whenever restoring a saved character.
+- **Fixed:** Native `magic` chat rolls include the exact localized WoD20 Coincidental/Vulgar casting label so the independent Dice Improvements v0.2.0 Paradox-die listener can recognize the casting roll. The v0.1.5 `Reality:` note is retained alongside the label.
+- **Preserved:** Only one native WoD20 Arete roll per cast. No new Paradox engine, flags, accounting, or duplicate listeners. Explicitly bound macros still target their original Actor. The optional Player Magick launcher remains; no hotbar assignment is made.
+- **Upgrade/rollback:** Safe module-only code update, no Actor or chat migration. Back up the module folder and world. To roll back, restore v0.1.5 files; existing per-user preferences remain harmless but are ignored by v0.1.5.
+- **Automated tests:** Six Node mock/contract tests, JavaScript syntax, ZIP CRC and module metadata passed.
+- **Live Foundry:** Not yet tested. Validate actor switching across reopen/relogin, then a native spell chat card on a Mage with existing Paradox using Dice Improvements v0.2.0 (old Paradox module disabled).
+
 ## v0.1.4 — 2026-10-15
 
 - Renamed Actors sidebar and Shift+J action to **Player Magick**. The **module ID remains `wod20-player-actions`**.
