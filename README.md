@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.7 (2026-10-15)  
+**Release:** v0.1.8 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -13,7 +13,21 @@ A focused, player-facing Mage: The Ascension 20th Anniversary casting interface 
 3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. A secondary **Change Character** control appears on the panel and in the casting header.
 4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the calculated difficulty and roll using WoD20's native dice roller.
 
-The casting window scales up to 1020 px wide on a suitable desktop and shrinks with the viewport. Sphere cards display in 3 columns on wide screens, 2 on medium screens, and 1 on narrow screens. The spell details, Arete, Quintessence, and live difficulty preview are kept together and readable.
+The casting window scales up to 1020 px wide on a suitable desktop and shrinks with the viewport. Sphere cards display in 3 columns on wide screens, 2 on medium screens, and 1 on narrow screens. The caster name, Arete and available Quintessence share a compact single-line strip on desktop; they wrap responsively on narrow screens. The live difficulty preview remains visible.
+
+## Compact casting controls (v0.1.8)
+
+Below the Sphere cards, casting details now use this order:
+
+1. **One row:** Reality classification dropdown, **Quintessence spent** minus/value/plus rocker, and **GM modifier** minus/value/plus rocker. The user sees and changes these without typing numbers. Quintessence stays within **0 to min(3, currently available)**; GM modifier stays within **-3 to +3**. Both disable their buttons when a limit is reached. At narrow widths, the two rockers sit together below the reality selector.
+2. **One row of checkboxes:** Use Focus, Spend 1 Willpower, Extended casting / ritual. These are optional and unchecked on open.
+3. **Compact live preview:** Native Arete dice, calculated final Difficulty and highest selected Sphere, updated when any rocker or Sphere selection changes.
+4. **Effect / focus description:** Optional single-line text field.
+5. **Casting rules and Storyteller notes:** Collapsed by default, expandable if the player wants rules reminders. Each Sphere's own rank guide remains separately expandable.
+
+**Use Focus records intent only.** It adds `Focus used` to the one native WoD20 magic chat card when checked. It neither grants an automatic difficulty benefit nor spends resources; any difficulty change must be selected in the GM modifier with the Storyteller's agreement. Native WoD20 remains responsible for the Willpower option. Extended casting remains one roll per press; additional attempts are tracked manually.
+
+The module does **not** persist the individual casting-choice checkboxes between casts or change their default values.
 
 ## Macros and hotbar
 
@@ -60,9 +74,9 @@ Restore your backup of the `wod20-player-actions` module directory or the origin
 
 ## Testing and known limits
 
-Tests run: JS syntax verification and seven Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. Layout carried forward from v0.1.5 (Chromium fixture previously checked at 1440px and 820px).
+Tests run: JS syntax verification and eight Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.8 dialog was rendered and its rockers clicked in a Chromium fixture at 1440px, 820px and 430px; no horizontal overflow was found.
 
-**Live Foundry v14 of v0.1.7: not yet tested.** The user provided a live screenshot of the earlier card containing repeated fields; the redesigned card has not yet been observed in Foundry. The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.8: not yet tested.** The user provided live screenshots of v0.1.7 controls motivating this compact redesign. The v0.1.8 controls have not yet been observed in Foundry. The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.4.md`.
 
