@@ -1,0 +1,35 @@
+{
+  "id": "wod20-player-actions",
+  "title": "WoD20 Player Magick",
+  "description": "Guided Mage casting for WoD20: assigned-character default, known Rotes, and a compact widescreen Sphere selector. No automatic macros or hotbar changes.",
+  "version": "0.1.4",
+  "authors": [
+    {
+      "name": "Community tools"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "worldofdarkness",
+        "type": "system",
+        "compatibility": {
+          "minimum": "7.3.1"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/player-actions.js"
+  ],
+  "styles": [
+    "styles/player-actions.css"
+  ],
+  "socket": false,
+  "readme": "README.md",
+  "url": "https://github.com/rebsiot/M20-player-actions"
+}
