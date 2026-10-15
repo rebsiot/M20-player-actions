@@ -1,3 +1,24 @@
+# v0.1.8 Test Report -- 2026-10-15
+
+## New checks performed
+
+- `node --check scripts/player-actions.js`: passed.
+- All **eight** existing and new Node mocks passed: `casting-guide.cjs`, `casting-controls.cjs`, `character-default.cjs`, `chat-card-clarity.cjs`, `launcher.cjs`, `paradox-chat-contract.cjs`, `roll-routing.cjs`, `smoke.cjs`.
+- New `casting-controls.cjs` checks: compact single-bar character/resources markup; reality, quint, GM controls in correct order; rocker input names and min/max; checkbox row and focus annotation; Effect/focus field before collapsed Casting rules; single native roll; unchanged final difficulty and delayed Quintessence deduction; preserved exact localized Paradox detector marker.
+- Chromium fixture (`browser_ui_test.py`, mock Foundry dialog containing the **actual production HTML, CSS and event handlers**) at 1440, 820 and 430 viewport widths: **passed**. Interacted with both rockers; disabled values at 0/2 Quintessence and -3/+3 GM modifier; verified FormData, Focus checkbox, live preview at difficulty 3, initially collapsed rules, and absence of horizontal overflow. Header/control bar measured 47/60 pixels at desktop and 820 widths. Images are included as separate development previews but **are not screenshots of a live Foundry client**.
+- Release package: manifest `version`, module ID, archive paths and CRC validated; no Player Magick hotbar assignment logic added.
+
+## Not tested live
+
+- Foundry v14 on the user's Ubuntu deployment, native DialogV2 chrome/control CSS conflicts, true character and resource state, independent Dice Improvements Paradox-die listener and Willpower resource application. No claims of live success.
+- Real player/GM permissions and narrow Foundry desktop UI should be smoke-tested after installation.
+
+## Suggested one live test
+
+Open Player Magick on an owned Mage with 2 Quintessence: verify the top strip is single-line at desktop, increment Quintessence from 0 to 2 with disabled `+`, set GM modifier -1, check Use Focus, cast a Coincidental effect, and confirm the native chat card includes `Focus used` and only one native roll. Return to v0.1.7 from the backed-up module directory if any rendering/roll error occurs.
+
+---
+
 # v0.1.7 Test Report — 2026-10-15
 
 ## Automated/mock-tested

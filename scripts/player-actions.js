@@ -1,4 +1,4 @@
-/* WoD20 Player Magick v0.1.7: native WoD20 rolls, remembered character, and spell-label compatibility. */
+/* WoD20 Player Magick v0.1.8: native WoD20 rolls, remembered character, and spell-label compatibility. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -203,35 +203,54 @@ async function guidedCast(actor, item = null) {
   }).join("") || '<p class="wpa-warning">No known Spheres found. Add Sphere ratings to the character sheet before casting.</p>';
   const content = `<div class="wpa-root wpa-cast">
     <div class="wpa-cast-summary" aria-label="Current casting character and resources">
-      <div class="wpa-caster"><div class="wpa-caster-heading"><span class="wpa-eyebrow">Casting as</span><button type="button" class="wpa-cast-change" title="Choose a different character">Change</button></div><strong>${escape(actor.name)}</strong></div>
-      <div class="wpa-stat"><span>Arete</span><strong>${rating} <small>dice</small></strong></div>
-      <div class="wpa-stat"><span>Quintessence</span><strong>${currentQuint.value} <small>available</small></strong></div>
+      <div class="wpa-caster"><span class="wpa-eyebrow">Casting as</span><strong>${escape(actor.name)}</strong></div>
+      <div class="wpa-stat"><span>Arete</span><strong>${rating}</strong><small>dice</small></div>
+      <div class="wpa-stat"><span>Quintessence</span><strong>${currentQuint.value}</strong><small>available</small></div>
+      <button type="button" class="wpa-cast-change" title="Choose a different character">Change</button>
     </div>
     <section class="wpa-cast-section" aria-label="Sphere selection">
       <div class="wpa-section-heading"><strong>Spheres</strong><span>Choose a level (0 = not used). Expand a card for a quick reference.</span></div>
       <div class="wpa-spheres">${fields}</div>
     </section>
     <section class="wpa-cast-section" aria-label="Casting details">
-      <div class="wpa-section-heading"><strong>Casting details</strong><span>${item ? `Confirm the effect and how Sleepers perceive it.` : `Describe your effect and how Sleepers perceive it.`}</span></div>
+      <div class="wpa-section-heading"><strong>Casting details</strong></div>
       <div class="wpa-cast-settings">
-        <label class="wpa-effect-field">Effect / focus description (optional)<input name="effect" maxlength="250" placeholder="A few words about the effect (optional)" value=""></label>
         <label class="wpa-reality-field">Reality classification <select name="reality">
           <option value="coincidental">Coincidental (+3)</option>
           <option value="vulgar">Vulgar, no witnesses (+4)</option>
           <option value="witnessed">Vulgar, witnessed (+5)</option></select></label>
-        <label>Situation modifier (-3 to +3) <input type="number" name="modifier" min="-3" max="3" value="0"></label>
-        <label>Quintessence to spend <input type="number" name="quint" min="0" max="${Math.min(currentQuint.value, 3)}" value="0"></label>
+        <div class="wpa-stepper-field">
+          <span class="wpa-setting-label">Quintessence spent</span>
+          <div class="wpa-stepper" data-min="0" data-max="${Math.min(currentQuint.value, 3)}" role="group" aria-label="Quintessence to spend">
+            <button type="button" data-step="-1" aria-label="Spend less Quintessence">&minus;</button>
+            <output data-step-value aria-live="polite" aria-label="Quintessence spent">0</output>
+            <button type="button" data-step="1" aria-label="Spend more Quintessence">+</button>
+            <input type="hidden" name="quint" value="0">
+          </div>
+        </div>
+        <div class="wpa-stepper-field">
+          <span class="wpa-setting-label">GM modifier</span>
+          <div class="wpa-stepper" data-min="-3" data-max="3" role="group" aria-label="GM difficulty modifier">
+            <button type="button" data-step="-1" aria-label="Decrease GM modifier">&minus;</button>
+            <output data-step-value aria-live="polite" aria-label="GM modifier">0</output>
+            <button type="button" data-step="1" aria-label="Increase GM modifier">+</button>
+            <input type="hidden" name="modifier" value="0">
+          </div>
+        </div>
       </div>
       <div class="wpa-check-options">
-        <label><input type="checkbox" name="willpower"> Spend 1 Willpower (handled by WoD20)</label>
-        <label><input type="checkbox" name="ritual"> Extended casting / ritual (one attempt)</label>
+        <label title="Records focus use in chat; no automatic difficulty change"><input type="checkbox" name="useFocus"> Use Focus</label>
+        <label><input type="checkbox" name="willpower"> Spend 1 Willpower</label>
+        <label><input type="checkbox" name="ritual"> Extended casting / ritual</label>
       </div>
+      <div class="wpa-preview" aria-live="polite">Choose at least one Sphere to cast.</div>
+      <label class="wpa-effect-field">Effect / focus description (optional)<input name="effect" maxlength="250" placeholder="A few words about the effect (optional)" value=""></label>
+      <details class="wpa-cast-help"><summary>Casting rules and Storyteller notes</summary>
+        <p>Highest chosen Sphere determines base difficulty. Multiple Spheres may be combined; the Storyteller decides the effect requirements.</p>
+        <p>M20 default: highest Sphere +3/+4/+5, then modifiers. Quintessence reduces difficulty one per point, subject to Storyteller ruling. The roll difficulty is capped at 10 here; harder effects can require additional successes.</p>
+        <p>Use Focus records your choice in chat; it does not automatically alter difficulty. Use the GM modifier for an agreed adjustment. WoD20 handles Willpower expenditure. Extended casting is one attempt here; track additional rolls manually.</p>
+      </details>
     </section>
-    <div class="wpa-preview" aria-live="polite">Choose at least one Sphere to cast.</div>
-    <details class="wpa-cast-help"><summary>Casting rules and Storyteller notes</summary>
-      <p>Highest chosen Sphere determines base difficulty. Multiple Spheres may be combined; the Storyteller decides the effect requirements.</p>
-      <p>M20 default: highest Sphere +3/+4/+5, then modifiers. Quintessence reduces difficulty one per point, subject to Storyteller ruling. The roll difficulty is capped at 10 here; harder effects can require additional successes.</p>
-    </details>
   </div>`;
   const Dialog = foundry.applications.api.DialogV2;
   // Wide on desktop but never wider than the user's available viewport.
@@ -261,6 +280,21 @@ async function guidedCast(actor, item = null) {
   });
   const update = () => {
     if (!form) return;
+    // Keep hidden form values, visible rocker output, and boundary buttons in sync.
+    for (const stepper of form.querySelectorAll(".wpa-stepper")) {
+      const input = stepper.querySelector('input[type="hidden"]');
+      if (!input) continue;
+      const minimum = int(stepper.dataset.min);
+      const maximum = int(stepper.dataset.max);
+      const current = clamp(input.value, minimum, maximum);
+      input.value = String(current);
+      const display = stepper.querySelector("[data-step-value]");
+      if (display) display.textContent = current > 0 && input.name === "modifier" ? `+${current}` : String(current);
+      for (const button of stepper.querySelectorAll("button[data-step]")) {
+        const next = current + int(button.dataset.step);
+        button.disabled = next < minimum || next > maximum;
+      }
+    }
     const fd = new FormData(form);
     const max = Math.max(0, ...SPHERES.map(s => clamp(fd.get(`sphere.${s}`), 0, 5)));
     const reality = fd.get("reality");
@@ -282,10 +316,19 @@ async function guidedCast(actor, item = null) {
     }
     const preview = form.querySelector(".wpa-preview");
     if (preview) preview.textContent = max
-      ? `Highest Sphere ${max} • Base ${base} • Adjustment ${adjustment >= 0 ? "+" : ""}${adjustment} • Arete ${rating}d10 vs ${diff}`
+      ? `Arete ${rating}d10 | Difficulty ${diff} | Highest Sphere ${max}`
       : "Choose at least one Sphere to cast.";
   };
   form?.addEventListener("click", event => {
+    const rocker = event.target.closest?.(".wpa-stepper button[data-step]");
+    if (rocker) {
+      const stepper = rocker.closest(".wpa-stepper");
+      const input = stepper?.querySelector('input[type="hidden"]');
+      if (!input) return;
+      input.value = String(clamp(int(input.value) + int(rocker.dataset.step), int(stepper.dataset.min), int(stepper.dataset.max)));
+      update();
+      return;
+    }
     const button = event.target.closest?.(".wpa-sphere-level");
     if (!button) return;
     const input = button.closest(".wpa-sphere")?.querySelector('input[name^="sphere."]');
@@ -338,6 +381,7 @@ async function performMageCast(actor, item, data) {
   const note = [
     realityLabel,
     `Spheres: ${chosen.map(([s, v]) => `${s} ${v}`).join(", ")}`,
+    ...(data.useFocus ? ["Focus used"] : []),
     ...(adjustments.length ? [`Modifiers: ${adjustments.join(" · ")}`] : []),
     ...(data.ritual ? ["Extended casting: track accumulated successes manually"] : [])
   ];

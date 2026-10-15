@@ -1,5 +1,14 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.8 -- 2026-10-15
+- **UI:** Replace the three tall caster/Arete/Quintessence cards with one compact character-and-resources strip, retaining the small Change button and remembered character behavior.
+- **UI:** Put Reality classification, Quintessence spent, and GM modifier on the same row when screen space permits. Quintessence and GM modifier use minus/plus rockers with visible values, accessible labels, immediate difficulty-preview updates and disabled buttons at their limits. On narrow screens, reality stays above the paired rockers to avoid horizontal scrolling.
+- **UI:** Move Use Focus, Spend 1 Willpower and Extended casting/ritual to one checkbox row; place Effect/focus description below the action controls and the collapsed Casting rules expander after the description. Keep Sphere cards and their own collapsed rules guides.
+- **Focus:** Use Focus is an optional, initially unchecked, descriptive marker on the existing native chat card. Checking it adds `Focus used` to roll notes, but never changes the dice pool, difficulty or resources automatically; the GM modifier remains the explicit place for an agreed adjustment.
+- **Preserved:** WoD20 native DiceRoller, localized Coincidental/Vulgar label needed by the separate Dice Improvements Paradox-die listener, per-user character preference, Rotes, Quintessence/Willpower handling, optional launcher and zero automatic hotbar assignments.
+- **Testing:** Eight Node/mock contract tests plus actual Chromium fixture clicks and responsive layout checks at 1440/820/430 widths; syntax and ZIP integrity. **Not verified in live Foundry v14.**
+- **Upgrade/rollback:** Module-only code and CSS changes; no migration. Back up the existing module directory/world and restore v0.1.7 if necessary. GitHub publishing requires merge of the v0.1.8 PR.
+
 ## v0.1.7 — 2026-10-15
 - **Changed:** Condensed Mage chat cards without replacing WoD20's renderer. The action/title appears only once; the native `dicetext` now shows the Arete pool (e.g., `3d10`) instead of a second copy of the action; duplicate `systemText` is suppressed on Mage rolls. Power/general rolls retain the prior fields.
 - **Changed:** Removed the redundant `Reality: coincidental` line, redundant difficulty breakdown (WoD20 already adds the final difficulty), and zero-value modifier notes. Nonzero situational and Quintessence adjustments appear in a single concise `Modifiers:` line. Ritual notes remain when selected.
