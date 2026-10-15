@@ -1,0 +1,196 @@
+.wpa-root { display:grid; gap:10px; max-height: min(70vh, 720px); overflow-y:auto; padding:4px; color:var(--color-text-primary,#ddd); }
+.wpa-root label { display:grid; gap:4px; margin:0; }
+.wpa-root input:not([type=checkbox]), .wpa-root select { width:100%; min-height:30px; padding:5px; }
+.wpa-root label:has(input[type=checkbox]) { display:flex; align-items:center; gap:8px; }
+.wpa-root label input[type=checkbox] { width:auto; }
+.wpa-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.wpa-two p { margin:0; padding:5px 8px; background:var(--color-bg-option,rgba(120,120,120,.13)); border-radius:5px; }
+.wpa-spheres { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; padding:8px 0; }
+.wpa-sphere { min-width:0; padding:8px; border:1px solid var(--color-border-light-tertiary,#777); border-radius:6px; }
+.wpa-sphere-head { display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+.wpa-sphere-head small { opacity:.8; white-space:nowrap; }
+.wpa-sphere-picker { font-size:12px; margin-top:6px !important; }
+.wpa-sphere-picker input { max-width:95px; }
+.wpa-sphere-guide { margin-top:8px; font-size:12px; }
+.wpa-sphere-guide summary { cursor:pointer; font-weight:600; }
+.wpa-capabilities { list-style:none; margin:6px 0 0; padding:0; display:grid; gap:3px; }
+.wpa-capability { display:flex; align-items:baseline; gap:7px; line-height:1.35; padding:4px 5px; border-radius:4px; opacity:.8; }
+.wpa-capability.wpa-in-scope { opacity:1; background:var(--color-bg-option,rgba(120,120,120,.13)); }
+.wpa-capability.wpa-selected { box-shadow:inset 3px 0 var(--color-text-hyperlink,#5a8bad); }
+.wpa-rank-dots { font-size:10px; white-space:nowrap; min-width:49px; letter-spacing:0; }
+.wpa-warning { color:var(--color-level-error,#d88); font-weight:600; }
+@media (max-width:580px) { .wpa-spheres { grid-template-columns:1fr; } }
+.wpa-intro { margin:0; }
+.wpa-note { margin:3px 0; line-height:1.4; font-size:12px; opacity:.85; }
+.wpa-preview { font-weight:600; padding:10px; border-left:3px solid var(--color-text-hyperlink,#5a8bad); background:var(--color-bg-option,rgba(120,120,120,.13)); }
+.wpa-action-list { display:grid; gap:5px; margin:6px 0; }
+.wpa-action { display:flex; gap:9px; align-items:center; padding:9px; border:1px solid var(--color-border-light-tertiary,#777); border-radius:6px; }
+.wpa-action >img { width:29px; height:29px; object-fit:cover; }
+.wpa-action >span:first-of-type { flex:1; }
+.wpa-action small { display:block; font-size:11px; opacity:.72; }
+.wpa-action button { flex:none; width:auto; min-width:48px; }
+.wpa-root button.wpa-improvise { width:100%; min-height:42px; font-weight:700; }
+.wpa-panel .wpa-list-heading { font-size:14px; font-weight:700; padding-top:5px; }
+.wpa-panel .wpa-powers { padding-top:5px; }
+.wpa-panel .wpa-powers summary { cursor:pointer; font-weight:600; }
+.wpa-panel .wpa-action >span { flex:1; }
+.wpa-panel .wpa-run { min-height:31px; }
+.wpa-directory-button { margin:4px 0; min-height:30px; }
+
+.wpa-directory-controls { display:flex; justify-content:stretch; align-items:center; width:100%; padding:3px 2px; box-sizing:border-box; }
+.wpa-directory-controls .wpa-directory-button { display:flex; gap:6px; justify-content:center; align-items:center; flex:1; width:100%; min-height:29px; margin:0; white-space:nowrap; }
+.wpa-root button.wpa-change-character { width:100%; min-height:28px; }
+
+/* v0.1.4: clearer, wider guided-Magick layout. This styles the module content only. */
+.wpa-cast {
+  box-sizing: border-box;
+  gap: 13px;
+  padding: 16px;
+  max-height: min(78vh, 820px);
+  background: #171c27;
+  color: #f0f3fa;
+  border: 1px solid #3b4659;
+  border-radius: 8px;
+  font-family: var(--font-primary, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.wpa-cast .wpa-cast-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(125px, 0.45fr) minmax(145px, 0.5fr);
+  gap: 10px;
+  align-items: stretch;
+}
+.wpa-cast .wpa-caster,
+.wpa-cast .wpa-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: #242c3b;
+  border: 1px solid #3e4b5f;
+  border-radius: 6px;
+}
+.wpa-cast .wpa-caster strong { font-size: 16px; overflow-wrap: anywhere; }
+.wpa-cast .wpa-caster-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.wpa-cast button.wpa-cast-change { width:auto; min-height:25px; padding:2px 8px; background:#334159; border:1px solid #657995; border-radius:5px; color:#eef4ff; font-size:12px; cursor:pointer; }
+.wpa-cast button.wpa-cast-change:hover { background:#455c7e; }
+.wpa-cast .wpa-eyebrow,
+.wpa-cast .wpa-stat > span { color: #b9c6d9; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .035em; }
+.wpa-cast .wpa-stat strong { font-size: 16px; }
+.wpa-cast .wpa-stat strong small { font-size: 12px; font-weight: 400; color: #bbc9dc; }
+.wpa-cast .wpa-cast-section { display: grid; gap: 9px; min-width: 0; }
+.wpa-cast .wpa-section-heading { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.wpa-cast .wpa-section-heading strong { font-size: 16px; color: #fff; }
+.wpa-cast .wpa-section-heading span { font-size: 12px; color: #b9c6d9; }
+.wpa-cast .wpa-spheres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; }
+.wpa-cast .wpa-sphere {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 12px;
+  background: #222a39;
+  border: 1px solid #455269;
+  border-radius: 7px;
+}
+.wpa-cast .wpa-sphere-head { align-items: center; }
+.wpa-cast .wpa-sphere-head strong { font-size: 14px; color: #fff; }
+.wpa-cast .wpa-sphere-head small { font-size: 11px; color: #c8d2e4; opacity: 1; }
+.wpa-cast .wpa-sphere-levels { display: flex; align-items: stretch; gap: 5px; }
+.wpa-cast button.wpa-sphere-level {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  min-height: 34px;
+  margin: 0;
+  padding: 4px 0;
+  color: #f0f3fa;
+  background: #131a26;
+  border: 1px solid #536178;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wpa-cast button.wpa-sphere-level:hover,
+.wpa-cast button.wpa-sphere-level:focus-visible {
+  border-color: #a6c5ff;
+  box-shadow: 0 0 0 1px #a6c5ff;
+}
+.wpa-cast button.wpa-sphere-level.is-selected {
+  background: #446fae;
+  color: #fff;
+  border-color: #a4c5ff;
+  box-shadow: inset 0 0 0 1px #a4c5ff;
+}
+.wpa-cast .wpa-sphere-guide { margin: 0; font-size: 12px; }
+.wpa-cast .wpa-sphere-guide summary,
+.wpa-cast .wpa-cast-help summary { color: #c4d9ff; cursor: pointer; font-weight: 600; }
+.wpa-cast .wpa-sphere-guide summary:hover,
+.wpa-cast .wpa-cast-help summary:hover { color: #fff; }
+.wpa-cast .wpa-capabilities { margin-top: 8px; gap: 5px; }
+.wpa-cast .wpa-capability { opacity: 1; color: #e5eaf3; padding: 5px 4px; line-height: 1.45; }
+.wpa-cast .wpa-capability.wpa-in-scope { background: #334157; }
+.wpa-cast .wpa-capability.wpa-selected { box-shadow: inset 3px 0 #9ac3fa; }
+.wpa-cast .wpa-rank-dots { min-width: 35px; color: #aecbfa; }
+.wpa-cast .wpa-warning { color: #ffc5b9; font-size: 12px; }
+.wpa-cast .wpa-cast-settings { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 14px; row-gap: 10px; }
+.wpa-cast .wpa-cast-settings label { display: grid; align-content: start; gap: 5px; color: #e8edf7; }
+.wpa-cast .wpa-cast-settings label small { display: inline; font-weight: 400; color: #c2cbd9; }
+.wpa-cast input:not([type=checkbox]):not([type=hidden]),
+.wpa-cast select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 35px;
+  color: #f6f8fb;
+  background: #111824;
+  border: 1px solid #64718a;
+  border-radius: 5px;
+  padding: 7px 9px;
+  font-family: inherit;
+  font-size: 13px;
+}
+.wpa-cast input::placeholder { color: #a0aec4; }
+.wpa-cast .wpa-check-options { display: flex; flex-wrap: wrap; gap: 14px 24px; }
+.wpa-cast .wpa-check-options label { display: flex; align-items: center; gap: 7px; line-height: 1.4; }
+.wpa-cast .wpa-check-options input[type=checkbox] { width: 17px; height: 17px; margin: 0; }
+.wpa-cast .wpa-preview {
+  color: #f5f8ff;
+  background: #263a56;
+  border-left: 4px solid #90b9fb;
+  border-radius: 4px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+.wpa-cast .wpa-cast-help { padding: 0 2px; color: #c4cede; font-size: 12px; }
+.wpa-cast .wpa-cast-help p { margin: 8px 0 0; line-height: 1.5; }
+.wpa-panel .wpa-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: var(--color-bg-option, rgba(120,120,120,.16));
+  border: 1px solid var(--color-border-light-tertiary, #777);
+}
+.wpa-panel .wpa-panel-header > div { display: grid; gap: 2px; min-width: 0; }
+.wpa-panel .wpa-panel-header small { opacity: .8; }
+.wpa-panel .wpa-panel-header strong { overflow-wrap: anywhere; }
+.wpa-root.wpa-panel button.wpa-change-character { flex: 0 0 auto; width: auto; padding: 4px 10px; margin: 0; }
+@media (max-width: 1110px) {
+  .wpa-cast .wpa-spheres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .wpa-cast { padding: 10px; }
+  .wpa-cast .wpa-cast-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wpa-cast .wpa-caster { grid-column: 1 / -1; }
+  .wpa-cast .wpa-spheres { grid-template-columns: 1fr; }
+  .wpa-cast .wpa-cast-settings { grid-template-columns: 1fr; }
+}
+
+.wpa-panel .wpa-improvise { border:1px solid var(--color-border-highlight,#9ab9ff); }
