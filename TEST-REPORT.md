@@ -1,3 +1,24 @@
+# v0.1.9 Test Report — 2026-10-15
+
+## Automated and browser verification
+
+- `node --check scripts/player-actions.js` passed.
+- All nine `.cjs` tests passed, including **`tests/character-picker.cjs`** for permitted Mage options, selected-name display, and exclusion of unowned/non-Mage Actors. Historical roll/Paradox, power, launcher, macro-preservation and Rote tests stayed green.
+- `tests/browser-ui.py` passed at viewport widths **1440, 820 and 430 px**, exercising native `<select>` character change, persistence of `preferredActorUuid`, immediate re-render with the selected Mage's stats/Spheres, and a strict permissions check that unowned and non-Mage Actors never appear.
+- Top Difficulty shows an em dash before selecting Spheres, then follows the exact clamped roll difficulty as Reality, Quintessence and GM modifier change. The lower preview no longer repeats difficulty.
+- Native `magic` card/Paradox spell labels are unchanged. One native roll remains the only roll per cast; no roll is issued by the header picker itself.
+- Complete ZIP checked for CRC, expected `module.json` path, and versioned manifest/download metadata.
+
+## Not verified live
+
+Actual Foundry VTT v14 rendering, User Settings persistence between separate browser sessions, live WoD20 system API calls and Dice Improvements processing have not been run here. Browser fixture screenshots are illustrative only.
+
+## Suggested one live test and rollback
+
+With two owned Mage Actors, open Improvised Magick, select Sphere 2 and verify header Difficulty 5 for Coincidental (+3). Change to Vulgar/no witnesses (+4) to see 6, and increase the GM modifier to +1 to see 7. Choose the second Mage from the character dropdown: it must immediately display the second character's Arete/Spheres; close and reopen and confirm the last-used Mage persists. Do not cast until these values look right. Back up `Z:\Data\modules\wod20-player-actions` and the world; roll back to v0.1.8 if needed.
+
+---
+
 # v0.1.8 Test Report -- 2026-10-15
 
 ## New checks performed

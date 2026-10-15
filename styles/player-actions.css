@@ -75,11 +75,30 @@
   gap: 7px;
   min-width: 0;
 }
-.wpa-cast .wpa-caster { flex: 1 1 auto; }
-.wpa-cast .wpa-caster strong { font-size: 14px; overflow-wrap: anywhere; }
-.wpa-cast .wpa-stat { padding-left: 14px; border-left: 1px solid #4e5c73; white-space: nowrap; }
+/* v0.1.9: one compact selector, with Difficulty alongside Arete and Quintessence. */
+.wpa-cast .wpa-caster { display: inline-flex; flex: 1 1 240px; gap: 8px; }
+.wpa-cast .wpa-caster-select {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 120px;
+  max-width: 310px;
+  min-height: 32px;
+  padding: 4px 27px 4px 9px;
+  border: 1px solid #657995;
+  border-radius: 5px;
+  background: #334159;
+  color: #f0f5ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.wpa-cast .wpa-caster-select:hover,
+.wpa-cast .wpa-caster-select:focus-visible { border-color: #a6c5ff; outline-offset: 2px; }
+.wpa-cast .wpa-stat { padding-left: 12px; border-left: 1px solid #4e5c73; white-space: nowrap; }
 .wpa-cast .wpa-stat strong { font-size: 15px; color: #fff; }
 .wpa-cast .wpa-stat small { font-size: 12px; color: #bbc9dc; }
+.wpa-cast .wpa-difficulty-stat strong { min-width: 1.5ch; color: #bad6ff; font-size: 17px; font-variant-numeric: tabular-nums; }
 .wpa-cast .wpa-eyebrow,
 .wpa-cast .wpa-stat > span {
   color: #bbc9dc;
@@ -89,20 +108,6 @@
   text-transform: uppercase;
   letter-spacing: .035em;
 }
-.wpa-cast button.wpa-cast-change {
-  flex: 0 0 auto;
-  width: auto;
-  min-height: 29px;
-  margin: 0;
-  padding: 3px 10px;
-  background: #334159;
-  border: 1px solid #657995;
-  border-radius: 5px;
-  color: #eef4ff;
-  font-size: 12px;
-  cursor: pointer;
-}
-.wpa-cast button.wpa-cast-change:hover { background: #455c7e; }
 .wpa-cast .wpa-cast-section { display: grid; gap: 9px; min-width: 0; }
 .wpa-cast .wpa-section-heading { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .wpa-cast .wpa-section-heading strong { font-size: 16px; color: #fff; }
@@ -284,8 +289,8 @@
   .wpa-cast { padding: 10px; }
   .wpa-cast .wpa-cast-summary { gap: 6px 12px; }
   .wpa-cast .wpa-caster { flex-basis: 100%; }
+  .wpa-cast .wpa-caster-select { max-width: none; }
   .wpa-cast .wpa-cast-summary > .wpa-stat:nth-child(2) { padding-left: 0; border-left: 0; }
-  .wpa-cast button.wpa-cast-change { margin-left: auto; }
   .wpa-cast .wpa-spheres { grid-template-columns: 1fr; }
 }
 @media (max-width: 450px) {

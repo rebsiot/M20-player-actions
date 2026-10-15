@@ -1,4 +1,4 @@
-/* WoD20 Player Magick v0.1.8: native WoD20 rolls, remembered character, and spell-label compatibility. */
+/* WoD20 Player Magick v0.1.9: compact Mage picker and live header difficulty. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -172,6 +172,15 @@ async function runDice(actor, {title, pool, difficulty, extras = [], willpower =
   await DiceRoller(roll);
 }
 
+function eligibleMageActors(current) {
+  // Never expose unowned Actors or non-Mages in the casting character picker.
+  // Keep synthetic current Actors usable even when not in the world directory.
+  const actors = Array.from(game.actors?.contents ?? game.actors ?? []);
+  if (current && !actors.some(a => a?.uuid === current.uuid)) actors.push(current);
+  return actors.filter(a => a?.uuid && canUse(a) && isMage(a))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 async function guidedCast(actor, item = null) {
   if (!canUse(actor)) return ui.notifications.warn("Choose a character you own.");
   if (!isMage(actor)) return ui.notifications.warn("Guided magick requires a Mage character.");
@@ -182,6 +191,9 @@ async function guidedCast(actor, item = null) {
   const currentQuint = quintessence(actor);
   const title = item ? `Cast Rote: ${item.name}` : "Improvised Magick";
   const knownSpheres = SPHERES.filter(s => spheres[s] >= 1);
+  const actorOptions = eligibleMageActors(actor).map(a =>
+    `<option value="${escape(a.uuid)}"${a.uuid === actor.uuid ? " selected" : ""}>${escape(a.name)}</option>`
+  ).join("");
   const fields = knownSpheres.map(s => {
     const known = clamp(spheres[s], 1, 5);
     const selected = clamp(requirements[s], 0, 5);
@@ -203,10 +215,10 @@ async function guidedCast(actor, item = null) {
   }).join("") || '<p class="wpa-warning">No known Spheres found. Add Sphere ratings to the character sheet before casting.</p>';
   const content = `<div class="wpa-root wpa-cast">
     <div class="wpa-cast-summary" aria-label="Current casting character and resources">
-      <div class="wpa-caster"><span class="wpa-eyebrow">Casting as</span><strong>${escape(actor.name)}</strong></div>
+      <label class="wpa-caster"><span class="wpa-eyebrow">Casting as</span><select class="wpa-caster-select" aria-label="Casting character">${actorOptions}</select></label>
       <div class="wpa-stat"><span>Arete</span><strong>${rating}</strong><small>dice</small></div>
+      <div class="wpa-stat wpa-difficulty-stat"><span>Difficulty</span><strong data-current-difficulty aria-live="polite">&mdash;</strong></div>
       <div class="wpa-stat"><span>Quintessence</span><strong>${currentQuint.value}</strong><small>available</small></div>
-      <button type="button" class="wpa-cast-change" title="Choose a different character">Change</button>
     </div>
     <section class="wpa-cast-section" aria-label="Sphere selection">
       <div class="wpa-section-heading"><strong>Spheres</strong><span>Choose a level (0 = not used). Expand a card for a quick reference.</span></div>
@@ -216,9 +228,9 @@ async function guidedCast(actor, item = null) {
       <div class="wpa-section-heading"><strong>Casting details</strong></div>
       <div class="wpa-cast-settings">
         <label class="wpa-reality-field">Reality classification <select name="reality">
-          <option value="coincidental">Coincidental (+3)</option>
-          <option value="vulgar">Vulgar, no witnesses (+4)</option>
-          <option value="witnessed">Vulgar, witnessed (+5)</option></select></label>
+          <option value="coincidental">Coincidental (+3 to highest Sphere)</option>
+          <option value="vulgar">Vulgar, no witnesses (+4 to highest Sphere)</option>
+          <option value="witnessed">Vulgar, witnessed (+5 to highest Sphere)</option></select></label>
         <div class="wpa-stepper-field">
           <span class="wpa-setting-label">Quintessence spent</span>
           <div class="wpa-stepper" data-min="0" data-max="${Math.min(currentQuint.value, 3)}" role="group" aria-label="Quintessence to spend">
@@ -270,13 +282,32 @@ async function guidedCast(actor, item = null) {
   });
   await popup.render({force:true});
   const form = popup.form || popup.element?.querySelector("form");
-  // Character change is optional; the assigned character always remains the default.
-  popup.element?.querySelector?.(".wpa-cast-change")?.addEventListener("click", async () => {
-    const selected = await chooseCharacter(actor);
-    if (!selected || selected.uuid === actor.uuid) return;
-    await popup.close();
-    // Do not carry a Rote from the previous character onto the new one.
-    await openPanel(selected);
+  // Change Mages in place, with no intermediate character dialog.
+  // Preserve the last-used choice, but never carry a Rote from one Mage to another.
+  const casterSelect = popup.element?.querySelector?.(".wpa-caster-select");
+  casterSelect?.addEventListener("change", async () => {
+    if (casterSelect.value === actor.uuid) return;
+    const selected = eligibleMageActors(actor).find(a => a.uuid === casterSelect.value);
+    if (!selected) {
+      ui.notifications.warn("You cannot cast as that character.");
+      casterSelect.value = actor.uuid;
+      return;
+    }
+    casterSelect.disabled = true;
+    try {
+      try { await rememberCharacter(selected); }
+      catch (error) {
+        console.error(`${MOD} | Could not save preferred character`, error);
+        ui.notifications.warn("Character selected, but the preference could not be saved.");
+      }
+      await popup.close();
+      await guidedCast(selected); // Fresh, unbound effect on the new character.
+    } catch (error) {
+      console.error(`${MOD} | Could not switch casting character`, error);
+      ui.notifications.error("Could not switch casting character.");
+      casterSelect.disabled = false;
+      casterSelect.value = actor.uuid;
+    }
   });
   const update = () => {
     if (!form) return;
@@ -314,9 +345,13 @@ async function guidedCast(actor, item = null) {
         row.classList.toggle("wpa-selected", chosen > 0 && level === chosen);
       }
     }
+    // The top header is the single authoritative live difficulty preview.
+    const difficultyLabel = popup.element?.querySelector?.("[data-current-difficulty]")
+      || form.querySelector("[data-current-difficulty]");
+    if (difficultyLabel) difficultyLabel.textContent = max ? String(diff) : "—";
     const preview = form.querySelector(".wpa-preview");
     if (preview) preview.textContent = max
-      ? `Arete ${rating}d10 | Difficulty ${diff} | Highest Sphere ${max}`
+      ? `Arete ${rating}d10 | Highest Sphere ${max}`
       : "Choose at least one Sphere to cast.";
   };
   form?.addEventListener("click", event => {

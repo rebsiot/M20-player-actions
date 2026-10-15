@@ -14,7 +14,7 @@ setup_js=r'''() => {
   window.Hooks={once:(n,cb)=>hooks[n]=cb,on:(n,cb)=>hooks[n]=cb};
   window.game={
     system:{id:'worldofdarkness'},modules:{get:()=>module},
-    settings:{register:()=>{},get:()=>'',set:async()=>{}},
+    settings:{register:()=>{},get:(m,k)=>window.__test.settings[`${m}.${k}`]||'',set:async(m,k,v)=>{window.__test.settings[`${m}.${k}`]=v;}},
     keybindings:{register:()=>{}},
     user:{isGM:false,character:null},
     i18n:{localize:k=>k}
@@ -39,6 +39,7 @@ setup_js=r'''() => {
         this.element.append(footer);
         document.body.append(this.element);
       }
+      async close(){this.element?.remove();}
     }}}
   };
   window.__runHooks=()=>{hooks.init?.();hooks.ready?.();};
@@ -53,7 +54,17 @@ actor_js=r'''() => {
     {id:'life',type:'Sphere',name:'Life',system:{id:'life',value:3}},
     {id:'mind',type:'Sphere',name:'Mind',system:{id:'mind',value:2}}
   ]}; actor.items.forEach(i=>i.parent=actor);
-  game.user.character=actor; window.__test.actor=actor;
+  const secondary={id:'clo',uuid:'Actor.clo',name:'Chloe Hernandez',type:'PC',isOwner:true,
+    system:{settings:{splat:'mage'}},items:[
+      {id:'ar2',type:'Advantage',name:'Arete',system:{id:'arete',permanent:4}},
+      {id:'q2',type:'Advantage',name:'Quintessence',system:{id:'quintessence',temporary:3}},
+      {id:'time',type:'Sphere',name:'Time',system:{id:'time',value:3}}
+    ]};secondary.items.forEach(i=>i.parent=secondary);
+  const unowned={...secondary,id:'hidden',uuid:'Actor.hidden',name:'Hidden Mage',isOwner:false};
+  const vampire={...secondary,id:'vamp',uuid:'Actor.vamp',name:'Accessible Vampire',system:{settings:{splat:'vampire'}}};
+  game.user.character=actor;
+  game.actors={contents:[actor,secondary,unowned,vampire]};
+  window.__test.actor=actor;
   return game.modules.get('wod20-player-actions').api.guidedCast(actor);
 }'''
 
@@ -67,6 +78,12 @@ with sync_playwright() as p:
         page.evaluate('window.__runHooks()')
         page.evaluate(actor_js)
         summary=page.locator('.wpa-cast-summary')
+        picker=page.locator('.wpa-caster-select')
+        assert picker.input_value()=='Actor.eli'
+        assert picker.locator('option').all_text_contents()==['Chloe Hernandez','Eli Smith']
+        assert 'highest Sphere' in page.locator('select[name="reality"] option[value="coincidental"]').inner_text()
+        difficulty=page.locator('[data-current-difficulty]')
+        assert difficulty.inner_text()=='—','no Sphere means no valid difficulty yet'
         before=page.locator('.wpa-stepper output').all_text_contents()
         assert before==['0','0'],(width,before)
         qu=page.locator('.wpa-stepper').nth(0)
@@ -83,7 +100,16 @@ with sync_playwright() as p:
         assert gm.locator('output').inner_text()=='-3'
         assert gm.locator('button[data-step="-1"]').is_disabled()
         page.locator('.wpa-sphere[data-sphere="Matter"] button[data-level="2"]').click()
-        assert 'Difficulty 3' in page.locator('.wpa-preview').inner_text()
+        assert difficulty.inner_text()=='3','top difficulty tracks Sphere, 2 Quint and -3 GM modifier'
+        assert 'Difficulty' not in page.locator('.wpa-preview').inner_text(),'no duplicated difficulty preview'
+        page.locator('select[name="reality"]').select_option('witnessed')
+        assert difficulty.inner_text()=='3','clamp remains 3 at modifier -3, Quint -2 and witnessed +5'
+        gm.locator('button[data-step="1"]').click()
+        assert difficulty.inner_text()=='3'
+        gm.locator('button[data-step="1"]').click()
+        assert difficulty.inner_text()=='4','live difficulty increases with GM modifier'
+        gm.locator('button[data-step="-1"]').click()
+        gm.locator('button[data-step="-1"]').click()
         page.locator('input[name="useFocus"]').check()
         fd=page.evaluate('Object.fromEntries(new FormData(document.querySelector("form")).entries())')
         assert fd['quint']=='2' and fd['modifier']=='-3' and fd['useFocus']=='on',(width,fd)
@@ -95,6 +121,14 @@ with sync_playwright() as p:
         }''')
         assert metrics['overflow']==[],(width,metrics)
         print(width,metrics)
+        picker.select_option('Actor.clo')
+        assert page.locator('.wpa-caster-select').input_value()=='Actor.clo','inline character switch reopens with chosen Mage'
+        assert 'Chloe Hernandez' in page.locator('.wpa-caster-select').locator('option:checked').inner_text()
+        assert page.locator('.wpa-stat').first.inner_text().lower().find('4')>=0,'Arete switches with Mage'
+        assert page.locator('.wpa-sphere[data-sphere="Time"]').count()==1
+        assert page.locator('.wpa-sphere[data-sphere="Matter"]').count()==0,'old Spheres are not carried'
+        saved=page.evaluate('window.__test.settings["wod20-player-actions.preferredActorUuid"]')
+        assert saved=='Actor.clo','selection saved for subsequent openings'
         # Restore neutral values for an uncluttered visual screenshot.
         page.reload() if False else None
         page.locator('.wpa-cast').evaluate('(e)=>e.scrollTop=0')

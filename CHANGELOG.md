@@ -1,5 +1,14 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.9 — 2026-10-15
+
+- Changed the inline casting header from a distant **Change** button to a character-name dropdown directly after **Casting as**. It includes only owned/GM-accessible Mage Actors and defaults to the remembered or assigned Mage; choosing another saves that preference and opens a fresh casting screen for that Mage without a second chooser dialog.
+- Added the **live final Difficulty** to the same compact casting header. Shows a dash until a Sphere is selected, then updates on Sphere, Reality, Quintessence, or GM modifier changes. Removed duplicate difficulty from the lower preview.
+- Clarified all three Reality labels to read `+3/+4/+5 to highest Sphere` without changing math or Paradox markers.
+- No new auto-hotbar behavior, no dice engine, resource, or Paradox listener changes. Existing Rote selection, launcher macro, and World IDs/flags remain intact.
+- Nine Node regression/contract tests and 1440/820/430 Chromium fixture checks passed; live Foundry verification still pending.
+
+
 ## v0.1.8 -- 2026-10-15
 - **UI:** Replace the three tall caster/Arete/Quintessence cards with one compact character-and-resources strip, retaining the small Change button and remembered character behavior.
 - **UI:** Put Reality classification, Quintessence spent, and GM modifier on the same row when screen space permits. Quintessence and GM modifier use minus/plus rockers with visible values, accessible labels, immediate difficulty-preview updates and disabled buttons at their limits. On narrow screens, reality stays above the paired rockers to avoid horizontal scrolling.

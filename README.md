@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.8 (2026-10-15)  
+**Release:** v0.1.9 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -10,10 +10,18 @@ A focused, player-facing Mage: The Ascension 20th Anniversary casting interface 
 
 1. Open **Actors > Player Magick** or press **Shift+J**.
 2. **First launch:** use the character assigned in Foundry User Configuration (`game.user.character`), regardless of token selection. **After Change Character:** remember the player's manually selected Actor across future opens and reconnects, using a hidden Foundry v14 `user`-scope setting (per user, per world). If that Actor is deleted or the player loses ownership, fall back to the assigned character, then an owned selected token, or the chooser.
-3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. A secondary **Change Character** control appears on the panel and in the casting header.
-4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the calculated difficulty and roll using WoD20's native dice roller.
+3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. The panel retains its existing **Change Character** control, but the casting window now presents **Casting as [character dropdown]**, so you can switch directly without a second dialog.
+4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the **live Difficulty displayed in the top header** and roll using WoD20's native dice roller.
 
-The casting window scales up to 1020 px wide on a suitable desktop and shrinks with the viewport. Sphere cards display in 3 columns on wide screens, 2 on medium screens, and 1 on narrow screens. The caster name, Arete and available Quintessence share a compact single-line strip on desktop; they wrap responsively on narrow screens. The live difficulty preview remains visible.
+The casting window scales up to 1020 px wide on a suitable desktop and shrinks with the viewport. Sphere cards display in 3 columns on wide screens, 2 on medium screens, and 1 on narrow screens. The caster dropdown, Arete, current Difficulty and available Quintessence share a compact strip on desktop; they wrap responsively on narrow screens.
+
+## Character dropdown and current difficulty (v0.1.9)
+
+- The caster dropdown defaults to the already active/last-used Mage and lists **only Mages owned by the player** (or all accessible Mages for a GM). The existing per-user preference continues to determine subsequent launches across devices.
+- Switching characters via that dropdown persists the new choice and opens the chosen Mage's **fresh improvised casting screen** immediately. Previously selected Rotes and Sphere choices from the previous Actor are not carried over; this prevents mixing two Actors' magical data. If a selected Actor becomes unavailable, the selection is rejected rather than casting with the wrong character.
+- The top header now displays **Difficulty —** until at least one Sphere is selected. Once a Sphere level is chosen, Difficulty displays the same clamped value sent to the native WoD20 dice roller; it updates with Sphere ranks, Reality classification, Quintessence spent, and GM modifier. The lower preview shows only the Arete dice pool and highest selected Sphere to avoid repeating Difficulty.
+- Reality classification option wording is explicit: **Coincidental (+3 to highest Sphere)**, **Vulgar, no witnesses (+4 to highest Sphere)**, **Vulgar, witnessed (+5 to highest Sphere)**. Only the labels changed; the underlying rules/difficulty calculation are unchanged.
+
 
 ## Compact casting controls (v0.1.8)
 
@@ -21,7 +29,7 @@ Below the Sphere cards, casting details now use this order:
 
 1. **One row:** Reality classification dropdown, **Quintessence spent** minus/value/plus rocker, and **GM modifier** minus/value/plus rocker. The user sees and changes these without typing numbers. Quintessence stays within **0 to min(3, currently available)**; GM modifier stays within **-3 to +3**. Both disable their buttons when a limit is reached. At narrow widths, the two rockers sit together below the reality selector.
 2. **One row of checkboxes:** Use Focus, Spend 1 Willpower, Extended casting / ritual. These are optional and unchecked on open.
-3. **Compact live preview:** Native Arete dice, calculated final Difficulty and highest selected Sphere, updated when any rocker or Sphere selection changes.
+3. **Compact live preview:** Native Arete dice and highest selected Sphere; the live final Difficulty is shown prominently in the header, not repeated in the preview.
 4. **Effect / focus description:** Optional single-line text field.
 5. **Casting rules and Storyteller notes:** Collapsed by default, expandable if the player wants rules reminders. Each Sphere's own rank guide remains separately expandable.
 
@@ -74,11 +82,11 @@ Restore your backup of the `wod20-player-actions` module directory or the origin
 
 ## Testing and known limits
 
-Tests run: JS syntax verification and eight Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.8 dialog was rendered and its rockers clicked in a Chromium fixture at 1440px, 820px and 430px; no horizontal overflow was found.
+Tests run: JS syntax verification and nine Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 dialog was rendered and exercised in a Chromium fixture at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls and no-horizontal-overflow checks passed.
 
-**Live Foundry v14 of v0.1.8: not yet tested.** The user provided live screenshots of v0.1.7 controls motivating this compact redesign. The v0.1.8 controls have not yet been observed in Foundry. The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.9: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.9 controls have not yet been observed in a live Foundry client. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
-See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.4.md`.
+See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.9.md`.
 
 Fan-made Storyteller tools. Not affiliated with or endorsed by Paradox Interactive. This package includes no paid creator artwork.
 
