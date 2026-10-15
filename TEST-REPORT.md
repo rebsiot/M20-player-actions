@@ -1,29 +1,24 @@
-# v0.1.4 Test Report — 2026-10-15
+# v0.1.6 Test Report — 2026-10-15
 
-## Automated validation
+## Automated/mock-tested
 
-- `node --check scripts/player-actions.js` — JavaScript syntax verification.
-- `node tests/casting-guide.cjs` — Sphere filtering, clickable rank buttons in HTML, Rote defaults, collapsed guides, and wider dialog sizing.
-- `node tests/character-default.cjs` — assigned character precedence, ownership, Change Character, explicit Actor UUID binding, and selected token fallback.
-- `node tests/roll-routing.cjs` — one native `magic` card per cast, unchanged WoD20 roller routing, and native Power delegation.
-- `node tests/smoke.cjs` — sidebar label, legacy Rote execute API, no macro creation, no hotbar assign/hook, no Actor-sheet pin hooks, and no Paradox module references.
-- Headless Chromium fixture at 1440x900 and 820x900 — renders five Mage Sphere cards in 3 columns at wide viewport and 2 at medium viewport, with readable labels and visible action footer. This is **not** a live Foundry render.
-- ZIP integrity verification — passed when packaging v0.1.4 (archive paths and CRCs validated).
+- `node --check scripts/player-actions.js` — JavaScript syntax verified.
+- `tests/casting-guide.cjs` — width/layout, Sphere dots, Rote defaults, collapsed guidance.
+- `tests/character-default.cjs` — **per-user** persistent character preference after Change Character; precedence over assigned Actor; explicit macro override; deleted/unowned Actor fallback; token fallback.
+- `tests/roll-routing.cjs` — native WoD20 `magic` origin, localized Coincidental/Vulgar/Witnessed markers, one native roll per cast, and Power use delegation.
+- `tests/paradox-chat-contract.cjs` — contract mock representing WoD20 template and Dice Improvements v0.2.0 chat marker match with two existing Paradox dice. Does not run that external module live.
+- `tests/smoke.cjs` — player panel, legacy Rote macro compatibility, no hotbar modifications and no direct Paradox accounting.
+- `tests/launcher.cjs` — one optional world macro on GM load, idempotent creation, no hotbar assignment.
+- `tools/package_release.py` — module ID/version and manifest/download match, full installable ZIP, CRC and required files.
 
-## Not yet confirmed in live Foundry
+All six `.cjs` tests passed in local Node mocks. No live Foundry, browser session, or separate module interaction was executed in this build. v0.1.5's visual Chromium fixture checks remain historical, not new live verification.
 
-- Actors sidebar label and Shift+J shortcut in installed Foundry v14.
-- DialogV2 appearance inside the user's actual WoD20 skin and on smaller screens.
-- Character change inside the casting dialog with multiple owned Actors.
-- One real cast through the installed WoD20 system, with chat card and Willpower/Quintessence behavior.
+## Known limitations and next live test
 
-## First requested live test
+- The Paradox-die listener belongs to Dice Improvements v0.2.0+ (or the old Paradox module), NOT to Player Magick. It processes only Mage chat rolls with the exact WoD20 spell classification label. It also requires **existing temporary Paradox > 0**; otherwise zero dice are marked. Do not enable both Paradox handlers simultaneously.
+- User-scoped Foundry v14 preference storage should be tested from an actual player account and after reconnect; simulated `game.settings` was used here.
+- To live-test: On a disposable Mage Actor with **2 temporary Paradox**, using Dice Improvements v0.2.0 with old `wod20-paradox` disabled, cast an Improvised Coincidental spell. Expect the first two native dice shown in grayscale; a 1 on either should expose Add/Ignore Paradox in chat. Then change casting character, close/reopen, and confirm the choice persists. Report the first error or missing effect observed.
 
-Open **Actors > Player Magick** on the assigned Mage PC and verify that character appears automatically. Open **Improvised Magick**, select one Sphere dot, and confirm the dice preview updates before running a roll.
+## Rollback
 
-## v0.1.5 test addendum — 2026-10-15
-- `node --check scripts/player-actions.js`: passed.
-- `tests/launcher.cjs`: passed (GM-only macro creation, idempotency across reload, readable ownership, and no hotbar assignments).
-- All five `.cjs` tests: passed in local Node mocks.
-- Live Foundry v14 integration: not tested.
-- Macro creation affects only the world Macro Directory; manual hotbar placement remains the player's choice.
+Back up the world and original `Z:\Data\modules\wod20-player-actions` folder before upgrading. Restore that folder or v0.1.5 ZIP and restart Foundry to roll back; no automatic Actor migration runs. Any casts that updated Quintessence/Willpower or other game data are not undone by restoring module code.

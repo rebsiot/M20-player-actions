@@ -1,6 +1,7 @@
-/* WoD20 Player Magick v0.1.4: same module ID and native WoD20 roll path. */
+/* WoD20 Player Magick v0.1.6: native WoD20 rolls, remembered character, and spell-label compatibility. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
+const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
 const SPHERES = ["Correspondence", "Entropy", "Forces", "Life", "Matter", "Mind", "Prime", "Spirit", "Time"];
 // Original, concise M20 Sphere prompts. These are reminders, not rules adjudications.
 // Each entry describes what the corresponding dot broadly makes possible.
@@ -84,15 +85,28 @@ const icon = (item) => item?.img && !item.img.includes("mystery-man") ? item.img
 const actorAdv = (actor, key) => actor?.api?.getAdvantage?.(key) || actor?.items?.find(i => i.type === "Advantage" && String(i.system?.id || i.name).toLowerCase() === key);
 
 function resolveActor(actorUuid = null) {
-  // A generated hotbar macro explicitly bound to an Actor must keep that binding.
+  // Existing macros with an explicit Actor UUID retain their original binding.
   if (actorUuid) return fromUuidSync(actorUuid);
-  // The player's assigned character takes priority over unrelated selected tokens.
-  // Do not force token selection to open Player Magick.
+  // A manually selected character is preferred until the player changes it again.
+  // User-scope Foundry settings persist per player and world across devices.
+  const savedUuid = game.settings.get(MOD, PREFERRED_ACTOR_SETTING);
+  if (savedUuid) {
+    let saved = null;
+    try { saved = fromUuidSync(savedUuid); } catch (error) { console.warn(`${MOD} | Saved character cannot be resolved`, error); }
+    if (canUse(saved)) return saved;
+  }
+  // First-time users default to their assigned character; token is a fallback.
   const assigned = game.user.character;
   if (canUse(assigned)) return assigned;
   const tokens = canvas?.tokens?.controlled || [];
   if (tokens.length > 1) { ui.notifications.warn("Select a single token for this action."); return null; }
-  return tokens[0]?.actor || null;
+  return canUse(tokens[0]?.actor) ? tokens[0].actor : null;
+}
+async function rememberCharacter(actor) {
+  // Only an explicit manual selection changes the preference. Never save
+  // ephemeral token selection or modify the user's Foundry assigned character.
+  if (!canUse(actor) || !actor?.uuid) return;
+  await game.settings.set(MOD, PREFERRED_ACTOR_SETTING, actor.uuid);
 }
 function arete(actor) {
   const adv = actorAdv(actor, "arete");
@@ -302,7 +316,17 @@ async function performMageCast(actor, item, data) {
   if (spend > quint.value) throw new Error("Not enough Quintessence remaining.");
   const difficulty = clamp(raw + mod - spend, 3, 10);
   const effect = String(data.effect ?? item?.name ?? "Magick").trim().slice(0, 250) || item?.name || "Magick";
+  // Native WoD20 and its Paradox-die listeners recognize the localized spell
+  // classification. Include the same label in the native chat card rather than
+  // creating a second roll, changing ChatMessage flags, or updating Paradox.
+  const realityKey = {
+    coincidental: "wod.spheres.coincidentalspell",
+    vulgar: "wod.spheres.vulgarspell",
+    witnessed: "wod.spheres.vulgarspellwitness"
+  }[reality];
+  const realityLabel = game.i18n.localize(realityKey);
   const note = [
+    realityLabel,
     `Reality: ${reality}`, `Spheres: ${chosen.map(([s, v]) => `${s} ${v}`).join(", ")}`,
     `Difficulty: ${difficulty} (base ${raw}, modifier ${mod}, Quintessence ${spend})`,
     ...(data.ritual ? ["Extended effect: one roll; track accumulated successes manually"] : [])
@@ -372,6 +396,11 @@ async function chooseCharacter(current = null) {
   if (!data?.actorUuid) return null;
   const actor = await fromUuid(data.actorUuid);
   if (!canUse(actor)) return ui.notifications.warn("You do not control that character.");
+  try { await rememberCharacter(actor); }
+  catch (error) {
+    console.error(`${MOD} | Could not save preferred character`, error);
+    ui.notifications.warn("Character selected, but the preference could not be saved.");
+  }
   return actor;
 }
 
@@ -447,6 +476,14 @@ function ensureDirectoryButton() {
 
 Hooks.once("init", () => {
   if (game.system.id !== SYSTEM_ID) return;
+  game.settings.register(MOD, PREFERRED_ACTOR_SETTING, {
+    name: "Last selected Player Magick character",
+    hint: "The last owned Actor manually selected in Player Magick.",
+    scope: "user", // Foundry v14: per-user, per-world and persistent across devices
+    config: false,
+    type: String,
+    default: ""
+  });
   // Keybindings must be registered during init, not ready.
   game.keybindings.register(MOD,"openPanel", {
     name: "Open Player Magick",

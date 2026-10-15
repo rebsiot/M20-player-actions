@@ -23,7 +23,7 @@ class FakeDialog {
 }
 const ctx={
   Hooks:{once:(k,cb)=>hooks[k]=cb,on:(k,cb)=>hooks[k]=cb},
-  game:{system:{id:'worldofdarkness'},modules:{get:()=>mod},user:{isGM:false,character:actor},keybindings:{register:()=>{}}},
+  game:{system:{id:'worldofdarkness'},settings:{register:()=>{},get:()=>'',set:async()=>{}},modules:{get:()=>mod},user:{isGM:false,character:actor},keybindings:{register:()=>{}}},
   ui:{notifications:{warn:()=>{},error:err=>{throw new Error(err)}}},
   canvas:{tokens:{controlled:[]}},
   foundry:{utils:{escapeHTML:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')},applications:{api:{DialogV2:FakeDialog}}},

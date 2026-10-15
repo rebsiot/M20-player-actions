@@ -18,7 +18,7 @@ if not manifest['download'].endswith(f'/v{version}/{zip_name}'):
     raise SystemExit('Download URL does not match module version/asset name.')
 include = [
     'module.json', 'README.md', 'CHANGELOG.md', 'TEST-REPORT.md',
-    '05-HANDOFF-UPDATE-0.1.4.md', 'PLAYER-MAGICK-LAUNCHER.js',
+    '05-HANDOFF-UPDATE-0.1.4.md', '05-HANDOFF-UPDATE-0.1.6.md', 'PLAYER-MAGICK-LAUNCHER.js',
     'scripts/player-actions.js', 'styles/player-actions.css',
 ]
 include.extend(str(p.relative_to(ROOT)) for p in sorted((ROOT / 'tests').glob('*.cjs')))
