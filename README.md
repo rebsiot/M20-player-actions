@@ -59,3 +59,11 @@ Tests run: JS syntax verification; source-level mock tests for assigned-characte
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.4.md`.
 
 Fan-made Storyteller tools. Not affiliated with or endorsed by Paradox Interactive. This package includes no paid creator artwork.
+
+## GitHub release and Foundry manifest
+
+Install from the Foundry **Install Module** dialog using this manifest URL:
+
+`https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json`
+
+The manifest's `download` field points at the matching versioned GitHub Release ZIP. To upgrade an existing installation, back up the module folder and your Foundry world before installing or replacing files; modules are enabled separately in each world. A release tag is published by the repository workflow after its packaging, syntax, and mock tests pass. Live Foundry functionality is **not** established by a successful publishing workflow.

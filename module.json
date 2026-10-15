@@ -31,5 +31,7 @@
   ],
   "socket": false,
   "readme": "README.md",
-  "url": "https://github.com/rebsiot/M20-player-actions"
+  "url": "https://github.com/rebsiot/M20-player-actions",
+  "manifest": "https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json",
+  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.5/wod20-player-magick-0.1.5.zip"
 }

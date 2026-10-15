@@ -1,0 +1,48 @@
+name: Publish Foundry Module
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - module.json
+      - scripts/**
+      - styles/**
+      - tests/**
+      - tools/package_release.py
+      - .github/workflows/publish-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify JavaScript and regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/player-actions.js
+          for test in tests/*.cjs; do node "$test"; done
+      - name: Package versioned Foundry release
+        shell: bash
+        run: python3 tools/package_release.py
+      - name: Publish GitHub Release with installable ZIP
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import json;print(json.load(open("module.json"))["version"])')
+          tag="v${version}"
+          zip="dist/wod20-player-magick-${version}.zip"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; leaving versioned asset unchanged."
+          else
+            gh release create "$tag" "$zip" \
+              --target "$GITHUB_SHA" \
+              --title "Player Magick $tag" \
+              --notes "Foundry VTT v14 / WoD20 Player Magick. Default assigned Mage character, wider compact Sphere casting UI, optional world Macro launcher, and no automatic hotbar assignments. Independent of the separate Paradox module. Local automated tests passed; live Foundry verification pending. Upgrade: back up your installed module and world, then install this versioned ZIP; restore the prior module folder to roll back."
+          fi
