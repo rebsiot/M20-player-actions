@@ -19,7 +19,7 @@ The casting window scales up to 1020 px wide on a suitable desktop and shrinks w
 
 - The caster dropdown defaults to the already active/last-used Mage and lists **only Mages owned by the player** (or all accessible Mages for a GM). The existing per-user preference continues to determine subsequent launches across devices.
 - Switching characters via that dropdown persists the new choice and opens the chosen Mage's **fresh improvised casting screen** immediately. Previously selected Rotes and Sphere choices from the previous Actor are not carried over; this prevents mixing two Actors' magical data. If a selected Actor becomes unavailable, the selection is rejected rather than casting with the wrong character.
-- The top header now displays **Difficulty —** until at least one Sphere is selected. Once a Sphere level is chosen, Difficulty displays the same clamped value sent to the native WoD20 dice roller; it updates with Sphere ranks, Reality classification, Quintessence spent, and GM modifier. The lower preview shows only the Arete dice pool and highest selected Sphere to avoid repeating Difficulty.
+- The top header now displays a **large, high-contrast Difficulty —** until at least one Sphere is selected. Once a Sphere level is chosen, Difficulty displays the same clamped value sent to WoD20, updating with Sphere ranks, Reality, Quintessence spent, and GM modifier. The supporting metrics are Arete dice, highest Sphere, Quintessence deduction, and the Willpower option. The old redundant lower dice-pool preview is removed. Willpower shows its native bonus as +1 success or +3 dice according to the installed WoD20 setting when checked; no new rules are applied.
 - Reality classification option wording is explicit: **Coincidental (+3 to highest Sphere)**, **Vulgar, no witnesses (+4 to highest Sphere)**, **Vulgar, witnessed (+5 to highest Sphere)**. Only the labels changed; the underlying rules/difficulty calculation are unchanged.
 
 
@@ -27,9 +27,9 @@ The casting window scales up to 1020 px wide on a suitable desktop and shrinks w
 
 Below the Sphere cards, casting details now use this order:
 
-1. **One row:** Reality classification dropdown, **Quintessence spent** minus/value/plus rocker, and **GM modifier** minus/value/plus rocker. The user sees and changes these without typing numbers. Quintessence stays within **0 to min(3, currently available)**; GM modifier stays within **-3 to +3**. Both disable their buttons when a limit is reached. At narrow widths, the two rockers sit together below the reality selector.
+1. **One row:** Reality classification dropdown, **Quintessence (N remaining)** minus/value/plus rocker, and **GM modifier** minus/value/plus rocker. The user sees and changes these without typing numbers. Quintessence stays within **0 to min(3, currently available)**; GM modifier stays within **-3 to +3**. Both disable their buttons when a limit is reached. At narrow widths, the two rockers sit together below the reality selector.
 2. **One row of checkboxes:** Use Focus, Spend 1 Willpower, Extended casting / ritual. These are optional and unchecked on open.
-3. **Compact live preview:** Native Arete dice and highest selected Sphere; the live final Difficulty is shown prominently in the header, not repeated in the preview.
+3. **Live roll summary:** Prominent final Difficulty at the upper right, with supporting Arete dice, highest Sphere, Quintessence reduction, and Willpower option. Quintessence remaining updates as the rocker changes. No duplicated lower roll summary.
 4. **Effect / focus description:** Optional single-line text field.
 5. **Casting rules and Storyteller notes:** Collapsed by default, expandable if the player wants rules reminders. Each Sphere's own rank guide remains separately expandable.
 
@@ -73,7 +73,7 @@ Player Magick **does not** read, roll, update, or account for Paradox and does n
 - Spell rolls use the WoD20 native roller, action origin `magic`, and current Arete. Configured native Willpower spending remains handled by WoD20.
 - Casting difficulty continues to use the v0.1.3 formula: highest selected Sphere +3 coincidental, +4 vulgar without Sleepers, +5 vulgar with Sleepers; user situational modifier and optional Quintessence reduction; final difficulty clamped to 3–10.
 - If specified, Quintessence is deducted **after** the native roll finishes, using the supported Advantage/Actor data location; no deduction occurs simply by opening the interface.
-- Rote Sphere requirements are suggested when the source Item contains recognizable fields, but the player/Storyteller must confirm combinations, scale, and effect requirements.
+- **Quick Rote casting:** A Rote with recognized Sphere requirements that the Mage knows opens a compact confirmation instead of the full Sphere grid. It displays the Rote name, preselected Sphere levels, final Difficulty, and normal situational controls. Choose **Edit Spheres / Advanced** to reopen the full editor with that Rote prefilled. Rotes with missing requirements or levels above the Mage's known ratings open the full editor with a warning instead of silently guessing. The player/Storyteller still adjudicates combinations, scale and effect requirements.
 - Manual Power activation is still available under the collapsed **Other Powers** section for backwards compatibility, without replacing native Item use methods.
 
 ## Rollback
@@ -82,9 +82,9 @@ Restore your backup of the `wod20-player-actions` module directory or the origin
 
 ## Testing and known limits
 
-Tests run: JS syntax verification and nine Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 dialog was rendered and exercised in a Chromium fixture at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls and no-horizontal-overflow checks passed.
+Tests run: JS syntax verification and ten Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 improvised and Rote dialogs were rendered and exercised in Chromium fixtures at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls, Rote presets, Advanced opening and no-horizontal-overflow checks passed.
 
-**Live Foundry v14 of v0.1.9: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.9 controls have not yet been observed in a live Foundry client. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.9: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.9 controls and the Rote quick-cast path have not yet been observed in a live Foundry client. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.9.md`.
 

@@ -93,6 +93,8 @@ with sync_playwright() as p:
         qu.locator('button[data-step="1"]').click()
         qu.locator('button[data-step="1"]').click()
         assert qu.locator('output').inner_text()=='2'
+        assert '0 remaining' in page.locator('[data-quint-remaining]').inner_text()
+        assert page.locator('[data-quint-spent]').inner_text()=='−2'
         assert qu.locator('button[data-step="1"]').is_disabled()
         gm.locator('button[data-step="1"]').click()
         assert gm.locator('output').inner_text()=='+1'
@@ -101,6 +103,10 @@ with sync_playwright() as p:
         assert gm.locator('button[data-step="-1"]').is_disabled()
         page.locator('.wpa-sphere[data-sphere="Matter"] button[data-level="2"]').click()
         assert difficulty.inner_text()=='3','top difficulty tracks Sphere, 2 Quint and -3 GM modifier'
+        assert page.locator('[data-highest-sphere]').inner_text()=='2'
+        page.locator('input[name="willpower"]').check()
+        assert page.locator('[data-willpower-preview]').inner_text()=='+1 success'
+        page.locator('input[name="willpower"]').uncheck()
         assert 'Difficulty' not in page.locator('.wpa-preview').inner_text(),'no duplicated difficulty preview'
         page.locator('select[name="reality"]').select_option('witnessed')
         assert difficulty.inner_text()=='3','clamp remains 3 at modifier -3, Quint -2 and witnessed +5'
@@ -124,7 +130,7 @@ with sync_playwright() as p:
         picker.select_option('Actor.clo')
         assert page.locator('.wpa-caster-select').input_value()=='Actor.clo','inline character switch reopens with chosen Mage'
         assert 'Chloe Hernandez' in page.locator('.wpa-caster-select').locator('option:checked').inner_text()
-        assert page.locator('.wpa-stat').first.inner_text().lower().find('4')>=0,'Arete switches with Mage'
+        assert page.locator('.wpa-metric').first.inner_text().lower().find('4')>=0,'Arete switches with Mage'
         assert page.locator('.wpa-sphere[data-sphere="Time"]').count()==1
         assert page.locator('.wpa-sphere[data-sphere="Matter"]').count()==0,'old Spheres are not carried'
         saved=page.evaluate('window.__test.settings["wod20-player-actions.preferredActorUuid"]')

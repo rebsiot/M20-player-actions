@@ -69,3 +69,13 @@ Back up the world and original `Z:\Data\modules\wod20-player-actions` folder bef
 ## Additional v0.1.7 card acceptance check
 
 On a Mage PC with Arete 3 and Matter 2 / Spirit 2, cast a Coincidental effect without modifiers. Expect one title (`Arete • Magick`), a short `3d10` line, exactly one localized spell classification, one Spheres line, one final `Difficulty: 5`, and the native successes/dice display. Cast again with a situational adjustment or Quintessence to confirm a single `Modifiers:` line. Verify Dice Improvements still recognizes the localized marker and marks existing Paradox dice once, without direct Paradox state edits in Player Magick.
+
+
+## v0.1.9 refinement — prominent Difficulty and quick Rotes
+
+- **Native execution / ownership:** The existing `performMageCast` and `runDice` functions are unchanged. Rotes with populated and valid structured Sphere requirements use `quickCastRote`, prefill hidden Sphere fields, and submit to that same casting function. Requirements missing or beyond current known Sphere ratings open the full editor with a warning, not a silent cast. GM/player control checks are preserved.
+- **UI metrics:** The casting header shows Arete dice, highest Sphere, Quintessence deduction, Willpower effect and high-contrast final Difficulty. Rocker label displays available Quintessence minus planned spend (0…min(3,available)). Willpower preview uses native `CONFIG.worldofdarkness.willpowerBonusDice` mode; Focus continues to be descriptive only.
+- **Static/Node:** All ten `.cjs` tests passed, including the new `tests/rote-quick-cast.cjs`, full/improvised Sphere casting, native/paradox localized markers, chat-card formatting, character defaults/dropdown, launcher idempotency, and hotbar safety. JavaScript syntax check passed.
+- **Real browser fixture, not Foundry:** `tests/browser-ui.py` and `tests/browser-rote-quick.py` passed at 1440, 820, and 430 viewport widths. Clicked Quint and GM rockers, toggled Willpower/Focus, changed characters in the full editor, opened Rote Advanced, verified derived difficulty and resource preview, and checked for horizontal overflow. Screenshots are visual mocks of production HTML/CSS run outside Foundry.
+- **Release ZIP:** Validated top-level `wod20-player-actions/module.json`, current 0.1.9 metadata, manifest/download URLs, absence of traversal/symlinks, and CRC using `ZipFile.testzip`.
+- **Not tested:** Live Foundry v14 with actual installed WoD20 module/characters, real DialogV2 event lifecycle, actual native dice display, and Dice Improvements runtime interaction. These remain required before live success can be claimed.

@@ -21,3 +21,13 @@ Based on the last published **v0.1.8** module ZIP and current GitHub `main` tree
 - Back up `Z:\Data\modules\wod20-player-actions` and the world before upgrade; restart/refresh after install. Roll back by restoring the v0.1.8 module folder. No automatic migrations. Any rolls already spent resources remain game changes.
 - Submit v0.1.9 to GitHub as a PR based on `main`. Stable Foundry manifest must remain v0.1.8 until explicitly merged/published. On publication, verify release ZIP exists before reporting success.
 - Update owning 05 handoff. GLOBAL architecture documents need no API changes; separate Dice Improvements Paradox contract is unchanged and remains live-unverified.
+
+
+## Additional same-release refinement (after user feedback)
+
+The v0.1.9 PR is unmerged, so this refinement remains **v0.1.9** rather than a new published version. User clarified that the summary must make **Difficulty** immediately readable; Arete/Highest Sphere/Quintessence/Willpower are supporting context and should not compete for emphasis.
+
+- Replace the cramped header with one responsive caster+metrics strip and a large high-contrast Difficulty at the right. Move total Quintessence available out of the header; the rocker now labels the **remaining** Quintessence after current planned spend. Reflect native +1 success vs +3 dice Willpower configuration only when checked. Remove redundant lower roll summary. No change to casting math, server validation, storage or roll payload.
+- Known Rotes with recognized and permissible Sphere requirements now go through `quickCastRote` (named Rote + fixed Sphere tags + same situational options + Roll Arete). `Edit Spheres / Advanced` opens the unchanged full guided editor with the same Rote. No recognizable requirements, or requirements exceeding the Mage's known levels, revert to the full editor with a warning. The previously existing `guidedCast(actor,item)` entry point remains the full advanced editor; existing Rote macros route to quick casting through the stable `execute` API.
+- Tests: ten Node/mock tests including `rote-quick-cast.cjs`, plus both Chromium fixtures (`browser-ui.py`, `browser-rote-quick.py`) at 1440/820/430. Do **not** claim live Foundry validation. ZIP and source are ready for the existing PR #5 review.
+- Cross-component boundary: native WoD20 roll and Dice Improvements/Paradox localized chat marker remain unchanged. No updates to Dice Improvements, Paradox module, world Actor IDs, macros or hotbars.
