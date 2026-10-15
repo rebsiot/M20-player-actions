@@ -1,5 +1,12 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.7 — 2026-10-15
+- **Changed:** Condensed Mage chat cards without replacing WoD20's renderer. The action/title appears only once; the native `dicetext` now shows the Arete pool (e.g., `3d10`) instead of a second copy of the action; duplicate `systemText` is suppressed on Mage rolls. Power/general rolls retain the prior fields.
+- **Changed:** Removed the redundant `Reality: coincidental` line, redundant difficulty breakdown (WoD20 already adds the final difficulty), and zero-value modifier notes. Nonzero situational and Quintessence adjustments appear in a single concise `Modifiers:` line. Ritual notes remain when selected.
+- **Preserved:** Exact localized `Coincidental spell`/`Vulgar spell` classification in native `extraInfo` for Dice Improvements Paradox-die detection, single native `magic` roll, per-user character choice, optional launcher macro and no automatic hotbar setup. Does not process Paradox.
+- **Tests:** All seven Node mock/contract tests passed, including the new native-card formatting test, plus JS syntax and ZIP integrity. **Live Foundry v0.1.7 not verified.**
+- **Upgrade/rollback:** Complete v0.1.7 ZIP, no schema migration. Back up the installed module and world; restore v0.1.6 to roll back. Confirm chat card content and Paradox detection on a real Mage before retiring the backup.
+
 ## v0.1.6 — 2026-10-15
 - **Fixed:** Remember the last character explicitly chosen via **Change Character** in a Foundry v14 user-scoped setting (per player, per world; survives logout and changing devices). Before any explicit choice, use the assigned Foundry character as before. Validate ownership whenever restoring a saved character.
 - **Fixed:** Native `magic` chat rolls include the exact localized WoD20 Coincidental/Vulgar casting label so the independent Dice Improvements v0.2.0 Paradox-die listener can recognize the casting roll. The v0.1.5 `Reality:` note is retained alongside the label.

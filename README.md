@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.6 (2026-10-15)  
+**Release:** v0.1.7 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -19,9 +19,15 @@ The casting window scales up to 1020 px wide on a suitable desktop and shrinks w
 
 **One world Macro called `Player Magick` is created once by the GM, available in the Macro Directory. No hotbar installation is performed.** Players can drag that launcher Macro onto their hotbars if they want. The panel no longer exposes per-Rote Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but no new per-Rote macros are offered from the UI. Hotbar workflows may return in a separate later enhancement.
 
+## Cleaner native roll cards (v0.1.7)
+
+The native WoD20 chat card now displays the casting title **once**, a compact **Arete dice pool**, the **localized reality classification**, the selected **Spheres**, and the **one final difficulty automatically added by WoD20**, followed by the native success/dice display. The previous redundant `Reality: ...`, duplicate title, and repeated difficulty-breakdown lines are removed. A brief **Modifiers** line appears only for nonzero situational adjustments or Quintessence expenditure. Extended casting keeps its note when selected.
+
+This is a formatting-only change to the existing `DiceRollContainer` payload: no separate chat renderer or dice engine. The localized Coincidental/Vulgar spell classification stays in the card for the Dice Improvements Paradox-die listener. Rote casting and all existing per-player character preferences are preserved. No hotbar slots are altered.
+
 ## Paradox-die detection compatibility (separate ownership)
 
-Player Magick **does not** read, roll, update, or account for Paradox and does not register a Paradox hook or depend on a Paradox module. It uses WoD20's native `DiceRollContainer` and `DiceRoller` for one Arete roll per cast. In **v0.1.6**, the resulting native `magic` chat card includes the WoD20 localized spell label `wod.spheres.coincidentalspell`, `wod.spheres.vulgarspell`, or `wod.spheres.vulgarspellwitness`, matching the native spell labels detected by `wod20-dice-improvements` v0.2.0 (and the earlier original Paradox listener). v0.1.5 used only `Reality: coincidental/vulgar/witnessed`, which those listeners did not recognize.
+Player Magick **does not** read, roll, update, or account for Paradox and does not register a Paradox hook or depend on a Paradox module. It uses WoD20's native `DiceRollContainer` and `DiceRoller` for one Arete roll per cast. In **v0.1.6+**, the resulting native `magic` chat card includes the WoD20 localized spell label `wod.spheres.coincidentalspell`, `wod.spheres.vulgarspell`, or `wod.spheres.vulgarspellwitness`, matching the native spell labels detected by `wod20-dice-improvements` v0.2.0 (and the earlier original Paradox listener). v0.1.5 used only `Reality: coincidental/vulgar/witnessed`, which those listeners did not recognize.
 
 **To use the Dice Improvements Paradox-die feature:** enable `wod20-dice-improvements` v0.2.0 or later and disable the old `wod20-paradox` module, per Dice Improvements' documented migration instructions. Its listener reads the native chat message and existing temporary Paradox; **0 Paradox means no Paradox dice**, and Paradox resolution remains entirely in that separate module. No additional Paradox dice are rolled by Player Magick. This interaction has been contract/mock-tested, not live-tested.
 
@@ -54,9 +60,9 @@ Restore your backup of the `wod20-player-actions` module directory or the origin
 
 ## Testing and known limits
 
-Tests run: JS syntax verification and six Node-based mock/contract tests including per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. Layout carried forward from v0.1.5 (Chromium fixture previously checked at 1440px and 820px).
+Tests run: JS syntax verification and seven Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. Layout carried forward from v0.1.5 (Chromium fixture previously checked at 1440px and 820px).
 
-**Live Foundry v14: not yet tested.** The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.7: not yet tested.** The user provided a live screenshot of the earlier card containing repeated fields; the redesigned card has not yet been observed in Foundry. The screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.4.md`.
 
