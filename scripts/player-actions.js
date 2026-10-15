@@ -1,4 +1,4 @@
-/* WoD20 Player Magick v0.1.6: native WoD20 rolls, remembered character, and spell-label compatibility. */
+/* WoD20 Player Magick v0.1.7: native WoD20 rolls, remembered character, and spell-label compatibility. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -162,8 +162,11 @@ async function runDice(actor, {title, pool, difficulty, extras = [], willpower =
   // Using "arete" left the roll card empty, even though Dice So Nice animated the dice.
   roll.origin = kind;
   roll.action = title;
-  roll.systemText = title;
-  roll.dicetext = [title];
+  // WoD20 renders action, dicetext and systemText as separate rows. For magick,
+  // keep the action once, show the Arete pool once, and omit duplicate title rows.
+  // Non-magick rolls retain their previous layout for compatibility.
+  roll.systemText = kind === "magic" ? "" : title;
+  roll.dicetext = kind === "magic" ? [`${pool}d10`] : [title];
   roll.extraInfo = extras;
   roll.usewillpower = willpower; // Native WoD20 spends Willpower using its own settings.
   await DiceRoller(roll);
@@ -325,11 +328,18 @@ async function performMageCast(actor, item, data) {
     witnessed: "wod.spheres.vulgarspellwitness"
   }[reality];
   const realityLabel = game.i18n.localize(realityKey);
+  // Keep the localized spell label so the separate Dice Improvements listener
+  // recognizes Paradox dice. The WoD20 roller adds the final Difficulty itself.
+  // Only nonzero modifiers need an additional explanation in the chat card.
+  const adjustments = [
+    ...(mod ? [`Situation ${mod > 0 ? "+" : ""}${mod}`] : []),
+    ...(spend ? [`Quintessence -${spend}`] : [])
+  ];
   const note = [
     realityLabel,
-    `Reality: ${reality}`, `Spheres: ${chosen.map(([s, v]) => `${s} ${v}`).join(", ")}`,
-    `Difficulty: ${difficulty} (base ${raw}, modifier ${mod}, Quintessence ${spend})`,
-    ...(data.ritual ? ["Extended effect: one roll; track accumulated successes manually"] : [])
+    `Spheres: ${chosen.map(([s, v]) => `${s} ${v}`).join(", ")}`,
+    ...(adjustments.length ? [`Modifiers: ${adjustments.join(" · ")}`] : []),
+    ...(data.ritual ? ["Extended casting: track accumulated successes manually"] : [])
   ];
   // Do not spend on an interrupted or failed roll: pre-validate then invoke native roller.
   await loadDice();
