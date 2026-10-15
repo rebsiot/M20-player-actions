@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.4 (2026-10-15)  
+**Release:** v0.1.5 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -17,7 +17,7 @@ The casting window scales up to 1020 px wide on a suitable desktop and shrinks w
 
 ## Macros and hotbar
 
-**No macro creation or hotbar installation is performed in v0.1.4.** The panel no longer exposes Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but new macros are not offered from the UI. Hotbar workflows may return in a separate later enhancement.
+**One world Macro called `Player Magick` is created once by the GM, available in the Macro Directory. No hotbar installation is performed.** Players can drag that launcher Macro onto their hotbars if they want. The panel no longer exposes per-Rote Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but no new per-Rote macros are offered from the UI. Hotbar workflows may return in a separate later enhancement.
 
 ## Independent of Paradox
 
@@ -48,7 +48,7 @@ Player Magick does not read or update Paradox, register a Paradox hook, call the
 
 ## Rollback
 
-Restore your backup of the `wod20-player-actions` module directory or the original `wod20-player-actions-0.1.3.zip`, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
+Restore your backup of the `wod20-player-actions` module directory or the original `wod20-player-actions-0.1.3.zip`, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
 
 ## Testing and known limits
 

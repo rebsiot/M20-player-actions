@@ -460,12 +460,36 @@ Hooks.once("init", () => {
   Hooks.on("renderSidebar", () => ensureDirectoryButton());
 });
 
+// Publish one optional world Macro (not a hotbar assignment) for players to drag themselves.
+// GM-only, idempotent, and leaves any existing macro with the same name intact.
+const LAUNCHER_NAME = "Player Magick";
+const LAUNCHER_COMMAND = `const api = game.modules.get("wod20-player-actions")?.api;
+if (!api?.openPanel) ui.notifications.warn("Enable the WoD20 Player Magick module first.");
+else await api.openPanel();`;
+async function ensureLauncherMacro() {
+  if (!game.user.isGM) return;
+  const existing = game.macros?.find(m => m.getFlag?.(MOD, "launcher") === true || m.name === LAUNCHER_NAME);
+  if (existing) return;
+  try {
+    await Macro.create({
+      name: LAUNCHER_NAME,
+      type: "script",
+      img: "icons/svg/dice-target.svg",
+      command: LAUNCHER_COMMAND,
+      ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER },
+      flags: { [MOD]: { launcher: true } }
+    });
+  } catch (error) {
+    console.warn(`${MOD} | Unable to create optional launcher macro`, error);
+  }
+}
+
 Hooks.once("ready", () => {
   if (game.system.id !== SYSTEM_ID) return;
-  // Retain execute() for previously created script macros, but create none and never
-  // install to any user's hotbar. UI provides casting actions directly.
+  // Retain execute() for old macros. Create only one optional launcher, never touch hotbars.
   game.modules.get(MOD).api = { execute, openPanel, guidedCast };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
+  void ensureLauncherMacro();
   console.log(`${MOD} | Ready. Actors tab: Player Magick; shortcut: Shift+J.`);
 });

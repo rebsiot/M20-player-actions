@@ -31,3 +31,6 @@
 1. Enable v0.1.4 in a test world and open Player Magick with an assigned Mage.
 2. Check character precedence, widen dialog, Sphere button selection, and native chat card via a real roll.
 3. If verified, update `GLOBAL-04-DECISIONS-ROADMAP-RISKS.md` live status and the main `05-WOD20-PLAYER-ACTIONS.md` handoff. Keep 15-series starter hotbar work separate and paused.
+
+### v0.1.5 update
+- Optional world `Player Magick` launcher Macro created idempotently by GM, player-readable, never assigned to hotbars. No per-Rote macros or hotbar automation.

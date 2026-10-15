@@ -1,8 +1,8 @@
 {
   "id": "wod20-player-actions",
   "title": "WoD20 Player Magick",
-  "description": "Guided Mage casting for WoD20: assigned-character default, known Rotes, and a compact widescreen Sphere selector. No automatic macros or hotbar changes.",
-  "version": "0.1.4",
+  "description": "Guided Mage casting with default character, wide Sphere picker, and one optional launcher macro; never auto-populates hotbars.",
+  "version": "0.1.5",
   "authors": [
     {
       "name": "Community tools"

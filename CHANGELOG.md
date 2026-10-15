@@ -27,3 +27,9 @@
 ## v0.1.0 — 2026-10-12
 
 - Initial Player Actions panel, guided Mage/Rote casting, native WoD20 dice bridge, optional Power activation, and explicit hotbar shortcut creation (now paused in v0.1.4).
+
+## v0.1.5 — 2026-10-15
+- Create exactly one optional `Player Magick` launcher Macro in the world Macro Directory when a GM loads the module.
+- Players may drag it to a hotbar manually; never automatically assign any hotbar slot.
+- Existing macros and duplicate-name entries are preserved without overwrites.
+- No changes to WoD20 native rolls or Paradox interaction.

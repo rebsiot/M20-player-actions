@@ -20,3 +20,10 @@
 ## First requested live test
 
 Open **Actors > Player Magick** on the assigned Mage PC and verify that character appears automatically. Open **Improvised Magick**, select one Sphere dot, and confirm the dice preview updates before running a roll.
+
+## v0.1.5 test addendum — 2026-10-15
+- `node --check scripts/player-actions.js`: passed.
+- `tests/launcher.cjs`: passed (GM-only macro creation, idempotency across reload, readable ownership, and no hotbar assignments).
+- All five `.cjs` tests: passed in local Node mocks.
+- Live Foundry v14 integration: not tested.
+- Macro creation affects only the world Macro Directory; manual hotbar placement remains the player's choice.
