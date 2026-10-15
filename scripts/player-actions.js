@@ -1,4 +1,4 @@
-/* WoD20 Player Magick v0.1.8: native WoD20 rolls, remembered character, and spell-label compatibility. */
+/* WoD20 Player Magick v0.1.9: prominent casting difficulty, resource preview, and quick Rote casting. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -172,115 +172,85 @@ async function runDice(actor, {title, pool, difficulty, extras = [], willpower =
   await DiceRoller(roll);
 }
 
-async function guidedCast(actor, item = null) {
-  if (!canUse(actor)) return ui.notifications.warn("Choose a character you own.");
-  if (!isMage(actor)) return ui.notifications.warn("Guided magick requires a Mage character.");
-  if (item && (item.parent?.id !== actor.id || item.type !== "Rote")) return ui.notifications.warn("This Rote does not belong to the character.");
-  const rating = arete(actor);
-  const spheres = sphereRatings(actor);
-  const requirements = roteRequirements(item);
-  const currentQuint = quintessence(actor);
-  const title = item ? `Cast Rote: ${item.name}` : "Improvised Magick";
-  const knownSpheres = SPHERES.filter(s => spheres[s] >= 1);
-  const fields = knownSpheres.map(s => {
-    const known = clamp(spheres[s], 1, 5);
-    const selected = clamp(requirements[s], 0, 5);
-    const descriptions = SPHERE_GUIDE[s].slice(0, known).map((description, index) => `
-      <li class="wpa-capability" data-rank="${index + 1}"><span class="wpa-rank-dots">${"&#9679;".repeat(index + 1)}</span>
-        <span><b>${escape(DOT_TIERS[index])}:</b> ${escape(description)}</span></li>`).join("");
-    const requirementWarning = selected > known
-      ? `<small class="wpa-warning">This Rote asks for ${selected} dots, but ${escape(actor.name)} knows ${known}. Select a valid level or consult the Storyteller.</small>`
-      : "";
-    const levelButtons = Array.from({length: known + 1}, (_, rank) => `
-      <button type="button" class="wpa-sphere-level${rank === selected ? " is-selected" : ""}" data-level="${rank}" aria-pressed="${rank === selected}" aria-label="${escape(s)} ${rank} ${rank === 1 ? "dot" : "dots"}">${rank}</button>`).join("");
-    return `<section class="wpa-sphere" data-sphere="${escape(s)}">
-      <div class="wpa-sphere-head"><strong>${escape(s)}</strong><small>${known} known</small></div>
-      <input type="hidden" name="sphere.${escape(s)}" value="${selected}" data-max="${known}">
-      <div class="wpa-sphere-levels" role="group" aria-label="${escape(s)} dots to use">${levelButtons}</div>
-      ${requirementWarning}
-      <details class="wpa-sphere-guide"><summary>What each dot allows</summary><ol class="wpa-capabilities">${descriptions}</ol></details>
-    </section>`;
-  }).join("") || '<p class="wpa-warning">No known Spheres found. Add Sphere ratings to the character sheet before casting.</p>';
-  const content = `<div class="wpa-root wpa-cast">
-    <div class="wpa-cast-summary" aria-label="Current casting character and resources">
-      <div class="wpa-caster"><span class="wpa-eyebrow">Casting as</span><strong>${escape(actor.name)}</strong></div>
-      <div class="wpa-stat"><span>Arete</span><strong>${rating}</strong><small>dice</small></div>
-      <div class="wpa-stat"><span>Quintessence</span><strong>${currentQuint.value}</strong><small>available</small></div>
-      <button type="button" class="wpa-cast-change" title="Choose a different character">Change</button>
+function eligibleMageActors(current) {
+  // Never expose unowned Actors or non-Mages in the casting character picker.
+  // Keep synthetic current Actors usable even when not in the world directory.
+  const actors = Array.from(game.actors?.contents ?? game.actors ?? []);
+  if (current && !actors.some(a => a?.uuid === current.uuid)) actors.push(current);
+  return actors.filter(a => a?.uuid && canUse(a) && isMage(a))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** The compact caster/roll summary is shared by improvised and Rote casting. */
+function castSummaryHTML(actor, rating, {allowChange = true} = {}) {
+  const actorChoices = eligibleMageActors(actor).map(a =>
+    `<option value="${escape(a.uuid)}"${a.uuid === actor.uuid ? " selected" : ""}>${escape(a.name)}</option>`
+  ).join("");
+  const caster = allowChange
+    ? `<label class="wpa-caster"><span class="wpa-eyebrow">Casting as</span><select class="wpa-caster-select" aria-label="Casting character">${actorChoices}</select></label>`
+    : `<div class="wpa-caster wpa-caster-static"><span class="wpa-eyebrow">Casting as</span><strong>${escape(actor.name)}</strong></div>`;
+  return `<div class="wpa-cast-summary" aria-label="Casting character and live roll details">
+    ${caster}
+    <div class="wpa-roll-metrics">
+      <div class="wpa-metric"><span>Arete</span><strong>${rating} <small>dice</small></strong></div>
+      <div class="wpa-metric"><span>Highest Sphere</span><strong data-highest-sphere>&mdash;</strong></div>
+      <div class="wpa-metric"><span>Quintessence</span><strong data-quint-spent>&mdash;</strong></div>
+      <div class="wpa-metric"><span>Willpower</span><strong data-willpower-preview>&mdash;</strong></div>
+      <div class="wpa-stat wpa-difficulty-stat"><span>Difficulty</span><strong data-current-difficulty aria-live="polite">&mdash;</strong></div>
     </div>
-    <section class="wpa-cast-section" aria-label="Sphere selection">
-      <div class="wpa-section-heading"><strong>Spheres</strong><span>Choose a level (0 = not used). Expand a card for a quick reference.</span></div>
-      <div class="wpa-spheres">${fields}</div>
-    </section>
-    <section class="wpa-cast-section" aria-label="Casting details">
-      <div class="wpa-section-heading"><strong>Casting details</strong></div>
-      <div class="wpa-cast-settings">
-        <label class="wpa-reality-field">Reality classification <select name="reality">
-          <option value="coincidental">Coincidental (+3)</option>
-          <option value="vulgar">Vulgar, no witnesses (+4)</option>
-          <option value="witnessed">Vulgar, witnessed (+5)</option></select></label>
-        <div class="wpa-stepper-field">
-          <span class="wpa-setting-label">Quintessence spent</span>
-          <div class="wpa-stepper" data-min="0" data-max="${Math.min(currentQuint.value, 3)}" role="group" aria-label="Quintessence to spend">
-            <button type="button" data-step="-1" aria-label="Spend less Quintessence">&minus;</button>
-            <output data-step-value aria-live="polite" aria-label="Quintessence spent">0</output>
-            <button type="button" data-step="1" aria-label="Spend more Quintessence">+</button>
-            <input type="hidden" name="quint" value="0">
-          </div>
-        </div>
-        <div class="wpa-stepper-field">
-          <span class="wpa-setting-label">GM modifier</span>
-          <div class="wpa-stepper" data-min="-3" data-max="3" role="group" aria-label="GM difficulty modifier">
-            <button type="button" data-step="-1" aria-label="Decrease GM modifier">&minus;</button>
-            <output data-step-value aria-live="polite" aria-label="GM modifier">0</output>
-            <button type="button" data-step="1" aria-label="Increase GM modifier">+</button>
-            <input type="hidden" name="modifier" value="0">
-          </div>
-        </div>
-      </div>
-      <div class="wpa-check-options">
-        <label title="Records focus use in chat; no automatic difficulty change"><input type="checkbox" name="useFocus"> Use Focus</label>
-        <label><input type="checkbox" name="willpower"> Spend 1 Willpower</label>
-        <label><input type="checkbox" name="ritual"> Extended casting / ritual</label>
-      </div>
-      <div class="wpa-preview" aria-live="polite">Choose at least one Sphere to cast.</div>
-      <label class="wpa-effect-field">Effect / focus description (optional)<input name="effect" maxlength="250" placeholder="A few words about the effect (optional)" value=""></label>
-      <details class="wpa-cast-help"><summary>Casting rules and Storyteller notes</summary>
-        <p>Highest chosen Sphere determines base difficulty. Multiple Spheres may be combined; the Storyteller decides the effect requirements.</p>
-        <p>M20 default: highest Sphere +3/+4/+5, then modifiers. Quintessence reduces difficulty one per point, subject to Storyteller ruling. The roll difficulty is capped at 10 here; harder effects can require additional successes.</p>
-        <p>Use Focus records your choice in chat; it does not automatically alter difficulty. Use the GM modifier for an agreed adjustment. WoD20 handles Willpower expenditure. Extended casting is one attempt here; track additional rolls manually.</p>
-      </details>
-    </section>
   </div>`;
-  const Dialog = foundry.applications.api.DialogV2;
-  // Wide on desktop but never wider than the user's available viewport.
-  const viewportWidth = Number(globalThis.innerWidth) || 1080;
-  const dialogWidth = Math.min(1020, Math.max(320, viewportWidth - 56));
-  const popup = new Dialog({window: {title}, position: {width: dialogWidth}, content,
-    buttons: [
-      {action: "cancel", label: "Cancel"},
-      {action: "roll", label: "Roll Arete", icon: "fas fa-dice-d10", default: true,
-       callback: (_event, button) => Object.fromEntries(new FormData(button.form).entries())}
-    ],
-    submit: async result => {
-      if (!result || result === "cancel") return;
-      try { await performMageCast(actor, item, result); }
-      catch (error) { console.error(`${MOD}: cast failed`, error); ui.notifications.error(`Cast failed: ${error.message}`); }
-    }
-  });
-  await popup.render({force:true});
+}
+
+/** Keep one set of mechanical controls for both quick Rote and improvised casts. */
+function castDetailsHTML(availableQuint, {quick = false} = {}) {
+  const description = `<label class="wpa-effect-field">${quick ? "Variation / focus description (optional)" : "Effect / focus description (optional)"}<input name="effect" maxlength="250" placeholder="A few words about the effect (optional)" value=""></label>`;
+  return `<section class="wpa-cast-section" aria-label="Casting details">
+    <div class="wpa-section-heading"><strong>Casting details</strong></div>
+    <div class="wpa-cast-settings">
+      <label class="wpa-reality-field">Reality classification <select name="reality">
+        <option value="coincidental">Coincidental (+3 to highest Sphere)</option>
+        <option value="vulgar">Vulgar, no witnesses (+4 to highest Sphere)</option>
+        <option value="witnessed">Vulgar, witnessed (+5 to highest Sphere)</option></select></label>
+      <div class="wpa-stepper-field">
+        <span class="wpa-setting-label" data-quint-remaining>Quintessence (${availableQuint} remaining)</span>
+        <div class="wpa-stepper" data-min="0" data-max="${Math.min(availableQuint, 3)}" role="group" aria-label="Quintessence to spend">
+          <button type="button" data-step="-1" aria-label="Spend less Quintessence">&minus;</button>
+          <output data-step-value aria-live="polite" aria-label="Quintessence spent">0</output>
+          <button type="button" data-step="1" aria-label="Spend more Quintessence">+</button>
+          <input type="hidden" name="quint" value="0">
+        </div>
+      </div>
+      <div class="wpa-stepper-field">
+        <span class="wpa-setting-label">GM modifier</span>
+        <div class="wpa-stepper" data-min="-3" data-max="3" role="group" aria-label="GM difficulty modifier">
+          <button type="button" data-step="-1" aria-label="Decrease GM modifier">&minus;</button>
+          <output data-step-value aria-live="polite" aria-label="GM modifier">0</output>
+          <button type="button" data-step="1" aria-label="Increase GM modifier">+</button>
+          <input type="hidden" name="modifier" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="wpa-check-options">
+      <label title="Records focus use in chat; no automatic difficulty change"><input type="checkbox" name="useFocus"> Use Focus</label>
+      <label><input type="checkbox" name="willpower"> Spend 1 Willpower</label>
+      <label><input type="checkbox" name="ritual"> Extended casting / ritual</label>
+    </div>
+    <div class="wpa-preview" aria-live="polite" hidden></div>
+    ${quick ? `<details class="wpa-cast-help wpa-optional-description"><summary>Optional effect description</summary>${description}</details>` : description}
+    <details class="wpa-cast-help"><summary>Casting rules and Storyteller notes</summary>
+      <p>Highest chosen Sphere determines base difficulty. Multiple Spheres may be combined; the Storyteller decides the effect requirements.</p>
+      <p>M20 default: highest Sphere +3/+4/+5, then modifiers. Quintessence reduces difficulty one per point, subject to Storyteller ruling. The roll difficulty is capped at 10 here; harder effects can require additional successes.</p>
+      <p>Use Focus records your choice in chat; it does not automatically alter difficulty. Use the GM modifier for an agreed adjustment. WoD20 handles Willpower expenditure. Extended casting is one attempt here; track additional rolls manually.</p>
+    </details>
+  </section>`;
+}
+
+/** Wire the shared steppers, permission-neutral previews and Sphere selection. */
+function wireCastControls(popup, actor) {
   const form = popup.form || popup.element?.querySelector("form");
-  // Character change is optional; the assigned character always remains the default.
-  popup.element?.querySelector?.(".wpa-cast-change")?.addEventListener("click", async () => {
-    const selected = await chooseCharacter(actor);
-    if (!selected || selected.uuid === actor.uuid) return;
-    await popup.close();
-    // Do not carry a Rote from the previous character onto the new one.
-    await openPanel(selected);
-  });
+  const availableQuint = quintessence(actor).value;
   const update = () => {
     if (!form) return;
-    // Keep hidden form values, visible rocker output, and boundary buttons in sync.
     for (const stepper of form.querySelectorAll(".wpa-stepper")) {
       const input = stepper.querySelector('input[type="hidden"]');
       if (!input) continue;
@@ -299,8 +269,9 @@ async function guidedCast(actor, item = null) {
     const max = Math.max(0, ...SPHERES.map(s => clamp(fd.get(`sphere.${s}`), 0, 5)));
     const reality = fd.get("reality");
     const base = max + (reality === "coincidental" ? 3 : reality === "vulgar" ? 4 : 5);
-    const adjustment = clamp(fd.get("modifier"), -3, 3) - clamp(fd.get("quint"), 0, 3);
-    const diff = clamp(base + adjustment, 3, 10);
+    const spend = clamp(fd.get("quint"), 0, 3);
+    const adjustment = clamp(fd.get("modifier"), -3, 3) - spend;
+    const difficulty = clamp(base + adjustment, 3, 10);
     for (const card of form.querySelectorAll(".wpa-sphere")) {
       const chosen = clamp(fd.get(`sphere.${card.dataset.sphere}`), 0, 5);
       for (const button of card.querySelectorAll(".wpa-sphere-level")) {
@@ -314,10 +285,19 @@ async function guidedCast(actor, item = null) {
         row.classList.toggle("wpa-selected", chosen > 0 && level === chosen);
       }
     }
+    const root = popup.element || form;
+    const set = (selector, value) => { const target = root.querySelector(selector) || form.querySelector(selector); if (target) target.textContent = value; };
+    set("[data-current-difficulty]", max ? String(difficulty) : "—");
+    set("[data-highest-sphere]", max ? String(max) : "—");
+    set("[data-quint-spent]", spend ? `−${spend}` : "—");
+    const willpower = fd.has("willpower") ? (globalThis.CONFIG?.worldofdarkness?.willpowerBonusDice ? "+3 dice" : "+1 success") : "—";
+    set("[data-willpower-preview]", willpower);
+    set("[data-quint-remaining]", `Quintessence (${Math.max(0, availableQuint - spend)} remaining)`);
     const preview = form.querySelector(".wpa-preview");
-    if (preview) preview.textContent = max
-      ? `Arete ${rating}d10 | Difficulty ${diff} | Highest Sphere ${max}`
-      : "Choose at least one Sphere to cast.";
+    if (preview) {
+      preview.hidden = !!max;
+      preview.textContent = max ? "" : "Choose at least one Sphere to cast.";
+    }
   };
   form?.addEventListener("click", event => {
     const rocker = event.target.closest?.(".wpa-stepper button[data-step]");
@@ -340,6 +320,140 @@ async function guidedCast(actor, item = null) {
   form?.addEventListener("change", update);
   update();
 }
+
+/** Full Sphere editor, used for improvised magick and customized Rotes. */
+async function guidedCast(actor, item = null) {
+  if (!canUse(actor)) return ui.notifications.warn("Choose a character you own.");
+  if (!isMage(actor)) return ui.notifications.warn("Guided magick requires a Mage character.");
+  if (item && (item.parent?.id !== actor.id || item.type !== "Rote")) return ui.notifications.warn("This Rote does not belong to the character.");
+  const rating = arete(actor);
+  const spheres = sphereRatings(actor);
+  const requirements = roteRequirements(item);
+  const currentQuint = quintessence(actor);
+  const title = item ? `Customize Rote: ${item.name}` : "Improvised Magick";
+  const knownSpheres = SPHERES.filter(s => spheres[s] >= 1);
+  const fields = knownSpheres.map(s => {
+    const known = clamp(spheres[s], 1, 5);
+    const selected = clamp(requirements[s], 0, 5);
+    const descriptions = SPHERE_GUIDE[s].slice(0, known).map((description, index) => `
+      <li class="wpa-capability" data-rank="${index + 1}"><span class="wpa-rank-dots">${"&#9679;".repeat(index + 1)}</span>
+        <span><b>${escape(DOT_TIERS[index])}:</b> ${escape(description)}</span></li>`).join("");
+    const requirementWarning = selected > known
+      ? `<small class="wpa-warning">This Rote asks for ${selected} dots, but ${escape(actor.name)} knows ${known}. Select a valid level or consult the Storyteller.</small>`
+      : "";
+    const levelButtons = Array.from({length: known + 1}, (_, rank) => `
+      <button type="button" class="wpa-sphere-level${rank === selected ? " is-selected" : ""}" data-level="${rank}" aria-pressed="${rank === selected}" aria-label="${escape(s)} ${rank} ${rank === 1 ? "dot" : "dots"}">${rank}</button>`).join("");
+    return `<section class="wpa-sphere" data-sphere="${escape(s)}">
+      <div class="wpa-sphere-head"><strong>${escape(s)}</strong><small>${known} known</small></div>
+      <input type="hidden" name="sphere.${escape(s)}" value="${selected}" data-max="${known}">
+      <div class="wpa-sphere-levels" role="group" aria-label="${escape(s)} dots to use">${levelButtons}</div>
+      ${requirementWarning}
+      <details class="wpa-sphere-guide"><summary>What each dot allows</summary><ol class="wpa-capabilities">${descriptions}</ol></details>
+    </section>`;
+  }).join("") || '<p class="wpa-warning">No known Spheres found. Add Sphere ratings to the character sheet before casting.</p>';
+  const content = `<div class="wpa-root wpa-cast">
+    ${castSummaryHTML(actor, rating)}
+    <section class="wpa-cast-section" aria-label="Sphere selection">
+      <div class="wpa-section-heading"><strong>Spheres</strong><span>Choose a level (0 = not used). Expand a card for a quick reference.</span></div>
+      <div class="wpa-spheres">${fields}</div>
+    </section>
+    ${castDetailsHTML(currentQuint.value)}
+  </div>`;
+  const Dialog = foundry.applications.api.DialogV2;
+  const viewportWidth = Number(globalThis.innerWidth) || 1080;
+  const dialogWidth = Math.min(1020, Math.max(320, viewportWidth - 56));
+  const popup = new Dialog({window: {title}, position: {width: dialogWidth}, content,
+    buttons: [
+      {action: "cancel", label: "Cancel"},
+      {action: "roll", label: "Roll Arete", icon: "fas fa-dice-d10", default: true,
+       callback: (_event, button) => Object.fromEntries(new FormData(button.form).entries())}
+    ],
+    submit: async result => {
+      if (!result || result === "cancel") return;
+      try { await performMageCast(actor, item, result); }
+      catch (error) { console.error(`${MOD}: cast failed`, error); ui.notifications.error(`Cast failed: ${error.message}`); }
+    }
+  });
+  await popup.render({force:true});
+  // Change Mages in place; a Rote belongs to its original Actor only.
+  const casterSelect = popup.element?.querySelector?.(".wpa-caster-select");
+  casterSelect?.addEventListener("change", async () => {
+    if (casterSelect.value === actor.uuid) return;
+    const selected = eligibleMageActors(actor).find(a => a.uuid === casterSelect.value);
+    if (!selected) {
+      ui.notifications.warn("You cannot cast as that character.");
+      casterSelect.value = actor.uuid;
+      return;
+    }
+    casterSelect.disabled = true;
+    try {
+      try { await rememberCharacter(selected); }
+      catch (error) {
+        console.error(`${MOD} | Could not save preferred character`, error);
+        ui.notifications.warn("Character selected, but the preference could not be saved.");
+      }
+      await popup.close();
+      await guidedCast(selected);
+    } catch (error) {
+      console.error(`${MOD} | Could not switch casting character`, error);
+      ui.notifications.error("Could not switch casting character.");
+      casterSelect.disabled = false;
+      casterSelect.value = actor.uuid;
+    }
+  });
+  wireCastControls(popup, actor);
+}
+
+/** A practiced Rote should remove Sphere-picking work, not alter Arete mechanics. */
+async function quickCastRote(actor, item) {
+  if (!canUse(actor) || !isMage(actor)) return ui.notifications.warn("Select an owned Mage character.");
+  if (item?.parent?.id !== actor.id || item.type !== "Rote") return ui.notifications.warn("This Rote does not belong to the character.");
+  const requirements = roteRequirements(item);
+  const included = SPHERES.filter(s => requirements[s] > 0);
+  const known = sphereRatings(actor);
+  if (!included.length) {
+    ui.notifications.warn("This Rote has no recognized Sphere requirements. Select its Spheres in the full editor.");
+    return guidedCast(actor, item);
+  }
+  if (included.some(s => requirements[s] > 5 || requirements[s] > known[s])) {
+    ui.notifications.warn("This Rote exceeds the character's known Sphere ratings. Review its requirements in the full editor.");
+    return guidedCast(actor, item);
+  }
+  const rating = arete(actor);
+  const availableQuint = quintessence(actor).value;
+  const sphereInputs = SPHERES.map(s => `<input type="hidden" name="sphere.${s}" value="${requirements[s]}">`).join("");
+  const sphereChips = included.map(s => `<span class="wpa-rote-chip">${escape(s)} <strong>${requirements[s]}</strong></span>`).join("");
+  const content = `<div class="wpa-root wpa-cast wpa-rote-quick">
+    ${castSummaryHTML(actor, rating, {allowChange:false})}
+    <section class="wpa-rote-effect" aria-label="Known Rote">
+      <div class="wpa-rote-label">Known Rote</div><strong class="wpa-rote-name">${escape(item.name)}</strong>
+      <div class="wpa-rote-chips">${sphereChips}</div>
+      <div class="wpa-rote-hint">Sphere requirements are preselected. Use Edit Spheres if you need to customize the effect.</div>
+      ${sphereInputs}
+    </section>
+    ${castDetailsHTML(availableQuint, {quick:true})}
+  </div>`;
+  const Dialog = foundry.applications.api.DialogV2;
+  const viewportWidth = Number(globalThis.innerWidth) || 1080;
+  const dialogWidth = Math.min(780, Math.max(320, viewportWidth - 56));
+  const popup = new Dialog({window:{title:`Cast Rote: ${item.name}`},position:{width:dialogWidth},content,
+    buttons:[
+      {action:"cancel",label:"Cancel"},
+      {action:"advanced",label:"Edit Spheres / Advanced",callback:()=>({advanced:true})},
+      {action:"roll",label:"Roll Arete",icon:"fas fa-dice-d10",default:true,
+       callback:(_event,button)=>Object.fromEntries(new FormData(button.form).entries())}
+    ],
+    submit:async result=>{
+      if (!result || result === "cancel") return;
+      if (result.advanced) return guidedCast(actor,item);
+      try { await performMageCast(actor,item,result); }
+      catch (error) {console.error(`${MOD}: Rote cast failed`,error);ui.notifications.error(`Rote cast failed: ${error.message}`);}
+    }
+  });
+  await popup.render({force:true});
+  wireCastControls(popup,actor);
+}
+
 async function performMageCast(actor, item, data) {
   if (!canUse(actor)) throw new Error("You no longer control this character.");
   const rating = arete(actor);
@@ -428,8 +542,8 @@ async function execute(actorUuid = null, itemId = null, action = null) {
   if (!canUse(actor)) return ui.notifications.warn("Select a token or assign a character in User Configuration.");
   const item = itemId ? actor.items.get(itemId) : null;
   if (itemId && !item) return ui.notifications.warn("This action's Rote or Power was deleted or replaced. Recreate the shortcut.");
+  if (item?.type === "Rote") return quickCastRote(actor, item);
   if (action === "cast" || (!item && isMage(actor))) return guidedCast(actor, item);
-  if (item?.type === "Rote") return guidedCast(actor, item);
   if (item?.type === "Power") return activatePower(actor, item);
   return openPanel(actor);
 }

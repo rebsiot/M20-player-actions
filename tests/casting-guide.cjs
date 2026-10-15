@@ -61,7 +61,8 @@ const ctx={
   assert.match(improvised,/Effect \/ focus description \(optional\)/);
   assert.match(improvised,/name="effect"[^>]*value=""/);
   assert.match(improvised,/class="wpa-cast-summary"/);
-  assert.match(improvised,/>Test Mage<\/strong>/);
+  assert.match(improvised,/<option value="Actor.mage123" selected>Test Mage<\/option>/);
+  assert.match(improvised,/data-current-difficulty/);
   assert.match(improvised,/class="wpa-cast-settings"/);
   assert.match(improvised,/class="wpa-cast-help"/);
   assert.doesNotMatch(improvised,/details class="wpa-sphere-guide" open/, 'Sphere help initially collapsed');

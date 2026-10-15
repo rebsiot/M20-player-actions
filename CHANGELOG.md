@@ -1,5 +1,18 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.9 — 2026-10-15
+
+- **Improved roll clarity:** Make final Difficulty the dominant, high-contrast value in the upper-right casting summary, with readable Arete dice, highest chosen Sphere, Quintessence reduction, and Willpower effect alongside it. Remove the extra lower roll-summary line. Willpower shows +1 success or +3 dice according to the installed WoD20 setting; no new bonus is calculated.
+- **Quintessence remaining:** Move available Quintessence out of the top header and label the rocker `Quintessence (N remaining)`, reducing the displayed remaining amount immediately as the player steps up the planned expenditure. The server-side actual-resource check and after-roll spending remain unchanged.
+- **Fast known-Rote casting:** Selecting a Rote with readable and available Sphere requirements opens a smaller confirmation showing the named Rote and required Sphere levels, live Difficulty, and only the necessary casting decisions. **Edit Spheres / Advanced** opens the original full prefilled editor; a Rote without recognized or usable requirements safely falls back to that editor. Neither pathway bypasses the native Arete roll, character ownership checks, or the Paradox-die classification marker.
+- **Verification:** Ten Node/mock tests passed, including Rote quick cast/Advanced/fallback, plus two Chromium fixtures (improvised and Rote) at 1440, 820, and 430 pixels. No horizontal overflow. Live Foundry v14 verification remains pending.
+- Changed the inline casting header from a distant **Change** button to a character-name dropdown directly after **Casting as**. It includes only owned/GM-accessible Mage Actors and defaults to the remembered or assigned Mage; choosing another saves that preference and opens a fresh casting screen for that Mage without a second chooser dialog.
+- Added the **live final Difficulty** to the same compact casting header. Shows a dash until a Sphere is selected, then updates on Sphere, Reality, Quintessence, or GM modifier changes. Removed duplicate difficulty from the lower preview.
+- Clarified all three Reality labels to read `+3/+4/+5 to highest Sphere` without changing math or Paradox markers.
+- No new auto-hotbar behavior, no dice engine, resource, or Paradox listener changes. Existing Rote data, launcher macro, and World IDs/flags remain intact.
+- Initial v0.1.9 checks were supplemented by the ten-test final pass noted above; live Foundry verification still pending.
+
+
 ## v0.1.8 -- 2026-10-15
 - **UI:** Replace the three tall caster/Arete/Quintessence cards with one compact character-and-resources strip, retaining the small Change button and remembered character behavior.
 - **UI:** Put Reality classification, Quintessence spent, and GM modifier on the same row when screen space permits. Quintessence and GM modifier use minus/plus rockers with visible values, accessible labels, immediate difficulty-preview updates and disabled buttons at their limits. On narrow screens, reality stays above the paired rockers to avoid horizontal scrolling.
