@@ -1,3 +1,16 @@
+# v0.1.15 Test Report — Release-note cleanup
+
+**Scope:** Player-facing changelog, README, GitHub release summary, release workflow and packaging. **No runtime JavaScript, CSS, icons, dice logic or world-data changes.**
+
+- **16 Node/mock regression suites: PASS**, including the new release-notes/version/manifest check. JavaScript syntax check: **PASS**.
+- **Installable ZIP: PASS**. The archive includes both updated release-note files, the human-readable README, preserved technical histories and the correct v0.1.15 manifest; CRC and path checks passed.
+- **Source comparison: PASS**. All **168 runtime and icon/launcher files** included in the previous published v0.1.14 package are **byte-for-byte identical** in v0.1.15.
+- **Browser checks:** The Improvised Magick and Quick Rote Chromium fixtures passed at 1440, 820 and 430 pixels in this run. The Basic Actions Chromium fixture stalled in this environment and is **not counted as a new pass**. The same source passed the Basic Actions browser fixture in v0.1.14, and was unchanged for this release.
+- **Live Foundry v14 + WoD20 + Combat Workflow v0.1.4:** **NOT VERIFIED**. This documentation change does not establish live runtime compatibility. The existing targeted-combat smoke test remains required.
+- **Release publication:** Pending user approval, GitHub merge and Actions verification. The connected GitHub actions cannot edit the body of the historical v0.1.14 release; the corrected human-readable notes will be used for v0.1.15 and subsequent releases.
+
+---
+
 # v0.1.14 Test Report - 2026-10-15
 
 ## Automated results

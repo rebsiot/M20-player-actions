@@ -14,20 +14,24 @@ if module_id != 'wod20-player-actions':
 name = f'wod20-player-magick-{version}.zip'
 if not version or not manifest.get('manifest') or not manifest.get('download','').endswith(f'/v{version}/{name}'):
     raise SystemExit('Version/manifest/download mismatch.')
+notes = (ROOT/'RELEASE-NOTES.md').read_text(encoding='utf-8')
+if not notes.startswith(f'# Player Actions v{version}\n'):
+    raise SystemExit('Release notes heading does not match module version.')
+
 required = [
-    'module.json','README.md','CHANGELOG.md','TEST-REPORT.md','ICONS-CREDITS.md',
+    'module.json','README.md','CHANGELOG.md','RELEASE-NOTES.md','TEST-REPORT.md','ICONS-CREDITS.md',
     'PLAYER-MAGICK-LAUNCHER.js','PLAYER-BASIC-ACTIONS-LAUNCHER.js',
     'scripts/player-actions.js','styles/player-actions.css',
     'icons/LICENSE.txt','icons/icon-authors.json'
 ]
 optional = []
-for pattern in ('05-HANDOFF-UPDATE-*.md','icons/*.svg','tests/*.cjs','tests/*.py'):
+for pattern in ('05-HANDOFF-UPDATE-*.md','icons/*.svg','tests/*.cjs','tests/*.py','docs/*.md'):
     optional += [str(f.relative_to(ROOT)) for f in ROOT.glob(pattern) if f.is_file()]
 icons = [x for x in optional if x.startswith('icons/') and x.endswith('.svg')]
 if len(icons) != 162:
     raise SystemExit(f'Expected 162 curated icons, found {len(icons)}.')
 tests=[x for x in optional if x.startswith('tests/') and x.endswith('.cjs')]
-if len(tests)<14:
+if len(tests)<16:
     raise SystemExit(f'Expected at least 14 Node tests, found {len(tests)}.')
 paths = sorted(set(required + optional))
 for rel in paths:

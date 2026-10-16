@@ -1,123 +1,107 @@
-## v0.1.14 - 2026-10-15 - Combat integration and readability (unpublished test build)
+# Release Notes — WoD20 Player Actions
 
-- **Standard Attack (Targeted):** New draggable catalog shortcut requiring exactly one target and an enabled **STL Combat Workflow v0.1.4+** (`stl-combat-workflow`). Calls its published API `api.open({attackerActor: actor})`; the separate Combat Workflow owns native Attack -> Defense -> Damage -> Soak -> Apply/Undo. No duplicate weapon/damage engine and no fallback to the WoD20 weapon dialog.
-- **Raw Attack:** Renamed generic and Brawl/Melee/Firearms hotbar shortcuts to explicitly indicate simple untargeted native WoD20 Attribute + Ability checks. No automatic defense/damage/soak.
-- **Use Magick:** Renamed shipped default Magick launcher, Actors sidebar action and catalog entry. Public API `openPanel()`/Shift+J/actor-bound Rotes remain stable. Unmodified catalog names are migrated without replacing customized macro names, scripts or images; GM-deleted shortcuts are not restored.
-- **Basic Actions readability:** Approximately 15% wider window (770 -> 885 px maximum), bolder/larger high-contrast action text, clearer dice pools and restrained tint. Original 20 presets + 5 private custom slots and 162 licensed SVGs are unchanged.
-- **Improvised Magick:** Effect/Focus description now collapses by default, matching the compact Rote editor. Sphere selection, difficulty, Focus choice, Paradox markers and native roll calculations unchanged.
-- **Catalog/permissions:** 40 catalog macros (was 39), all draggable by players. No hotbar auto-population, Actor migration, or modification of Combat Workflow module.
-- **Verification:** JS syntax, 15 Node/mock suites including new Combat Workflow contract checks and catalog migration, three Chromium fixtures at 1440/820/430 pixels; ZIP package integrity. **No live Foundry v14 / Combat Workflow integration test completed.**
-- **Upgrade/rollback:** Back up `Z:\Data\modules\wod20-player-actions` **and the world** before upgrading. Restore v0.1.13 code to roll back; world compendium edits and gameplay resource/health updates require separate backups or in-game Undo.
+These are the changes you will notice when playing. Newest versions are first. For technical implementation history, see [the archived developer changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
-## v0.1.13 — 2026-10-15 — Player Macro compendium (test build)
+## v0.1.15 — Clearer release notes
 
-- **Added:** Native GM-provisioned world Macro compendium **Player Actions — Hotbar Macros** with 39 Script Macros: 20 preset actions, 5 per-player/per-Actor custom slots, 2 dashboard/freeform tools, 3 Magick tools, and 9 combat/sheet shortcuts. Players drag any Macro themselves; no automatic hotbar assignments.
-- **Combat:** Attack chooser and direct Brawl/Melee/Firearms checks, Dodge/Block/Parry, native system Initiative, and Character Sheet link for weapon-specific damage/soak. No alternate dice, automated weapon damage or guessed soak rolls.
-- **Preserved:** All player-created custom slots, native WoD20 Attribute/Ability rolls, Actor selection (including GM last token), Magick/Rotes, Paradox classification, current world Macros and hotbar slots.
-- **World data:** One new compendium and hidden creation ledger are created on a GM's first login; no Actor/Item changes. Reference compendium is readable by players and not editable. Existing compendium documents are never overwritten; deleted macros are not restored on reload.
-- **Upgrade/rollback:** Back up the module directory **and world**. Upgrade the full v0.1.13 ZIP, restart and hard-refresh. Reinstall v0.1.12 to roll back code; the new world compendium will remain unless the GM chooses to remove it separately.
-- **Tests:** Node mock/syntax, module ZIP checks; live Foundry macro dragging and initiative pending.
+**What's changed**
 
-# Changes — WoD20 Player Magick
+- Rewrote the release history to explain what each update does, without making you wade through code and test details.
+- Updated the README and the GitHub release process to use a short, version-specific summary.
 
-## v0.1.12 — 2026-10-15 (Basic Actions clarity and icon expansion)
+**Gameplay is unchanged from v0.1.14.** Your characters, spells, custom actions, compendium macros and hotbars do not need to be reset.
 
-- **Correct chat card title:** Clicking **Notice**, **Search**, **React**, or any custom button now titles the native WoD20 chat card with that **action label**, not the underlying Ability name. The original Attribute + Ability breakdown, difficulty, wound penalty, specialties, native Willpower handling, rolled dice, and successes remain. This uses WoD20's existing `DiceRollContainer` and `DiceRoller` once, with no duplicate ChatMessage or altered dice engine.
-- **More custom SVGs:** Increased the bundled Game Icons library from **36 to 162** locally served SVGs, including Senses/Investigation, Movement, Social, Study, Technology/Tools, Magick, Combat/Defense, and Healing/Nature groups. Added searchable names, category filtering and a scrollable picker. Existing saved icon choices remain valid; the archive license and per-artist attribution are retained.
-- **Subtle pool strength cues:** Apply a restrained background tint on action buttons using the **base Attribute + Ability pool** (0 red, 4 yellow, 7+ green), with intermediate values interpolated and full text/dice counts preserved. The color never changes roll math or overrides the distinct custom-button controls.
-- **Compatibility:** Preserves the 20+5 compact layout, GM token precedence, user-scoped custom slots, Rotes and Player Magick, native `magic` rolls/Paradox markers, and manual-only hotbar use. No Actor migrations or changes to existing settings.
-- **Verification:** JavaScript syntax; 13 Node/mock tests including native chat-heading/wound/specialty/Willpower regression; 3 Chromium fixtures at widths 1440, 820, 430; 162 licensed SVG XML checks, packaging and ZIP CRC. Real Foundry **v0.1.12** behavior not yet tested. The v0.1.11 screenshot supplied by the user confirms why the original chat title needs correction.
-- **Upgrade / rollback:** Back up the world and `Z:\Data\modules\wod20-player-actions`, install the full v0.1.12 ZIP, restart Foundry and refresh. Roll back by restoring the v0.1.11 directory/ZIP; neither release migrates Actors.
+## v0.1.14 — Combat Workflow and a clearer interface
 
-## v0.1.11 - 2026-10-15 (Basic Actions and Game Icons)
+**What's new**
 
-- **Pre-release compactness refinement:** Reduced preset SVGs from 38px to 19px; changed action tile composition to an inline icon/title and a concise roll row (`Per + Alert` / `5d10`). Reduced button heights, row gutters, section padding, header and footer spacing, and maximum dashboard width from 890px to 770px. Full Attribute/Ability labels are retained in tooltips/accessibility labels; five custom slots receive the same compact layout, with edit and clear preserved. On narrow viewports, the bottom controls no longer overlay custom slots.
-- The 20 presets, five custom configurations, native WoD20 roll/Willpower handling, GM selection, Mage/Rote dialogs, icons and license are unchanged. These refinements are part of the **unpublished v0.1.11** PR, not a separate release.
+- **Standard Attack (Targeted)** requires one targeted defender and starts the separate **STL Combat Workflow**: attack, defense, damage, soak and GM health application or undo. Combat Workflow v0.1.4 or later must be enabled, and a GM must be online.
+- **Raw Attack** remains available when you only need a Brawl, Melee or Firearms dice check. It requires no target and does not calculate damage.
 
-- Added an optional **Player Basic Actions** Macro (GM creates once, player-readable, **no hotbar assignment**), opening a single five-column dashboard: 20 common action presets in four rows and 5 configurable actions in the fifth.
-- Bundled 36 selected SVGs from the supplied Game Icons archive (20 preset icons + curated custom icon picker); included the original `icons/LICENSE.txt` and `ICONS-CREDITS.md` with contributor attributions.
-- Custom actions have label, real Attribute, optional real Ability, icon, edit and clear; stored in a **per-user Foundry setting keyed by Actor UUID**, not written to character sheets.
-- Rolls route to native WoD20 Actor API with native Willpower option, and to native `DiceRoller` for supported Actors without an API. Difficulty stepper defaults to 6; preset buttons show current dice pools. Missing traits are disabled instead of silently guessed.
-- Preserved existing Player Magick launcher/button/Shift+J, quick Rotes, selected/previous GM token, localized Paradox recognition, existing resources and macro bindings.
-- Updated release packaging to include full selected icon assets, license/credits, new launcher, current handoff and all test fixtures; added icon assets to the release workflow trigger paths.
-- Verification: syntax, 12 Node/mock tests, 3 Chromium fixtures at desktop/medium/narrow sizes, SVG XML and archive CRC checks. **Live Foundry v14 not verified.**
-- Upgrade: back up `Z:\Data\modules\wod20-player-actions` and the world; install complete ZIP, restart Foundry and refresh. Rollback: restore v0.1.10 module ZIP/folder; pre-existing Actor data are unchanged.
+**What's improved**
 
-## v0.1.10 — 2026-10-15
+- **Player Magick** is now called **Use Magick** in the supplied shortcuts and player interface.
+- The Basic Actions window is about 15% wider, with easier-to-read button labels and dice pools.
+- The optional Effect / Focus description in Improvised Magick starts collapsed, like the Rote details.
+- The draggable macro collection now contains **40 shortcuts**. Existing hotbar positions and GM-customized macro content are preserved.
 
-- **GM caster priority:** When a GM launches Player Magick without an explicitly bound Actor, use the single selected canvas token first; if none is selected, resolve the last token selected. Previously remembered/assigned Actors are only fallback options. Previously selected synthetic/unlinked NPC tokens retain their own token Actor rather than reverting to the world base Actor.
-- **Token persistence:** A `controlToken` hook remembers the selected TokenDocument UUID in a hidden per-user Foundry v14 setting (`lastGmTokenUuid`). Deselecting the token does not clear it; deleting the token invalidates the reference and falls back safely. Quick consecutive selections queue setting writes in order. Multiple selected tokens prompt for a single selection rather than guessing.
-- **Preserved:** Regular players retain the v0.1.9 actor preference; explicit Actor UUID macro bindings are not overridden by token selection. Existing quick Rotes, casting options, native WoD20 roll/Paradox classification, world data and hotbars stay unchanged.
-- **Automated tests:** All **11** Node/mock tests passed, including new `gm-token-priority.cjs` covering current/previous tokens, per-GM persistence, unlinked synthetic Actors, stale token fallback, multi-selection, player isolation, and bound macros. Syntax and ZIP integrity checks passed. **Not live-tested in Foundry v14.**
-- **Upgrade/rollback:** Back up the world and module directory before upgrading; install the complete ZIP, restart and refresh. Restore v0.1.9 to roll back. No migration is run. Casting can still deduct in-world resources after pressing Roll.
+## v0.1.13 — Drag actions straight to your hotbar
 
-## v0.1.9 — 2026-10-15
+- Added **Player Actions — Hotbar Macros**, a compendium of 39 draggable shortcuts: Basic Actions, five custom slots, Magick, attacks, defenses, Initiative and utility tools.
+- Players choose which shortcuts they want. Nothing is automatically placed on a hotbar.
+- A GM creates the world compendium on first login. Players can read and use it without editing its master macros.
 
-- **Improved roll clarity:** Make final Difficulty the dominant, high-contrast value in the upper-right casting summary, with readable Arete dice, highest chosen Sphere, Quintessence reduction, and Willpower effect alongside it. Remove the extra lower roll-summary line. Willpower shows +1 success or +3 dice according to the installed WoD20 setting; no new bonus is calculated.
-- **Quintessence remaining:** Move available Quintessence out of the top header and label the rocker `Quintessence (N remaining)`, reducing the displayed remaining amount immediately as the player steps up the planned expenditure. The server-side actual-resource check and after-roll spending remain unchanged.
-- **Fast known-Rote casting:** Selecting a Rote with readable and available Sphere requirements opens a smaller confirmation showing the named Rote and required Sphere levels, live Difficulty, and only the necessary casting decisions. **Edit Spheres / Advanced** opens the original full prefilled editor; a Rote without recognized or usable requirements safely falls back to that editor. Neither pathway bypasses the native Arete roll, character ownership checks, or the Paradox-die classification marker.
-- **Verification:** Ten Node/mock tests passed, including Rote quick cast/Advanced/fallback, plus two Chromium fixtures (improvised and Rote) at 1440, 820, and 430 pixels. No horizontal overflow. Live Foundry v14 verification remains pending.
-- Changed the inline casting header from a distant **Change** button to a character-name dropdown directly after **Casting as**. It includes only owned/GM-accessible Mage Actors and defaults to the remembered or assigned Mage; choosing another saves that preference and opens a fresh casting screen for that Mage without a second chooser dialog.
-- Added the **live final Difficulty** to the same compact casting header. Shows a dash until a Sphere is selected, then updates on Sphere, Reality, Quintessence, or GM modifier changes. Removed duplicate difficulty from the lower preview.
-- Clarified all three Reality labels to read `+3/+4/+5 to highest Sphere` without changing math or Paradox markers.
-- No new auto-hotbar behavior, no dice engine, resource, or Paradox listener changes. Existing Rote data, launcher macro, and World IDs/flags remain intact.
-- Initial v0.1.9 checks were supplemented by the ten-test final pass noted above; live Foundry verification still pending.
+## v0.1.12 — Better roll names and more icons
 
+- Chat cards now show the **button you clicked** (such as **Notice**) instead of merely the underlying Ability (such as Alertness).
+- Expanded the custom-button icon picker to **162 searchable Game Icons** with categories.
+- Added gentle dice-pool shading: weaker pools lean red, midrange yellow, and stronger pools green. The color is only a visual guide; it never changes a roll.
 
-## v0.1.8 -- 2026-10-15
-- **UI:** Replace the three tall caster/Arete/Quintessence cards with one compact character-and-resources strip, retaining the small Change button and remembered character behavior.
-- **UI:** Put Reality classification, Quintessence spent, and GM modifier on the same row when screen space permits. Quintessence and GM modifier use minus/plus rockers with visible values, accessible labels, immediate difficulty-preview updates and disabled buttons at their limits. On narrow screens, reality stays above the paired rockers to avoid horizontal scrolling.
-- **UI:** Move Use Focus, Spend 1 Willpower and Extended casting/ritual to one checkbox row; place Effect/focus description below the action controls and the collapsed Casting rules expander after the description. Keep Sphere cards and their own collapsed rules guides.
-- **Focus:** Use Focus is an optional, initially unchecked, descriptive marker on the existing native chat card. Checking it adds `Focus used` to roll notes, but never changes the dice pool, difficulty or resources automatically; the GM modifier remains the explicit place for an agreed adjustment.
-- **Preserved:** WoD20 native DiceRoller, localized Coincidental/Vulgar label needed by the separate Dice Improvements Paradox-die listener, per-user character preference, Rotes, Quintessence/Willpower handling, optional launcher and zero automatic hotbar assignments.
-- **Testing:** Eight Node/mock contract tests plus actual Chromium fixture clicks and responsive layout checks at 1440/820/430 widths; syntax and ZIP integrity. **Not verified in live Foundry v14.**
-- **Upgrade/rollback:** Module-only code and CSS changes; no migration. Back up the existing module directory/world and restore v0.1.7 if necessary. GitHub publishing requires merge of the v0.1.8 PR.
+## v0.1.11 — Basic Actions dashboard
 
-## v0.1.7 — 2026-10-15
-- **Changed:** Condensed Mage chat cards without replacing WoD20's renderer. The action/title appears only once; the native `dicetext` now shows the Arete pool (e.g., `3d10`) instead of a second copy of the action; duplicate `systemText` is suppressed on Mage rolls. Power/general rolls retain the prior fields.
-- **Changed:** Removed the redundant `Reality: coincidental` line, redundant difficulty breakdown (WoD20 already adds the final difficulty), and zero-value modifier notes. Nonzero situational and Quintessence adjustments appear in a single concise `Modifiers:` line. Ritual notes remain when selected.
-- **Preserved:** Exact localized `Coincidental spell`/`Vulgar spell` classification in native `extraInfo` for Dice Improvements Paradox-die detection, single native `magic` roll, per-user character choice, optional launcher macro and no automatic hotbar setup. Does not process Paradox.
-- **Tests:** All seven Node mock/contract tests passed, including the new native-card formatting test, plus JS syntax and ZIP integrity. **Live Foundry v0.1.7 not verified.**
-- **Upgrade/rollback:** Complete v0.1.7 ZIP, no schema migration. Back up the installed module and world; restore v0.1.6 to roll back. Confirm chat card content and Paradox detection on a real Mage before retiring the backup.
+- Added **20 ready-made actions** in four rows, plus **five configurable buttons** for your own Attribute + Ability checks.
+- Each action has an icon, readable dice pool, and direct native WoD20 roll.
+- Players can rename, reconfigure or clear their custom buttons. Choices are saved separately for each player and character.
+- Kept the dashboard compact and created an optional launcher without automatically assigning it to the hotbar.
 
-## v0.1.6 — 2026-10-15
-- **Fixed:** Remember the last character explicitly chosen via **Change Character** in a Foundry v14 user-scoped setting (per player, per world; survives logout and changing devices). Before any explicit choice, use the assigned Foundry character as before. Validate ownership whenever restoring a saved character.
-- **Fixed:** Native `magic` chat rolls include the exact localized WoD20 Coincidental/Vulgar casting label so the independent Dice Improvements v0.2.0 Paradox-die listener can recognize the casting roll. The v0.1.5 `Reality:` note is retained alongside the label.
-- **Preserved:** Only one native WoD20 Arete roll per cast. No new Paradox engine, flags, accounting, or duplicate listeners. Explicitly bound macros still target their original Actor. The optional Player Magick launcher remains; no hotbar assignment is made.
-- **Upgrade/rollback:** Safe module-only code update, no Actor or chat migration. Back up the module folder and world. To roll back, restore v0.1.5 files; existing per-user preferences remain harmless but are ignored by v0.1.5.
-- **Automated tests:** Six Node mock/contract tests, JavaScript syntax, ZIP CRC and module metadata passed.
-- **Live Foundry:** Not yet tested. Validate actor switching across reopen/relogin, then a native spell chat card on a Mage with existing Paradox using Dice Improvements v0.2.0 (old Paradox module disabled).
+## v0.1.10 — Better GM character selection
 
-## v0.1.4 — 2026-10-15
+- The GM casts with the **selected token**, or the **last selected token** if none is currently selected.
+- Unlinked NPC tokens use their own token-specific Actor, rather than the base Actor.
+- Players' character preferences and explicitly actor-bound Rote macros continue to work as before.
 
-- Renamed Actors sidebar and Shift+J action to **Player Magick**. The **module ID remains `wod20-player-actions`**.
-- The assigned Foundry user character is used by default, ahead of any selected token. Explicit Actor UUID bindings in existing macros continue to override this default. Character selection remains accessible as a secondary option.
-- Redesigned the guided casting dialog as a wider, viewport-sensitive layout: three/two/one-column Sphere cards; larger clickable Sphere-rank buttons; collapsed dot-level explanations; consolidated character/Arete/Quintessence header and casting settings; live difficulty preview; optional character change.
-- Removed player-facing macro generation, Macro buttons, embedded Item pins, drag-to-hotbar creation, and the hotbarDrop hook. **No user's hotbar is populated, changed or cleared.** Existing macros remain usable through `api.execute`.
-- Kept the native WoD20 dice engine, `magic` chat origin, rules/math, Rote handling, native Power delegation, and delayed Quintessence deduction. This module has **no Paradox module dependency or Paradox state changes**.
-- Added mock tests for character default, no hotbar side effects, legacy macro execution, and new dialog. No live Foundry test claimed.
+## v0.1.9 — Faster Rotes and clearer difficulty
 
-## v0.1.3 — 2026-10-12
+- Added a smaller **Quick Rote Cast** window. Advanced options remain available when needed.
+- Made final casting Difficulty prominent, clarified Reality modifiers, and showed the Quintessence remaining after a planned spend.
+- Made it easier to switch between characters from the casting window.
 
-- Fixed blank Mage chat cards by selecting the supported native WoD20 roll origin `magic` instead of unsupported `arete`.
-- Power rolls use native roll origin `power` rather than an unsupported identifier.
+## v0.1.8 — Less clutter while casting
 
-## v0.1.2 — 2026-10-12
+- Grouped casting settings and resources into a more compact layout.
+- Added **Use Focus** as an optional chat note, without applying an unrequested dice modifier.
+- Kept additional casting rules and explanations out of the way until expanded.
 
-- Restricted Sphere pickers to the character's known Sphere levels; added expandable per-dot capability guides.
-- Added dynamic highlight of selected Sphere tiers and optional effect/focus description.
+## v0.1.7 — Cleaner spell-roll messages
 
-## v0.1.1 — 2026-10-12
+- Removed repeated labels and redundant information from Mage chat cards.
+- Kept native WoD20 dice rolls and the casting labels needed by the separate Paradox listener.
 
-- Fixed Actors sidebar action registration during Foundry v14 startup; registered Shift+J at init and backfilled already-rendered sidebar.
-- Added initial character picker/change option when no selected token or assigned character existed.
+## v0.1.6 — Remember your Mage
 
-## v0.1.0 — 2026-10-12
+- Remembered the character you selected for casting between sessions.
+- Corrected native spell labels so the separate Dice Improvements Paradox listener can recognize eligible casts.
 
-- Initial Player Actions panel, guided Mage/Rote casting, native WoD20 dice bridge, optional Power activation, and explicit hotbar shortcut creation (now paused in v0.1.4).
+## v0.1.5 — Optional hotbar launcher
 
-## v0.1.5 — 2026-10-15
-- Create exactly one optional `Player Magick` launcher Macro in the world Macro Directory when a GM loads the module.
-- Players may drag it to a hotbar manually; never automatically assign any hotbar slot.
-- Existing macros and duplicate-name entries are preserved without overwrites.
-- No changes to WoD20 native rolls or Paradox interaction.
+- Added an optional **Player Magick** launcher macro, available for players to place on their hotbars manually.
+- Existing world macros and hotbar assignments were left alone.
+
+## v0.1.4 — Simpler guided Magick
+
+- Improved the Sphere picker and guided casting layout.
+- Used the player's assigned character by default, with character switching available.
+- Removed automatic macro and hotbar generation from the casting interface.
+
+## v0.1.3 — Working native spell cards
+
+- Fixed blank Mage chat cards by using WoD20's supported magic roll type.
+- Kept Power rolls on WoD20's supported Power roll path.
+
+## v0.1.2 — Sphere guidance
+
+- Limited Sphere rank choices to what the character knows.
+- Added expandable explanations of Sphere capabilities and an optional effect description.
+
+## v0.1.1 — Reliable Foundry launcher
+
+- Fixed the Actors sidebar launcher appearing inconsistently during Foundry startup.
+- Added a character choice when no selected or assigned character was available.
+
+## v0.1.0 — First release
+
+- Introduced guided Mage casting, Rotes and native WoD20 dice integration.
+
+---
+
+**Install and rollback:** Back up your world and `Z:\\Data\\modules\\wod20-player-actions` before updating. Restart Foundry and reload clients after installation. Restoring an older module version does not undo gameplay changes such as damage or spent resources. For prerequisites, troubleshooting and the full workflow, see [README](README.md).
