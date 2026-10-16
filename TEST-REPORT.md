@@ -7,13 +7,13 @@
 - Chromium tutorial fixture: PASS at 1440, 820, and 430px for step navigation, checkbox layout, opt-out, reopened help and clipping.
 - Full installable ZIP, versioned release notes, native module folder layout and CRC: PASS on local package build.
 - **Live Foundry v14:** NOT VERIFIED. Follow the handoff smoke-test steps before considering this live-confirmed.
-- **Published GitHub release:** NOT YET VERIFIED as of source preparation; record publication separately after it succeeds.
+- **Published GitHub release:** PASS — v0.1.17 merged through PR #13; GitHub Actions run 38955801932 completed successfully. The published ZIP `wod20-player-magick-0.1.17.zip` has recorded SHA-256 `62292d111fbe3e876f83a91e1456311e36d19fea697d573ff01f013f9ee099b3`. The complete patched runtime source was committed to `main`. This does not establish live Foundry verification.
 
 ---
 
 # v0.1.16 Test Report - 2026-10-16
 
-**Status:** Candidate archive built locally; not installed, published to GitHub, or verified in live Foundry. v0.1.15 was published on GitHub on 2026-10-16.
+**Status:** v0.1.16 was merged and published on GitHub on 2026-10-16 (PR #12; Actions run 38952834950: success). The automated suites and ZIP packaging passed, but live Foundry and cross-module checks remain unverified.
 
 ## Automated checks - PASS
 
