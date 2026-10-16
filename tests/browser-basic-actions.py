@@ -79,11 +79,30 @@ with sync_playwright() as p:
     assert not counts['horizontal'] and not counts['overflow'],(width,counts)
     assert counts['cols']==(3 if width==430 else 5),(width,counts)
     assert counts['iconCount']==20
+    # Compact v0.1.11 revision: full action titles and actual dice pools remain
+    # readable alongside meaningful abbreviated Attribute + Ability pairs.
+    assert page.locator('.wpa-basic-pair').count()==20
+    assert page.locator('[data-basic-preset="notice"] .wpa-basic-pair').inner_text()=='Per + Alert'
+    assert page.locator('[data-basic-preset="occult"] .wpa-basic-pair').inner_text()=='Int + Occ'
+    assert 'Perception + Alertness' in page.locator('[data-basic-preset="notice"]').get_attribute('title')
+    compact=page.evaluate('''() => ({
+      iconSizes:[...document.querySelectorAll('.wpa-basic-tile img')].map(x=>getComputedStyle(x).width),
+      tileHeight:Math.round(document.querySelector('.wpa-basic-tile').getBoundingClientRect().height),
+      panelHeight:Math.round(document.querySelector('.wpa-basic').getBoundingClientRect().height),
+      clipping:[...document.querySelectorAll('.wpa-basic-tile,.wpa-basic-tile-main,.wpa-basic-tile-meta')]
+        .filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>({cls:el.className,content:el.textContent.trim().slice(0,70)}))
+    })''')
+    assert compact['iconSizes']==['19px']*20,(width,compact)
+    assert compact['tileHeight']<=65,(width,compact)
+    assert compact['panelHeight']<=(660 if width>=820 else 790),(width,compact)
+    assert not compact['clipping'],(width,compact)
     if width==820:
       (ROOT.parent/'preview-basic-actions-820.png').parent.mkdir(parents=True,exist_ok=True)
       page.screenshot(path=str(ROOT.parent/'preview-basic-actions-820.png'),full_page=True)
     if width==1440:
       page.screenshot(path=str(ROOT.parent/'preview-basic-actions-desktop.png'),full_page=True)
+    if width==430:
+      page.screenshot(path=str(ROOT.parent/'preview-basic-actions-mobile.png'),full_page=True)
     # Roll directly via native WoD20 Actor API. Difficulty and Willpower persist only until rolling.
     page.locator('[data-basic-step="1"]').click()
     assert page.locator('[data-basic-difficulty]').inner_text()=='7'

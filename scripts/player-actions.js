@@ -627,6 +627,19 @@ const BASIC_ROWS = [
 const BASIC_ATTRIBUTE_ORDER = ["strength", "dexterity", "stamina", "charisma", "manipulation", "appearance", "perception", "intelligence", "wits"];
 const basicTitle = (str) => String(str ?? "").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/[_-]/g," ").replace(/\b\w/g, ch=>ch.toUpperCase());
 const basicId = (str) => String(str ?? "").toLowerCase().replace(/[^a-z0-9]/g,"");
+// Compact dashboard abbreviations only; full trait names remain in the accessible
+// button label / hover text. Unknown/custom trait names use a readable prefix.
+const BASIC_ATTRIBUTE_SHORT = {
+  strength:"Str", dexterity:"Dex", stamina:"Sta", charisma:"Cha", manipulation:"Man",
+  appearance:"App", perception:"Per", intelligence:"Int", wits:"Wits"
+};
+const BASIC_ABILITY_SHORT = {
+  alertness:"Alert", awareness:"Aware", investigation:"Invest", empathy:"Emp",
+  stealth:"Stlth", athletics:"Athl", survival:"Surv", expression:"Expr",
+  subterfuge:"Subt", intimidation:"Intim", etiquette:"Etiq", leadership:"Lead",
+  occult:"Occ", academics:"Acad", computer:"Comp", medicine:"Med"
+};
+const basicShortTrait = (label, lookup) => lookup[basicId(label)] || basicTitle(label).replace(/\s+/g,"").slice(0,6);
 const basicIcon = (name) => `modules/${MOD}/icons/${BASIC_ICONS.includes(name) ? name : "dice-six-faces-one"}.svg`;
 const basicItems = (actor) => Array.from(actor?.items ?? []);
 function basicAttributes(actor) {
@@ -689,10 +702,14 @@ function basicTileHTML(actor, action, dataAttr, custom=false) {
   const desc = `${basicTitle(action.attr)}${action.abilityId || action.ability ? ` + ${t.ability?.name || action.abilityId || action.ability}` : ""}`;
   const pool = t.missing ? "Not on sheet" : `${t.pool}d10`;
   const tooltip = `${action.label}: ${desc}${t.missing ? ` (${t.missing})` : ` = ${t.pool} dice`}`;
+  const attrShort = basicShortTrait(t.attr?.label || action.attr, BASIC_ATTRIBUTE_SHORT);
+  const abilityName = t.ability?.name || action.ability || action.abilityId;
+  const pairShort = `${attrShort}${abilityName ? ` + ${basicShortTrait(abilityName,BASIC_ABILITY_SHORT)}` : ""}`;
   return `<button type="button" class="wpa-basic-tile${custom ? " is-custom" : ""}" ${dataAttr}
     aria-label="${escape(tooltip)}" title="${escape(tooltip)}"${t.missing ? " disabled" : ""}>
-    <img src="${basicIcon(action.icon)}" alt="" loading="lazy">
-    <strong>${escape(action.label)}</strong><span class="wpa-basic-pool${t.missing ? " unavailable" : ""}">${escape(pool)}</span>
+    <span class="wpa-basic-tile-main"><img src="${basicIcon(action.icon)}" alt="" loading="lazy"><strong>${escape(action.label)}</strong></span>
+    <span class="wpa-basic-tile-meta"><span class="wpa-basic-pair">${escape(pairShort)}</span>
+      <span class="wpa-basic-pool${t.missing ? " unavailable" : ""}">${escape(pool)}</span></span>
   </button>`;
 }
 function basicDashboardHTML(actor) {
@@ -703,7 +720,8 @@ function basicDashboardHTML(actor) {
   const custom = slots.map((action,i)=>`<div class="wpa-basic-custom-cell">
     ${action ? basicTileHTML(actor,action,`data-basic-custom="${i}"`,true) :
      `<button type="button" class="wpa-basic-tile is-empty" data-basic-config="${i}" aria-label="Configure custom action ${i+1}">
-        <span class="wpa-basic-plus" aria-hidden="true">+</span><strong>Configure</strong><span class="wpa-basic-pool">Action ${i+1}</span>
+        <span class="wpa-basic-tile-main"><span class="wpa-basic-plus" aria-hidden="true">+</span><strong>Configure</strong></span>
+        <span class="wpa-basic-tile-meta"><span class="wpa-basic-pool">Action ${i+1}</span></span>
       </button>`}
     ${action ? `<button type="button" class="wpa-basic-edit" data-basic-config="${i}" aria-label="Edit or clear ${escape(action.label)}" title="Edit / Clear"><i class="fas fa-pen" aria-hidden="true"></i></button>` : ""}
   </div>`).join("");
@@ -804,7 +822,7 @@ async function openBasicActions(actor=null) {
   const viewportWidth = Number(globalThis.innerWidth) || 1060;
   const popup = new foundry.applications.api.DialogV2({
     window:{title:`Basic Actions - ${actor.name}`},
-    position:{width:Math.min(890,Math.max(320,viewportWidth-50))},
+    position:{width:Math.min(770,Math.max(320,viewportWidth-50))},
     content:basicDashboardHTML(actor),
     buttons:[{action:"close",label:"Close"}]
   });
