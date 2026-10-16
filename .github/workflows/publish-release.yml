@@ -48,5 +48,5 @@ jobs:
             gh release create "$tag" "$zip" \
               --target "$GITHUB_SHA" \
               --title "WoD20 Player Actions $tag" \
-              --notes "WoD20 Player Actions: GM-provisioned player-readable world Macro compendium with 39 draggable shortcuts (20 Basic Actions, five custom slots, Dodge, Attack, Initiative, Magick, Rotes, dashboards). No automatic hotbar assignments; native WoD20 dice, wound, specialty and Paradox contracts preserved. The world compendium persists after code rollback. Back up world and module before upgrading. Automated tests passed; live Foundry v14 drag-and-roll verification pending."
+              --notes-file RELEASE-NOTES.md
           fi
