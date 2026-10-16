@@ -1,5 +1,19 @@
 # v0.1.10 Test Report — 2026-10-15
 
+## v0.1.11 - Basic Actions with Game Icons (2026-10-15)
+
+**Status: locally packaged and verified by static / Node mocks / Chromium fixtures. NOT tested inside a live Foundry v14 world.**
+
+- Source: released v0.1.10. Verified `scripts/player-actions.js` Git blob SHA (`0231c1357cc64e11828592ac6a422d0e94ffffab`) before editing.
+- JavaScript: `node --check scripts/player-actions.js` passed.
+- **12 Node/mock regressions:** existing 11 plus `tests/basic-actions.cjs`; the updated `launcher.cjs` validates two optional world Macro launchers and zero hotbar assignments. Tests cover known spell/Pardox labels, GM selected/previous token precedence, known Rote shortcuts, native WoD20 roll routing, twenty presets, actual 36 icon files and license, user-scoped custom settings per Actor, custom edit/clear semantics, missing Ability guard, native Actor ability options and NPC DiceRoller fallback.
+- **3 Chromium fixtures**, each at viewport widths **1440, 820, 430**: new `tests/browser-basic-actions.py` validates real embedded SVG icon loading, 4x5 + 5 grid, direct native-roll API options, difficulty rocker, Willpower reset, custom save/roll/clear, responsive columns, no horizontal overflow; the two prior `browser-ui.py` and `browser-rote-quick.py` fixtures still pass.
+- 36 SVGs validated as XML, without script/onload/foreignObject or external injected resources. The original ZIP archive's creator attribution text is packaged verbatim, plus a curated author credit list.
+- Release ZIP: `tools/package_release.py` builds the complete top-level `wod20-player-actions/` module including all 36 icons, both Macro source files, README, credits, tests and handoffs. ZIP CRC, manifest version/URL, safe paths and expected size verified.
+- **Compact layout refinement:** Updated Basic Actions HTML and CSS, added explicit `Per + Alert`/`Int + Occ` and full accessible tooltip assertions to Node tests, and added Chromium assertions for all 20 `19px` SVGs, button height (≤65px), complete roll-pair text, no clipped buttons and desktop panel height ≤660px. Confirmed all 12 Node tests plus all Chromium fixtures (1440/820/430 px) remain green after the revision. Narrow screens use 3 columns and scroll; the bottom controls no longer obscure custom slots. The native roll implementation was not modified.
+- **No live tests of native Actor API, chat rendering, token permissions, or Willpower expenditure in Foundry**. Test on a backed-up world; do not interpret headless Chromium or Node mocks as end-to-end success.
+- First live test: as a player, manually drag `Player Basic Actions` from Macro Directory to a hotbar slot. Click Notice and check Attribute + Ability + Difficulty in native chat; test one Willpower roll and one saved custom action. As GM test selected/last token and an NPC. Confirm Player Magick's quick Rote still works.
+
 ## Automated verification
 
 - `node --check scripts/player-actions.js`: **passed**.

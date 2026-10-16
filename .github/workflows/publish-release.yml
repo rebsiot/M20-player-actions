@@ -7,7 +7,11 @@ on:
       - module.json
       - scripts/**
       - styles/**
+      - icons/**
       - tests/**
+      - PLAYER-BASIC-ACTIONS-LAUNCHER.js
+      - PLAYER-MAGICK-LAUNCHER.js
+      - ICONS-CREDITS.md
       - tools/package_release.py
       - .github/workflows/publish-release.yml
   workflow_dispatch:
@@ -43,6 +47,6 @@ jobs:
           else
             gh release create "$tag" "$zip" \
               --target "$GITHUB_SHA" \
-              --title "Player Magick $tag" \
-              --notes "Foundry VTT v14 / WoD20 Player Magick. Persistent per-player Mage selection, localized native WoD20 spell labels for independent Dice Improvements Paradox-die detection, and no automatic hotbar assignments or duplicate Paradox accounting. Local automated tests passed; live Foundry verification pending. Upgrade: back up your installed module and world, then install this versioned ZIP; restore the prior module folder to roll back."
+              --title "WoD20 Player Actions $tag" \
+              --notes "Foundry v14 / WoD20 Player Actions: 20 icon-led Basic Actions, five private per-character custom buttons, curated Game Icons SVGs with author credits, and the existing Player Magick casting tools. All rolls use native WoD20 mechanisms; no automatic hotbar assignment or duplicate Paradox accounting. Automated tests passed; live Foundry client verification pending. Back up your module and world before upgrading; restore the previous version to roll back."
           fi

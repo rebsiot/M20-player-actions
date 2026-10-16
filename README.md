@@ -1,10 +1,31 @@
-# WoD20 Player Magick
+# WoD20 Player Actions (Player Magick + Basic Actions)
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.10 (2026-10-15)  
+**Release:** v0.1.11 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
+
+## Basic Actions dashboard (new in v0.1.11)
+
+From the **Macro Directory**, run **Player Basic Actions**, or drag that optional launcher Macro to your own hotbar. The module creates it once for GM-run worlds, but **never populates anyone's hotbar**. The existing **Player Magick** launcher, Actors sidebar button, and **Shift+J** remain intact. You can also invoke `game.modules.get("wod20-player-actions").api.openBasicActions()` from an existing macro.
+
+The Basic Actions window shows **four rows of five illustrated preset actions** and a **fifth row of five configurable buttons**. The 20 presets use these suggested Attribute + Ability combinations (the Storyteller may choose different combinations as circumstances warrant):
+
+| Row | Action | Attribute + Ability |
+| --- | --- | --- |
+| Awareness | Notice, Sense Magick, Search, Read Someone, React | Perception + Alertness; Perception + Awareness; Perception + Investigation; Perception + Empathy; Wits + Alertness |
+| Movement | Sneak, Climb, Run, Jump, Track | Dexterity + Stealth; Strength + Athletics; Stamina + Athletics; Strength + Athletics; Perception + Survival |
+| Social | Charm, Deceive, Intimidate, Negotiate, Lead | Charisma + Expression; Manipulation + Subterfuge; Manipulation + Intimidation; Manipulation + Etiquette; Charisma + Leadership |
+| Knowledge | Occult, Research, Investigate, Computer, First Aid | Intelligence + Occult; Intelligence + Academics; Intelligence + Investigation; Intelligence + Computer; Intelligence + Medicine |
+
+Each compact preset button shows a **19px Game Icons SVG**, its action name, an abbreviated **Attribute + Ability** pairing (such as `Per + Alert`), and the character's computed pool (`5d10`). Hover for the full Attribute/Ability names. The dashboard is 770px wide on desktop, with reduced padding, gaps and button height; it remains responsive. **Click the button to roll immediately** using the installed WoD20 Actor API (`rollAbility`/`rollAttribute`) where available; supported NPCs use the existing native WoD20 DiceRoller as a fallback. Standard actions requiring an Ability absent from the sheet are labeled **Not on sheet** and disabled rather than silently substituting another Ability. **Sense Magick** here is the basic Perception + Awareness roll; it does not cast Sphere magick.
+
+**Custom buttons:** Click **Configure** in any of the five empty slots; choose a label, a real Attribute from the selected character, an Ability from that character (or Attribute only), and an icon from the curated set. Save. Click the resulting button to roll; use the small **pencil** on the button to reconfigure or **Clear Slot**. Your custom settings are stored **per player and per Actor UUID**, in the hidden user-scoped Foundry setting `basicActionsByActor`, not in the Actor. Five custom slots for Eli won't overwrite five for Chloe. Changing a character's sheet Traits can make an existing custom action unavailable until edited.
+
+**Difficulty / Willpower:** The footer offers a 2-10 difficulty rocker, default 6, and an optional **Spend 1 Willpower** checkbox. WoD20 handles Willpower using its native rolling mechanism; the checkbox resets after rolling. This module does not run another success or resource engine. GM Basic Actions use the same selected-token / previous-token priority as Player Magick. Multiple selected GM tokens must be narrowed to one rather than selecting an arbitrary Actor.
+
+**Game Icons:** The release bundles 36 selected SVGs from the supplied `game-icons.net.svg.zip`, NOT the entire archive. Attribution and license are included in `ICONS-CREDITS.md` and `icons/LICENSE.txt`; the original authors are credited as required by the archive's CC BY 3.0 license terms. Only the five custom actions have editable icons; presets use fixed, legible defaults.
 
 ## What the player sees
 
@@ -89,13 +110,13 @@ Player Magick **does not** read, roll, update, or account for Paradox and does n
 
 ## Rollback
 
-Restore your backed-up `wod20-player-actions` module directory or the v0.1.9 ZIP, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
+Restore your backed-up `wod20-player-actions` module directory or the published v0.1.10 ZIP, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
 
 ## Testing and known limits
 
 Tests run: JS syntax verification and eleven Node-based mock/contract tests, including GM selected/previous token precedence and unlinked token preservation, native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 improvised and Rote dialogs were rendered and exercised in Chromium fixtures at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls, Rote presets, Advanced opening and no-horizontal-overflow checks passed.
 
-**Live Foundry v14 of v0.1.10: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.10 GM token-selection behavior has not yet been observed in a live Foundry client. The existing v0.1.9 UI fixtures remain historical tests of the casting layout. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.11: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.10 GM token-selection behavior has not yet been observed in a live Foundry client. The existing v0.1.9 UI fixtures remain historical tests of the casting layout. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
 See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.10.md`.
 
@@ -108,3 +129,7 @@ Install from the Foundry **Install Module** dialog using this manifest URL:
 `https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json`
 
 The manifest's `download` field points at the matching versioned GitHub Release ZIP. To upgrade an existing installation, back up the module folder and your Foundry world before installing or replacing files; modules are enabled separately in each world. A release tag is published by the repository workflow after its packaging, syntax, and mock tests pass. Live Foundry functionality is **not** established by a successful publishing workflow.
+
+## v0.1.11 test status
+
+The Basic Actions dashboard has an additional Node contract test and a real Chromium HTML/CSS/interaction fixture (1440, 820, 430 px) for preset icons and pools, native API routing, Difficulty/Willpower, custom action save/clear and responsive layout. **No live Foundry v14 client test has been performed for v0.1.11**; static and mock test reports are in `TEST-REPORT.md`.

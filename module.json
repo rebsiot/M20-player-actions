@@ -1,8 +1,8 @@
 {
   "id": "wod20-player-actions",
-  "title": "WoD20 Player Magick",
-  "description": "Mage casting with GM selected/previous token priority, player character dropdown, quick Rotes, live difficulty and native WoD20 rolls; no automatic hotbar assignments.",
-  "version": "0.1.10",
+  "title": "WoD20 Player Actions",
+  "description": "Twenty icon-led native WoD20 Basic Action buttons, five per-character customizable buttons, and established Player Magick casting; GM token selection, quick Rotes and no automatic hotbar assignments.",
+  "version": "0.1.11",
   "authors": [
     {
       "name": "Community tools"
@@ -33,5 +33,5 @@
   "readme": "README.md",
   "url": "https://github.com/rebsiot/M20-player-actions",
   "manifest": "https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json",
-  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.10/wod20-player-magick-0.1.10.zip"
+  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.11/wod20-player-magick-0.1.11.zip"
 }

@@ -1,5 +1,19 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.11 - 2026-10-15 (Basic Actions and Game Icons)
+
+- **Pre-release compactness refinement:** Reduced preset SVGs from 38px to 19px; changed action tile composition to an inline icon/title and a concise roll row (`Per + Alert` / `5d10`). Reduced button heights, row gutters, section padding, header and footer spacing, and maximum dashboard width from 890px to 770px. Full Attribute/Ability labels are retained in tooltips/accessibility labels; five custom slots receive the same compact layout, with edit and clear preserved. On narrow viewports, the bottom controls no longer overlay custom slots.
+- The 20 presets, five custom configurations, native WoD20 roll/Willpower handling, GM selection, Mage/Rote dialogs, icons and license are unchanged. These refinements are part of the **unpublished v0.1.11** PR, not a separate release.
+
+- Added an optional **Player Basic Actions** Macro (GM creates once, player-readable, **no hotbar assignment**), opening a single five-column dashboard: 20 common action presets in four rows and 5 configurable actions in the fifth.
+- Bundled 36 selected SVGs from the supplied Game Icons archive (20 preset icons + curated custom icon picker); included the original `icons/LICENSE.txt` and `ICONS-CREDITS.md` with contributor attributions.
+- Custom actions have label, real Attribute, optional real Ability, icon, edit and clear; stored in a **per-user Foundry setting keyed by Actor UUID**, not written to character sheets.
+- Rolls route to native WoD20 Actor API with native Willpower option, and to native `DiceRoller` for supported Actors without an API. Difficulty stepper defaults to 6; preset buttons show current dice pools. Missing traits are disabled instead of silently guessed.
+- Preserved existing Player Magick launcher/button/Shift+J, quick Rotes, selected/previous GM token, localized Paradox recognition, existing resources and macro bindings.
+- Updated release packaging to include full selected icon assets, license/credits, new launcher, current handoff and all test fixtures; added icon assets to the release workflow trigger paths.
+- Verification: syntax, 12 Node/mock tests, 3 Chromium fixtures at desktop/medium/narrow sizes, SVG XML and archive CRC checks. **Live Foundry v14 not verified.**
+- Upgrade: back up `Z:\Data\modules\wod20-player-actions` and the world; install complete ZIP, restart Foundry and refresh. Rollback: restore v0.1.10 module ZIP/folder; pre-existing Actor data are unchanged.
+
 ## v0.1.10 — 2026-10-15
 
 - **GM caster priority:** When a GM launches Player Magick without an explicitly bound Actor, use the single selected canvas token first; if none is selected, resolve the last token selected. Previously remembered/assigned Actors are only fallback options. Previously selected synthetic/unlinked NPC tokens retain their own token Actor rather than reverting to the world base Actor.
