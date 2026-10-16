@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.18: Match Pick Lock to sheet-supported skills. */
+/* WoD20 Player Actions v0.1.19: Native quick resources and damage adjustments. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -107,7 +107,8 @@ const TUTORIAL_STEPS = Object.freeze([
   {
     title: "Combat, hotbars and help",
     body: `<p><strong>Raw Attack</strong> makes one attack check. For the full combat sequence, <strong>Standard Attack (Targeted)</strong> needs exactly one targeted defender, an online GM and the separate STL Combat Workflow module.</p>
-      <p>Choose any optional shortcuts below, or leave everything unchecked. We only fill empty hotbar slots. You can also open <strong>Player Actions — Hotbar Macros</strong> to explore all 48 shortcuts.</p>
+      <p>Choose any optional shortcuts below, or leave everything unchecked. We only fill empty hotbar slots. You can also open <strong>Player Actions — Hotbar Macros</strong> to explore all 49 shortcuts.</p>
+      <p><strong>Quick Resources</strong> lets you adjust temporary pools and Bashing, Lethal or Aggravated damage with immediate saves. You can add it to your hotbar below.</p>
       <p>Reopen this walkthrough using <strong>Quick Tutorial</strong> in Basic Actions or Use Magick.</p>`
   }
 ]);
@@ -786,6 +787,7 @@ function basicDashboardHTML(actor) {
   return `<div class="wpa-root wpa-basic" aria-label="Basic Actions dashboard">
     <div class="wpa-basic-heading"><div><span>Rolling as</span><strong>${escape(actor.name)}</strong></div>
       <div class="wpa-basic-heading-actions"><button type="button" class="wpa-basic-resistance" title="Roll Willpower, a Virtue, or a standalone Attribute">Willpower / Resistance</button>
+      <button type="button" class="wpa-basic-resources" title="Adjust temporary pools and Bashing, Lethal or Aggravated damage">Quick Resources</button>
       <button type="button" class="wpa-basic-change" title="Choose another character">Change Character</button></div>
     </div>
     ${groups}
@@ -970,6 +972,10 @@ async function openBasicActions(actor=null) {
     }
     if (target.closest?.(".wpa-basic-resistance")) {
       await openResistanceShortcut(actor);
+      return;
+    }
+    if (target.closest?.(".wpa-basic-resources")) {
+      await openQuickResources(actor);
       return;
     }
     if (target.closest?.(".wpa-basic-change")) {
@@ -1259,6 +1265,236 @@ async function openSheetShortcut() {
   return actor.sheet?.render(true);
 }
 
+// v0.1.19: Manual, immediate adjustments to existing native WoD20 resources.
+// This deliberately does not roll, calculate damage/soak, spend Quintessence for
+// casts, or account for Paradox. Those jobs stay with WoD20 and other modules.
+const QUICK_RESOURCE_IDS = Object.freeze([
+  {key:"willpower",label:"Willpower"},
+  {key:"quintessence",label:"Quintessence"},
+  {key:"paradox",label:"Paradox (temporary)"},
+  {key:"bloodpool",label:"Blood Pool"},
+  {key:"rage",label:"Rage"},
+  {key:"gnosis",label:"Gnosis"},
+  {key:"glamour",label:"Glamour"},
+  {key:"pathos",label:"Pathos"},
+  {key:"essencepool",label:"Essence"},
+  {key:"faith",label:"Faith"},
+  {key:"conviction",label:"Conviction"},
+  {key:"vitality",label:"Vitality"}
+]);
+const QUICK_DAMAGE_TYPES = Object.freeze([
+  {key:"bashing",label:"Bashing",mark:"/"},
+  {key:"lethal",label:"Lethal",mark:"X"},
+  {key:"aggravated",label:"Aggravated",mark:"*"}
+]);
+const QUICK_HEALTH_LEVELS = Object.freeze([
+  "bruised","hurt","injured","wounded","mauled","crippled","incapacitated"
+]);
+const finitePoolNumber = (value) => value !== null && value !== undefined && value !== "" &&
+  Number.isFinite(Number(value)) && Number(value) >= 0;
+function quickAdvantageSource(actor,key) {
+  // PC actor.system.advantages is a derived display cache. Only the embedded
+  // Advantage Item is the writable source of truth for newer WoD20 sheets.
+  const found=basicItems(actor).find(item=>item?.type==="Advantage" &&
+    basicId(item.system?.id || item.system?.slug || item.name)===basicId(key) &&
+    item.system?.settings?.isvisible !== false && finitePoolNumber(item.system?.temporary));
+  if (found) return {kind:"item",doc:found,data:found.system,key,identity:found.id};
+  if (actor?.type==="PC") return null;
+  // Legacy Mage/Vampire actors hold these pools directly in system.advantages.
+  const legacy=actor?.system?.advantages?.[key];
+  if (legacy && typeof legacy==="object" && finitePoolNumber(legacy.temporary))
+    return {kind:"actor",doc:actor,data:legacy,key,identity:actor?.uuid};
+  return null;
+}
+function quickResourceSnapshot(actor) {
+  const sources=new Map();
+  for(const spec of QUICK_RESOURCE_IDS) {
+    const source=quickAdvantageSource(actor,spec.key);
+    if (source) sources.set(spec.key,{...source,label:spec.label,
+      current:int(source.data.temporary),
+      permanent:finitePoolNumber(source.data.permanent)?int(source.data.permanent):null,
+      nominalMax:finitePoolNumber(source.data.max)?int(source.data.max):null});
+  }
+  const q=sources.get("quintessence"),p=sources.get("paradox");
+  const sharedMax=q && p ? (q.nominalMax ?? p.nominalMax) : null;
+  const resources=[];
+  for(const spec of QUICK_RESOURCE_IDS) {
+    const source=sources.get(spec.key);
+    if (!source) continue;
+    const nominal=spec.key==="willpower" ? (source.permanent ?? source.nominalMax) : source.nominalMax;
+    if (nominal===null) continue; // Do not invent an unavailable permanent/max rating.
+    let max=nominal;
+    if (sharedMax !== null && spec.key==="quintessence")
+      max=Math.min(max,Math.max(0,sharedMax-p.current-(p.permanent ?? 0)));
+    if (sharedMax !== null && spec.key==="paradox")
+      max=Math.min(max,Math.max(0,sharedMax-q.current-(p.permanent ?? 0)));
+    resources.push({...source,id:`pool:${spec.key}`,max,
+      note:spec.key==="paradox" && source.permanent>0 ? `${source.permanent} permanent (read only)` : ""});
+  }
+  const health=actor?.system?.health;
+  const capacityFromLevels=QUICK_HEALTH_LEVELS.reduce((sum,key)=>sum+
+    (finitePoolNumber(health?.[key]?.total)?int(health[key].total):0),0);
+  const reportedMax=health?.totalhealthlevels?.max ?? actor?.system?.traits?.health?.totalhealthlevels?.max;
+  const capacity=capacityFromLevels || (finitePoolNumber(reportedMax)?int(reportedMax):0);
+  const healthTracks=[];
+  if (capacity>0 && health?.damage && typeof health.damage==="object") {
+    for(const track of [{key:"physical",label:"Health / Damage",data:health.damage},
+      {key:"chimerical",label:"Chimerical Damage",data:health.damage.chimerical}]) {
+      if (!track.data || !QUICK_DAMAGE_TYPES.every(d=>finitePoolNumber(track.data?.[d.key]))) continue;
+      const counts=Object.fromEntries(QUICK_DAMAGE_TYPES.map(d=>[d.key,int(track.data[d.key])]));
+      const total=Object.values(counts).reduce((a,b)=>a+b,0);
+      const rows=QUICK_DAMAGE_TYPES.map(d=>({kind:"health",id:`health:${track.key}:${d.key}`,
+        label:d.label,mark:d.mark,track:track.key,damageType:d.key,
+        current:counts[d.key],max:Math.max(0,capacity-total+counts[d.key]),identity:actor?.uuid}));
+      healthTracks.push({key:track.key,label:track.label,capacity,total,rows});
+    }
+  }
+  return {resources,healthTracks};
+}
+function quickResourceEntry(actor,id) {
+  const snapshot=quickResourceSnapshot(actor);
+  return [...snapshot.resources,...snapshot.healthTracks.flatMap(x=>x.rows)].find(row=>row.id===id) ?? null;
+}
+function quickResourcesRowHTML(row) {
+  const atLow=row.current<=0,atHigh=row.current>=row.max;
+  const text=`${row.label}: ${row.current} of ${row.max}`;
+  return `<div class="wpa-resource-row" data-wpa-resource-row="${escape(row.id)}">
+    <div class="wpa-resource-trait"><strong>${row.mark ? `<span class="wpa-resource-mark">${escape(row.mark)}</span> ` : ""}${escape(row.label)}</strong>
+      ${row.note ? `<small>${escape(row.note)}</small>` : ""}</div>
+    <div class="wpa-resource-controls">
+      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="-1" aria-label="Remove one ${escape(row.label)}" title="Remove one" ${atLow ? "disabled" : ""}>&minus;</button>
+      <output aria-label="${escape(text)}" class="wpa-resource-value">${row.current}<span> / ${row.max}</span></output>
+      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="1" aria-label="Add one ${escape(row.label)}" title="Add one" ${atHigh ? "disabled" : ""}>+</button>
+    </div>
+  </div>`;
+}
+function quickResourcesContentHTML(actor,history=null,status="Click + or - to update the character immediately.") {
+  const {resources,healthTracks}=quickResourceSnapshot(actor);
+  const pools=resources.length ? resources.map(quickResourcesRowHTML).join("") :
+    `<p class="wpa-resource-empty">No editable temporary resource pools are present on this character.</p>`;
+  const tracks=healthTracks.map(track=>`<section class="wpa-resource-section" aria-label="${escape(track.label)}">
+    <div class="wpa-resource-section-title"><h3>${escape(track.label)}</h3><span>${track.total} / ${track.capacity} marked</span></div>
+    ${track.rows.map(quickResourcesRowHTML).join("")}
+  </section>`).join("");
+  return `<div class="wpa-resource-stack">
+    <section class="wpa-resource-section" aria-label="Temporary resources"><h3>Temporary Resources</h3>${pools}</section>
+    ${tracks || `<p class="wpa-resource-empty">This character has no supported damage track to edit.</p>`}
+    <div class="wpa-resource-footer"><div class="wpa-resource-status" role="status" aria-live="polite">${escape(status)}</div>
+      <div class="wpa-resource-footer-actions"><button type="button" data-wpa-resource-action="undo" ${history?"":"disabled"}>Undo Last</button>
+        <button type="button" data-wpa-resource-action="refresh">Refresh</button></div></div>
+    <p class="wpa-resource-hint">Only temporary pools and damage counts change. Permanent traits, wound penalties, combat automation and Paradox rules remain with WoD20 and their owning modules.</p>
+  </div>`;
+}
+async function quickResourceWrite(actor,entry,next) {
+  if (!canUse(actor)) throw new Error("You no longer control this character.");
+  if (entry.kind==="item") {
+    // Never edit the derived actor.system.advantages snapshot for PC Actors.
+    const still=basicItems(actor).find(item=>item?.id===entry.identity && item?.type==="Advantage");
+    if (!still || typeof still.update!=="function") throw new Error("The resource Item is no longer editable.");
+    await still.update({"system.temporary":next});
+  } else {
+    if (typeof actor.update!=="function") throw new Error("The Actor cannot be updated.");
+    const path=entry.kind==="health" ? `system.health.damage.${entry.track==="chimerical"?"chimerical.":""}${entry.damageType}` :
+      `system.advantages.${entry.key}.temporary`;
+    const changes={[path]:next};
+    // Legacy WoD20 Actors use this flag to request the system's own derived
+    // calculations. PC Actors recalculate their wound status in prepareData.
+    if (actor.type!=="PC" && typeof actor.system?.settings?.isupdated==="boolean")
+      changes["system.settings.isupdated"]=false;
+    await actor.update(changes);
+  }
+}
+async function quickResourceChange(actor,id,delta) {
+  if (!canUse(actor)) throw new Error("You no longer control this character.");
+  if (![1,-1].includes(delta)) throw new Error("Invalid resource adjustment.");
+  const row=quickResourceEntry(actor,id);
+  if (!row) throw new Error("That resource is not on the current character sheet.");
+  // If another module left a pool above its cap, subtract exactly one rather
+  // than snapping it down by several points on a single '-' click.
+  const next=delta<0 ? Math.max(0,row.current-1) : Math.min(row.max,row.current+1);
+  if (next===row.current) return {changed:false,row};
+  await quickResourceWrite(actor,row,next);
+  const after=quickResourceEntry(actor,id);
+  if (!after) throw new Error("The resource is no longer on the character sheet.");
+  return {changed:after.current!==row.current,before:row.current,after:after.current,row};
+}
+async function quickResourceUndo(actor,history) {
+  if (!history) return {changed:false};
+  const row=quickResourceEntry(actor,history.id);
+  if (!row || row.current!==history.after || row.identity!==history.identity)
+    throw new Error("This value changed since your last adjustment. Refresh instead of overwriting it.");
+  if (history.before<0 || history.before>row.max)
+    throw new Error("The old value no longer fits this resource's current capacity.");
+  await quickResourceWrite(actor,row,history.before);
+  const after=quickResourceEntry(actor,history.id);
+  return {changed:after?.current===history.before};
+}
+async function openQuickResources(actor=null) {
+  actor ||= resolveActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor=await chooseCharacter();
+  if (!actor) return;
+  const viewport=Number(globalThis.innerWidth)||780;
+  const dialog=new foundry.applications.api.DialogV2({
+    window:{title:`Quick Resources - ${actor.name}`},
+    position:{width:Math.min(540,Math.max(310,viewport-44))},
+    content:`<div class="wpa-root wpa-resources" aria-label="Quick Resources">
+      <div class="wpa-resource-heading"><div><small>Adjusting</small><strong>${escape(actor.name)}</strong></div>
+      <button type="button" data-wpa-resource-action="change">Change Character</button></div>
+      <div data-wpa-resource-content>${quickResourcesContentHTML(actor)}</div>
+    </div>`,
+    buttons:[{action:"close",label:"Close"}]
+  });
+  await dialog.render({force:true});
+  const root=dialog.element?.querySelector?.(".wpa-resources");
+  if (!root) return dialog;
+  let busy=false,history=null;
+  const redraw=(status)=>{
+    const body=root.querySelector("[data-wpa-resource-content]");
+    if (body) body.innerHTML=quickResourcesContentHTML(actor,history,status);
+  };
+  root.addEventListener("click",async event=>{
+    const button=event.target.closest?.("[data-wpa-resource-action],[data-wpa-resource-id]");
+    if (!button || busy) return;
+    busy=true;
+    button.disabled=true;
+    try {
+      const action=button.dataset.wpaResourceAction;
+      if (action==="change") {
+        const selected=await chooseCharacter(actor);
+        if (selected && selected.uuid!==actor.uuid) {
+          await dialog.close();await openQuickResources(selected);
+        }
+        return;
+      }
+      if (action==="refresh") {
+        redraw("Current values refreshed from the character sheet.");
+        return;
+      }
+      if (action==="undo") {
+        const undone=await quickResourceUndo(actor,history);
+        if(undone.changed) {history=null;redraw("Last adjustment undone.");}
+        else {history=null;redraw("No adjustment to undo.");}
+        return;
+      }
+      const id=button.dataset.wpaResourceId,delta=int(button.dataset.wpaResourceDelta);
+      const result=await quickResourceChange(actor,id,delta);
+      if (result.changed) {
+        history={id,before:result.before,after:result.after,identity:result.row.identity};
+        redraw(`${result.row.label}: ${result.before} to ${result.after}. Saved.`);
+      } else redraw("This resource is already at its limit.");
+    } catch(error) {
+      console.warn(`${MOD} | Quick Resources adjustment failed`,error);
+      ui.notifications.error(`Quick Resources: ${error.message}`);
+      redraw(error.message);
+    } finally {
+      button.disabled=false;
+      busy=false;
+    }
+  });
+  return dialog;
+}
+
 // World Macro compendium: created ONCE in Foundry by the GM through native APIs.
 // No LevelDB stub files, foreign compendium mutations, or hotbar assignments.
 // The world owns the pack; replacing this module does not delete it.
@@ -1277,6 +1513,7 @@ function catalogMacroDefinitions() {
   for(let i=0;i<5;i++) add(`custom-${i+1}`,`Custom Action ${i+1}`,"My Custom Actions",
     "dice-six-faces-one","rollCustomShortcut",i);
   add("dash-basic","Basic Actions","Dashboards","dice-six-faces-one","openBasicActions");
+  add("dash-resources","Quick Resources","Dashboards","medical-pack","openQuickResources");
   add("any-check","Roll Any Check","Dashboards","dice-six-faces-one","openAnyCheckShortcut");
   add("resistance","Willpower / Resistance","Dashboards","riot-shield","openResistanceShortcut");
   add("dash-magick","Use Magick","Magick","spell-book","openPanel");
@@ -1378,12 +1615,14 @@ async function ensureMacroCompendium() {
 const TUTORIAL_HOTBAR_SHORTCUTS = Object.freeze([
   {key:"magick",label:"Use Magick",flag:"launcher",name:"Use Magick"},
   {key:"combat",label:"Combat — Standard Attack (Targeted)",flag:"combatLauncher",name:"Player Combat (Targeted)"},
-  {key:"basic",label:"Basic Actions",flag:"basicLauncher",name:"Player Basic Actions"}
+  {key:"basic",label:"Basic Actions",flag:"basicLauncher",name:"Player Basic Actions"},
+  {key:"resources",label:"Quick Resources",flag:"resourcesLauncher",name:"Player Quick Resources"}
 ]);
 
 function tutorialShortcutMacro(choice) {
   const expected = choice.key === "magick" ? LAUNCHER_COMMAND :
-    choice.key === "combat" ? COMBAT_LAUNCHER_COMMAND : BASIC_LAUNCHER_COMMAND;
+    choice.key === "combat" ? COMBAT_LAUNCHER_COMMAND :
+    choice.key === "resources" ? RESOURCES_LAUNCHER_COMMAND : BASIC_LAUNCHER_COMMAND;
   return game.macros?.find?.(m => m.getFlag?.(MOD,choice.flag) === true) ||
     game.macros?.find?.(m => m.name === choice.name && m.command === expected) || null;
 }
@@ -1417,7 +1656,7 @@ async function addTutorialHotbarShortcuts(selected = new Set()) {
     }
     // A matching script already on the bar should not be added a second time,
     // even if it came from a player's prior compendium import.
-    const catalogIds={magick:"dash-magick",combat:"standard-attack",basic:"dash-basic"};
+    const catalogIds={magick:"dash-magick",combat:"standard-attack",basic:"dash-basic",resources:"dash-resources"};
     const exists=[...occupancy.values()].some(id=>{
       const placed=game.macros?.get?.(id);
       return id===macro.id || (placed && (placed.command===macro.command ||
@@ -1672,7 +1911,7 @@ async function openTutorial() {
     const input=event.target.closest?.("[data-wpa-tutorial-choice]");
     if (!input || saving) return;
     const key=input.dataset.wpaTutorialChoice;
-    if (!["magick","combat","basic","compendium"].includes(key)) return;
+    if (!["magick","combat","basic","resources","compendium"].includes(key)) return;
     if (input.checked) selected.add(key);
     else selected.delete(key);
   });
@@ -1874,6 +2113,24 @@ async function ensureCombatLauncherMacro() {
   } catch(error) { console.warn(`${MOD} | Unable to create optional Combat launcher`,error); }
 }
 
+// Fourth optional world Macro. It is only assigned when a player checks the
+// Quick Resources box at the end of the tutorial (or drags a compendium macro).
+const RESOURCES_LAUNCHER_NAME="Player Quick Resources";
+const RESOURCES_LAUNCHER_COMMAND=macroCommand("openQuickResources");
+async function ensureResourcesLauncherMacro() {
+  if (!game.user.isGM) return;
+  // Respect an existing GM-authored Macro with this name. Do not replace it
+  // or create a confusing duplicate merely because its script was customized.
+  if (game.macros?.find?.(m=>m.getFlag?.(MOD,"resourcesLauncher")===true ||
+      m.name===RESOURCES_LAUNCHER_NAME)) return;
+  try {
+    await Macro.create({name:RESOURCES_LAUNCHER_NAME,type:"script",
+      img:basicIcon("medical-pack"),command:RESOURCES_LAUNCHER_COMMAND,
+      ownership:{default:CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER},
+      flags:{[MOD]:{resourcesLauncher:true}}});
+  } catch(error) { console.warn(`${MOD} | Unable to create optional Quick Resources launcher`,error); }
+}
+
 Hooks.once("ready", () => {
   if (game.system.id !== SYSTEM_ID) return;
   // Retain execute() for old macros. Create only one optional launcher, never touch hotbars.
@@ -1881,13 +2138,14 @@ Hooks.once("ready", () => {
     execute,openPanel,guidedCast,openBasicActions,
     rollPresetAction,rollCustomShortcut,rollCombatShortcut,
     openAttackShortcut,openStandardAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut,
-    openResistanceShortcut,openCountermagickShortcut,openFavoriteRotesShortcut,openTutorial
+    openResistanceShortcut,openCountermagickShortcut,openFavoriteRotesShortcut,openTutorial,openQuickResources
   };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
   void ensureLauncherMacro();
   void ensureBasicLauncherMacro();
   void ensureCombatLauncherMacro();
+  void ensureResourcesLauncherMacro();
   // A new world compendium is provisioned only on the GM's first ready.
   void ensureMacroCompendium().catch(error=>{
     console.error(`${MOD} | Macro compendium setup failed`,error);
