@@ -36,7 +36,7 @@ vm.runInNewContext(source+`
   // Calling a compendium macro uses the public Player Actions API.
   hooks.init();hooks.ready();
   const definitions=ctx.__definitions();
-  assert.equal(definitions.length,40);
+  assert.equal(definitions.length,48);
   const entry=definitions.find(d=>d.id==='standard-attack');
   assert.ok(entry);
   assert.match(entry.name,/^Standard Attack/);

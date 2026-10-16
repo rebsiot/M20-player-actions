@@ -1,107 +1,87 @@
-# Release Notes — WoD20 Player Actions
+# Release Notes - WoD20 Player Actions
 
-These are the changes you will notice when playing. Newest versions are first. For technical implementation history, see [the archived developer changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
+Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
-## v0.1.15 — Clearer release notes
+## v0.1.16 - More everyday actions
 
-**What's changed**
+- Added a compact **Quick Tutorial** on first login: four pages, explicit **Don't show again** per-user preference, and a small Help link to reopen from either main panel. Closing without opting out allows it to appear again on the next login.
+- Added **Willpower / Resistance**, a standalone rated trait check with adjustable difficulty (does not spend Willpower).
+- Added **Basic Countermagick**, a defensive Arete roll for Mages; Sphere eligibility and success cancellation stay with the Storyteller, and it is not tagged as a spell cast.
+- Added five **Modern Scenes** presets: Drive / Pursue, Pick Lock, Tail Someone, Street Information and Repair Equipment. They use real Abilities from the Actor.
+- Added **Favorite Rotes**: player-and-character-specific stars in Use Magick plus one draggable hotbar shortcut.
+- Expanded the optional macro catalog from 40 to **48 shortcuts**. Existing hotbars, user custom actions, and edited/deleted world compendium masters stay intact.
+- Still awaiting live Foundry v14 verification, particularly Paradox listening and targeted combat end-to-end.
 
-- Rewrote the release history to explain what each update does, without making you wade through code and test details.
-- Updated the README and the GitHub release process to use a short, version-specific summary.
+## v0.1.15 - Clearer release notes
 
-**Gameplay is unchanged from v0.1.14.** Your characters, spells, custom actions, compendium macros and hotbars do not need to be reset.
+- Rewrote player-facing release history and README, retained older technical notes, and corrected the GitHub release summary automation.
+- **Documentation only:** Gameplay was unchanged from v0.1.14. This version was merged but published on 2026-10-16 after v0.1.16 work began.
 
-## v0.1.14 — Combat Workflow and a clearer interface
+## v0.1.14 - Combat Workflow and clearer interface
 
-**What's new**
+- **Standard Attack (Targeted)** launches the separate STL Combat Workflow with one target and an online GM. **Raw Attack** still makes a single attack check without damage.
+- Renamed the player launcher to **Use Magick**, widened the Basic Actions dashboard, and collapsed the optional Effect / Focus editor by default.
+- Increased the macro compendium to **40 shortcuts**, preserving hotbars and customized entries.
 
-- **Standard Attack (Targeted)** requires one targeted defender and starts the separate **STL Combat Workflow**: attack, defense, damage, soak and GM health application or undo. Combat Workflow v0.1.4 or later must be enabled, and a GM must be online.
-- **Raw Attack** remains available when you only need a Brawl, Melee or Firearms dice check. It requires no target and does not calculate damage.
+## v0.1.13 - Drag actions straight to your hotbar
 
-**What's improved**
+- Added a player-readable world compendium of 39 optional draggable macros, including Basic Actions, custom slots, Magick, combat and utilities.
+- Hotbars are not assigned automatically, and players cannot edit the compendium masters.
 
-- **Player Magick** is now called **Use Magick** in the supplied shortcuts and player interface.
-- The Basic Actions window is about 15% wider, with easier-to-read button labels and dice pools.
-- The optional Effect / Focus description in Improvised Magick starts collapsed, like the Rote details.
-- The draggable macro collection now contains **40 shortcuts**. Existing hotbar positions and GM-customized macro content are preserved.
+## v0.1.12 - Better roll names and more icons
 
-## v0.1.13 — Drag actions straight to your hotbar
+- Buttons now give chat rolls their action names (such as Notice) instead of just their Ability names.
+- Expanded the searchable icon picker to 162 Game Icons and added an informational dice-pool tint.
 
-- Added **Player Actions — Hotbar Macros**, a compendium of 39 draggable shortcuts: Basic Actions, five custom slots, Magick, attacks, defenses, Initiative and utility tools.
-- Players choose which shortcuts they want. Nothing is automatically placed on a hotbar.
-- A GM creates the world compendium on first login. Players can read and use it without editing its master macros.
+## v0.1.11 - Basic Actions dashboard
 
-## v0.1.12 — Better roll names and more icons
+- Added 20 illustrated presets in four groups and five per-character custom buttons.
+- Saved custom actions individually by user and Actor without touching world character data.
 
-- Chat cards now show the **button you clicked** (such as **Notice**) instead of merely the underlying Ability (such as Alertness).
-- Expanded the custom-button icon picker to **162 searchable Game Icons** with categories.
-- Added gentle dice-pool shading: weaker pools lean red, midrange yellow, and stronger pools green. The color is only a visual guide; it never changes a roll.
+## v0.1.10 - Better GM character selection
 
-## v0.1.11 — Basic Actions dashboard
+- Prioritized selected or last-selected GM tokens, including unlinked NPCs. Explicitly bound macros remain bound.
 
-- Added **20 ready-made actions** in four rows, plus **five configurable buttons** for your own Attribute + Ability checks.
-- Each action has an icon, readable dice pool, and direct native WoD20 roll.
-- Players can rename, reconfigure or clear their custom buttons. Choices are saved separately for each player and character.
-- Kept the dashboard compact and created an optional launcher without automatically assigning it to the hotbar.
+## v0.1.9 - Faster Rotes and clearer difficulty
 
-## v0.1.10 — Better GM character selection
+- Added Quick Rote casting, clearer final difficulty and remaining Quintessence previews.
 
-- The GM casts with the **selected token**, or the **last selected token** if none is currently selected.
-- Unlinked NPC tokens use their own token-specific Actor, rather than the base Actor.
-- Players' character preferences and explicitly actor-bound Rote macros continue to work as before.
+## v0.1.8 - Less clutter while casting
 
-## v0.1.9 — Faster Rotes and clearer difficulty
+- Grouped casting options, retained advanced controls, and added optional Focus notes without dice changes.
 
-- Added a smaller **Quick Rote Cast** window. Advanced options remain available when needed.
-- Made final casting Difficulty prominent, clarified Reality modifiers, and showed the Quintessence remaining after a planned spend.
-- Made it easier to switch between characters from the casting window.
+## v0.1.7 - Cleaner spell-roll messages
 
-## v0.1.8 — Less clutter while casting
+- Removed redundant chat labels while preserving native spell information for Paradox listeners.
 
-- Grouped casting settings and resources into a more compact layout.
-- Added **Use Focus** as an optional chat note, without applying an unrequested dice modifier.
-- Kept additional casting rules and explanations out of the way until expanded.
+## v0.1.6 - Remember your Mage
 
-## v0.1.7 — Cleaner spell-roll messages
+- Remembered manually selected characters and improved native magick labels for dice/Paradox integration.
 
-- Removed repeated labels and redundant information from Mage chat cards.
-- Kept native WoD20 dice rolls and the casting labels needed by the separate Paradox listener.
+## v0.1.5 - Optional hotbar launcher
 
-## v0.1.6 — Remember your Mage
+- Added the optional Player Magick launcher while leaving existing hotbars alone.
 
-- Remembered the character you selected for casting between sessions.
-- Corrected native spell labels so the separate Dice Improvements Paradox listener can recognize eligible casts.
+## v0.1.4 - Simpler guided Magick
 
-## v0.1.5 — Optional hotbar launcher
+- Refined Sphere selection and casting layout and removed forced macro/hotbar generation.
 
-- Added an optional **Player Magick** launcher macro, available for players to place on their hotbars manually.
-- Existing world macros and hotbar assignments were left alone.
+## v0.1.3 - Working native spell cards
 
-## v0.1.4 — Simpler guided Magick
+- Switched spell rolls to supported WoD20 magic chat cards and Powers to the supported power path.
 
-- Improved the Sphere picker and guided casting layout.
-- Used the player's assigned character by default, with character switching available.
-- Removed automatic macro and hotbar generation from the casting interface.
+## v0.1.2 - Sphere guidance
 
-## v0.1.3 — Working native spell cards
+- Limited Sphere selections to known ratings and added expandable prompts.
 
-- Fixed blank Mage chat cards by using WoD20's supported magic roll type.
-- Kept Power rolls on WoD20's supported Power roll path.
+## v0.1.1 - Reliable Foundry launcher
 
-## v0.1.2 — Sphere guidance
+- Fixed Actors sidebar launcher visibility and offered character choice when needed.
 
-- Limited Sphere rank choices to what the character knows.
-- Added expandable explanations of Sphere capabilities and an optional effect description.
+## v0.1.0 - First release
 
-## v0.1.1 — Reliable Foundry launcher
-
-- Fixed the Actors sidebar launcher appearing inconsistently during Foundry startup.
-- Added a character choice when no selected or assigned character was available.
-
-## v0.1.0 — First release
-
-- Introduced guided Mage casting, Rotes and native WoD20 dice integration.
+- Added guided Mage casting, Rotes and native WoD20 dice integration.
 
 ---
 
-**Install and rollback:** Back up your world and `Z:\\Data\\modules\\wod20-player-actions` before updating. Restart Foundry and reload clients after installation. Restoring an older module version does not undo gameplay changes such as damage or spent resources. For prerequisites, troubleshooting and the full workflow, see [README](README.md).
+**Installation:** Back up the Foundry world and installed module folder, then replace the module files with Foundry stopped and restart. The independent Combat Workflow/Paradox modules remain separate. See [README](README.md) for rollback and verification notes.

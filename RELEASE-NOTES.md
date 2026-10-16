@@ -1,22 +1,25 @@
-# Player Actions v0.1.15
+# Player Actions v0.1.16
 
-**This is a documentation update.** We've made the release notes easier to read and corrected the version history. **Gameplay has not changed since v0.1.14.**
+**Four new gameplay conveniences plus a short first-login tutorial, without changing the WoD20 dice engine.**
 
-## What Player Actions includes
+## What's new
 
-- **40 optional hotbar shortcuts.** Drag only the actions you want from the **Player Actions — Hotbar Macros** compendium. Nothing is added to your hotbar automatically.
-- **Quick Basic Actions.** Roll 20 common checks or configure five of your own. Buttons show the dice pool, with readable labels and optional icons.
-- **Use Magick.** Cast improvised effects and Rotes with compact controls.
-- **Two kinds of attack.** **Raw Attack** makes a simple dice check. **Standard Attack (Targeted)** starts the full attack-to-soak sequence in the separate STL Combat Workflow module.
+- **Willpower / Resistance:** select a rated Willpower, Virtue or Attribute, then choose the difficulty. This does not spend Willpower.
+- **Basic Countermagick:** Mage Arete defense, adjustable difficulty and optional relevant Sphere note. It is a regular defensive roll, not a cast submitted to Paradox. The Storyteller determines eligibility and net successes.
+- **Modern Scenes:** five additional presets for driving, locks, surveillance, contacts and repairs. Missing Abilities show as unavailable rather than being invented.
+- **Favorite Rotes:** click a star in Use Magick, and drag the new Favorite Rotes macro onto your hotbar. Favorites are private to each player and character.
+- **Quick Tutorial:** a four-step walkthrough opens when each user first logs in. Choose **Don't show again** on the last screen to stop future popups. Reopen it any time from Basic Actions or Use Magick.
 
-## Before using Standard Attack
+The world Macro compendium now offers **48 optional shortcuts**, up from 40. No hotbars are reassigned, old macros overwritten or Actors migrated. Closing the tutorial without opting out will offer it again on the next login.
 
-Enable **STL Combat Workflow v0.1.4 or later**, target exactly **one defender**, and have a GM online. Other Player Actions features work without Combat Workflow.
+## What you need to know
 
-## Updating
+The documentation cleanup already merged for v0.1.15 is retained. Standard Attack still needs **STL Combat Workflow v0.1.4+**, one targeted defender and an online GM. Paradox accounting is still owned by its separate module.
 
-Back up your **world** and `Z:\Data\modules\wod20-player-actions`, update the module, restart Foundry and reload your browser. Existing hotbars and saved custom actions are preserved. Reinstall v0.1.14 to roll back the code; restoring the module does not reverse combat damage or other in-game changes.
+## Upgrade and verification
 
-**Verification:** Automated checks passed; live Foundry integration of the new combat shortcut has not been confirmed.
+Back up your Foundry world and `Z:\Data\modules\wod20-player-actions`, install the full ZIP, restart Foundry and hard-refresh. Existing compendium masters and user preferences are preserved. Restore backed-up module/world data if a rollback is required.
 
-[Full version history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md) · [Setup and usage](https://github.com/rebsiot/M20-player-actions/blob/main/README.md)
+**Automated tests:** See `TEST-REPORT.md`. **Live Foundry v14, Paradox, and two-client Combat Workflow verification:** not performed here.
+
+[Full history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md) | [Setup guide](https://github.com/rebsiot/M20-player-actions/blob/main/README.md)

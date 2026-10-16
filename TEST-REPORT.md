@@ -1,13 +1,37 @@
-# v0.1.15 Test Report — Release-note cleanup
+# v0.1.16 Test Report - 2026-10-16
 
-**Scope:** Player-facing changelog, README, GitHub release summary, release workflow and packaging. **No runtime JavaScript, CSS, icons, dice logic or world-data changes.**
+**Status:** Candidate archive built locally; not installed, published to GitHub, or verified in live Foundry. v0.1.15 was published on GitHub on 2026-10-16.
 
-- **16 Node/mock regression suites: PASS**, including the new release-notes/version/manifest check. JavaScript syntax check: **PASS**.
-- **Installable ZIP: PASS**. The archive includes both updated release-note files, the human-readable README, preserved technical histories and the correct v0.1.15 manifest; CRC and path checks passed.
-- **Source comparison: PASS**. All **168 runtime and icon/launcher files** included in the previous published v0.1.14 package are **byte-for-byte identical** in v0.1.15.
-- **Browser checks:** The Improvised Magick and Quick Rote Chromium fixtures passed at 1440, 820 and 430 pixels in this run. The Basic Actions Chromium fixture stalled in this environment and is **not counted as a new pass**. The same source passed the Basic Actions browser fixture in v0.1.14, and was unchanged for this release.
-- **Live Foundry v14 + WoD20 + Combat Workflow v0.1.4:** **NOT VERIFIED**. This documentation change does not establish live runtime compatibility. The existing targeted-combat smoke test remains required.
-- **Release publication:** Pending user approval, GitHub merge and Actions verification. The connected GitHub actions cannot edit the body of the historical v0.1.14 release; the corrected human-readable notes will be used for v0.1.15 and subsequent releases.
+## Automated checks - PASS
+
+- `node --check scripts/player-actions.js`: PASS.
+- **18 Node/mock suites** (`tests/*.cjs`): PASS. Existing v0.1.14 tests still cover native casting/chat labels, Paradox markers, GM token selection, compendium permissions and update protection, custom actions, Combat Workflow handoff and the Rote quick caster.
+- Added **new-actions.cjs** for all five modern presets, missing Ability safeguards, permanent Willpower rating versus temporary pool, native non-casting countermagick origin, no Actor write or resource spend, and private per-Actor Favorite Rote persistence/permissions.
+- Added **release-notes.cjs** for the v0.1.16 manifest/download, clear v0.1.15 documentation continuity, 0.1.0-v0.1.16 ordered history, archived technical docs, and versioned GitHub release-notes workflow.
+- Added **tutorial-onboarding.cjs** for automatic first-login opening, four steps, explicit user-scoped opt-out, repeat offer after early close, manual Help access after dismissal and no Actor edits.
+- Updated old catalog, dashboard and Standard Attack unit checks to cover **48 macros** and **25 preset actions**. Existing compendium content is created/additive only; no old masters or player hotbars are reset.
+- **Four Chromium fixture scripts PASS**, each at 1440, 820 and 430 px: Basic Actions including the new row/utility button, full Improvised Magick panel, Quick Rote dialog and a four-step onboarding walkthrough. The new tutorial fixture verifies Back/Next, first-login prompt, opt-out, suppressed relog and manual access from both panels, with no horizontal clipping. These fixtures are not a running Foundry world.
+- Packaging (`python3 tools/package_release.py`): complete module-root ZIP generated; versioned manifest and release note header match, all 162 SVGs included with credits, 18 Node tests included, archive CRC and path safety checks pass.
+
+## Live Foundry and cross-module checks - NOT VERIFIED
+
+- Neither WoD20's actual installed v7.3.x script nor the separate Paradox module source was mounted. A mock native roll does not prove the intended chat card or the absence of a live Paradox listener trigger.
+- In a backed-up test world, have a player roll Willpower and Stamina and confirm a real native chat card, ratings, no Willpower expenditure, and no unexpected wound/soak rules.
+- Have a Mage use **Basic Countermagick**. Confirm native chat visibility, default/modified difficulty, and zero Paradox changes. Separately cast a normal spell to verify Paradox once only.
+- Confirm each of five Modern Scenes presets with an Ability present and missing; test new compendium entries and that GM-edited/removed existing macros stay edited/removed.
+- Star a Rote, close and reopen Use Magick, relog, and invoke the Favorite Rotes hotbar macro on two different player accounts/Actors to confirm separation.
+- Log in as a player who has never opted out. Verify that the four tutorial steps open automatically, closing without opting out allows them to reappear, and **Don't show again** suppresses future login prompts. Reopen from Basic Actions and Use Magick. Verify a different player's preference remains independent.
+- Verify targeted Standard Attack (one defender, GM online) launches the independent Combat Workflow through attack, defense, damage, soak and Apply/Undo. Raw Attack still rolls without any targeted token.
+
+## Upgrade and rollback
+
+Before testing, back up the **world** (includes macro compendium) and `Z:\Data\modules\wod20-player-actions`; stop Foundry for Samba module replacement. Restart, enable in the intended world and hard-refresh. Return to last known working v0.1.14 or backed-up v0.1.15 module folder if needed, and restore a matching world snapshot if removing new world Macro entries is important. Module rollback alone does not undo gameplay or a changed world compendium.
+
+---
+
+# v0.1.15 Documentation-Only Merge (historical context)
+
+GitHub main v0.1.15 cleaned the player-facing changelog/README, archived earlier technical notes, introduced `RELEASE-NOTES.md`, updated the release workflow to `--notes-file`, and added release-document checks. Runtime JS/CSS was unchanged from v0.1.14. GitHub published v0.1.15 on 2026-10-16; gameplay remained unchanged.
 
 ---
 

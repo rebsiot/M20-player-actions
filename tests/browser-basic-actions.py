@@ -1,4 +1,4 @@
-"""Headless Chromium test for v0.1.11 Basic Actions. Not a live Foundry installation."""
+"""Headless Chromium test for v0.1.16 Basic Actions. Not a live Foundry installation."""
 from pathlib import Path
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
@@ -64,13 +64,13 @@ with sync_playwright() as p:
     page.evaluate('window.__runHooks()')
     page.evaluate("game.modules.get('wod20-player-actions').api.openBasicActions(window.__basicTest.actor)")
     grid=page.locator('.wpa-basic-grid')
-    assert grid.count()==5,grid.count()
+    assert grid.count()==6,grid.count()
     assert page.locator('.wpa-basic-grid').first.locator('.wpa-basic-tile').count()==5
-    assert page.locator('.wpa-basic-tile').count()==25
+    assert page.locator('.wpa-basic-tile').count()==30
     assert page.locator('.wpa-basic-tile.is-empty').count()==5
     assert page.locator('img[src$="binoculars.svg"]').count()==1
     images=page.locator('.wpa-basic-tile img')
-    assert images.count()==20
+    assert images.count()==25
     page.wait_for_function('''() => [...document.querySelectorAll('.wpa-basic-tile img')].every(x=>x.complete&&x.naturalWidth>0)''',timeout=3000)
     counts=page.evaluate('''() => ({horizontal:document.documentElement.scrollWidth>window.innerWidth+1,
       overflow:[...document.querySelectorAll('.wpa-basic,.wpa-basic-grid,.wpa-basic-footer')].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className),
@@ -79,10 +79,10 @@ with sync_playwright() as p:
       iconCount:[...document.querySelectorAll('.wpa-basic-tile img')].filter(x=>x.naturalWidth>0).length})''')
     assert not counts['horizontal'] and not counts['overflow'],(width,counts)
     assert counts['cols']==(3 if width==430 else 5),(width,counts)
-    assert counts['iconCount']==20
+    assert counts['iconCount']==25
     # Compact v0.1.11 revision: full action titles and actual dice pools remain
     # readable alongside meaningful abbreviated Attribute + Ability pairs.
-    assert page.locator('.wpa-basic-pair').count()==20
+    assert page.locator('.wpa-basic-pair').count()==25
     assert page.locator('[data-basic-preset="notice"]').get_attribute('style')=='--wpa-pool-hue:75', '5-dice Notice is between yellow and green'
     assert page.locator('[data-basic-preset="sense-magick"]').get_attribute('style')=='--wpa-pool-hue:97', '6 dice trends green'
     assert page.locator('[data-basic-preset="search"]').get_attribute('style')=='--wpa-pool-hue:120', '7+ is green'
@@ -96,10 +96,12 @@ with sync_playwright() as p:
       clipping:[...document.querySelectorAll('.wpa-basic-tile,.wpa-basic-tile-main,.wpa-basic-tile-meta')]
         .filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>({cls:el.className,content:el.textContent.trim().slice(0,70)}))
     })''')
-    assert compact['iconSizes']==['19px']*20,(width,compact)
+    assert compact['iconSizes']==['19px']*25,(width,compact)
     assert compact['tileHeight']<=(70 if width==430 else 70),(width,compact)
-    assert compact['panelHeight']<=(660 if width>=820 else 790),(width,compact)
+    assert compact['panelHeight']<=(720 if width>=820 else 790),(width,compact)
     assert not compact['clipping'],(width,compact)
+    assert page.locator('.wpa-basic-resistance').is_visible()
+    assert page.locator('[data-basic-preset="pick-lock"]').is_disabled()
     assert page.locator('.wpa-basic-footer').evaluate('(el) => getComputedStyle(el).position')==('static' if width==430 else 'sticky')
     if width==820:
       (ROOT.parent/'preview-basic-actions-820.png').parent.mkdir(parents=True,exist_ok=True)
@@ -152,4 +154,4 @@ with sync_playwright() as p:
     print('Basic Actions width',width,'layout',counts,'native rolls',len(rolls))
     page.close()
   b.close()
-print('PASS: actual SVGs, 4x5 presets plus 5 custom slots, native rolls, custom edit/clear, difficulty/Willpower, responsive 1440/820/430')
+print('PASS: actual SVGs, 5x5 presets plus 5 custom slots, native rolls, custom edit/clear, difficulty/Willpower, responsive 1440/820/430')
