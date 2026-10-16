@@ -1,7 +1,32 @@
-const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');
-const src=fs.readFileSync(path.join(__dirname,'../scripts/player-actions.js'),'utf8');
-const hooks={};const macros=[];let assigned=0;
-const game={system:{id:'worldofdarkness'},settings:{register:()=>{},get:()=>'',set:async()=>{}},user:{isGM:true,assignHotbarMacro(){assigned++;}},modules:{get:()=>({api:null})},macros:{find:fn=>macros.find(fn)}};
-const ctx={Hooks:{once:(event,fn)=>hooks[event]=fn,on:()=>{}},game,Macro:{create:async data=>{const m={...data,getFlag:(ns,k)=>data.flags?.[ns]?.[k]};macros.push(m);return m;}},canvas:{tokens:{controlled:[]}},ui:{actors:null,notifications:{}},document:{querySelector:()=>null},foundry:{utils:{escapeHTML:String}},CONST:{DOCUMENT_OWNERSHIP_LEVELS:{OBSERVER:2},KEYBINDING_PRECEDENCE:{NORMAL:1}},console};
-game.keybindings={register:()=>{}};
-(async()=>{vm.runInNewContext(src,ctx);hooks.init();hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1);assert.equal(macros[0].name,'Player Magick');assert.match(macros[0].command,/api\.openPanel\(\)/);assert.equal(macros[0].ownership.default,2);assert.equal(assigned,0);hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1,'reload must not duplicate');game.user.isGM=false;hooks.ready();await new Promise(setImmediate);assert.equal(macros.length,1,'player cannot create macro');console.log('PASS: one player-readable optional launcher, no auto hotbar assignment, no duplicates');})().catch(e=>{console.error(e);process.exitCode=1});
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const src = fs.readFileSync(path.join(__dirname,'../scripts/player-actions.js'),'utf8');
+const hooks={},macros=[];let assigned=0;
+const game={system:{id:'worldofdarkness'},settings:{register:()=>{},get:()=>'',set:async()=>{}},
+  user:{isGM:true,assignHotbarMacro(){assigned++;}},modules:{get:()=>({api:null})},
+  macros:{find:fn=>macros.find(fn)},keybindings:{register:()=>{}}};
+const ctx={Hooks:{once:(event,fn)=>hooks[event]=fn,on:()=>{}},game,
+  Macro:{create:async data=>{const m={...data,getFlag:(ns,k)=>data.flags?.[ns]?.[k]};macros.push(m);return m;}},
+  canvas:{tokens:{controlled:[]}},ui:{actors:null,notifications:{}},document:{querySelector:()=>null},
+  foundry:{utils:{escapeHTML:String}},
+  CONST:{DOCUMENT_OWNERSHIP_LEVELS:{OBSERVER:2},KEYBINDING_PRECEDENCE:{NORMAL:1}},console};
+(async()=>{
+  vm.runInNewContext(src,ctx);hooks.init();hooks.ready();await new Promise(setImmediate);
+  assert.equal(macros.length,2,'exactly one optional macro per dashboard');
+  const mage=macros.find(x=>x.name==='Player Magick');
+  const basic=macros.find(x=>x.name==='Player Basic Actions');
+  assert.ok(mage&&basic,'retain Player Magick and add Basic Actions launcher');
+  assert.match(mage.command,/api\.openPanel\(\)/);
+  assert.match(basic.command,/api\.openBasicActions\(\)/);
+  assert.equal(basic.flags['wod20-player-actions'].basicLauncher,true);
+  assert.equal(mage.flags['wod20-player-actions'].launcher,true);
+  assert.equal(macros.every(m=>m.ownership.default===2),true,'players can use the macros');
+  assert.equal(assigned,0,'never auto-populate hotbars');
+  hooks.ready();await new Promise(setImmediate);
+  assert.equal(macros.length,2,'reload must not duplicate launchers');
+  game.user.isGM=false;hooks.ready();await new Promise(setImmediate);
+  assert.equal(macros.length,2,'player cannot create a world Macro');
+  console.log('PASS: both optional launchers are idempotent, player-readable and never auto-assigned');
+})().catch(e=>{console.error(e);process.exitCode=1});

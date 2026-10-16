@@ -1,4 +1,4 @@
-/* WoD20 Player Magick v0.1.10: GM selected/previous token casting; native WoD20 roll path. */
+/* WoD20 Player Actions v0.1.11: Basic Actions and Player Magick, native WoD20 dice path. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -582,6 +582,286 @@ async function activatePower(actor, item) {
   }
 }
 
+// Basic Actions: one 5x5 dashboard; native WoD20 Attribute + Ability rolls.
+// Icon filenames are a curated whitelist of Game-icons.net SVG files bundled in this module.
+const BASIC_ACTIONS_SETTING = "basicActionsByActor";
+const BASIC_ICONS = [
+  "binoculars", "crystal-ball", "magnifying-glass", "face-to-face", "alarm-clock",
+  "footsteps", "mountain-climbing", "running-shoe", "jump-across", "deer-track",
+  "charm", "double-face-mask", "angry-eyes", "chat-bubble", "crown",
+  "spell-book", "archive-research", "sherlock-holmes", "laptop", "first-aid-kit",
+  "fist", "dodge", "eye-target", "spyglass", "light-bulb", "bandage-roll",
+  "pencil", "gears", "brain", "healing", "crossroad", "keyboard",
+  "book-pile", "compass", "dice-six-faces-one", "direction-sign"
+];
+const BASIC_ROWS = [
+  {label:"Awareness", actions:[
+    {id:"notice",label:"Notice",attr:"perception",ability:"Alertness",icon:"binoculars"},
+    {id:"sense-magick",label:"Sense Magick",attr:"perception",ability:"Awareness",icon:"crystal-ball"},
+    {id:"search",label:"Search",attr:"perception",ability:"Investigation",icon:"magnifying-glass"},
+    {id:"read-someone",label:"Read Someone",attr:"perception",ability:"Empathy",icon:"face-to-face"},
+    {id:"react",label:"React",attr:"wits",ability:"Alertness",icon:"alarm-clock"}
+  ]},
+  {label:"Movement", actions:[
+    {id:"sneak",label:"Sneak",attr:"dexterity",ability:"Stealth",icon:"footsteps"},
+    {id:"climb",label:"Climb",attr:"strength",ability:"Athletics",icon:"mountain-climbing"},
+    {id:"run",label:"Run",attr:"stamina",ability:"Athletics",icon:"running-shoe"},
+    {id:"jump",label:"Jump",attr:"strength",ability:"Athletics",icon:"jump-across"},
+    {id:"track",label:"Track",attr:"perception",ability:"Survival",icon:"deer-track"}
+  ]},
+  {label:"Social", actions:[
+    {id:"charm",label:"Charm",attr:"charisma",ability:"Expression",icon:"charm"},
+    {id:"deceive",label:"Deceive",attr:"manipulation",ability:"Subterfuge",icon:"double-face-mask"},
+    {id:"intimidate",label:"Intimidate",attr:"manipulation",ability:"Intimidation",icon:"angry-eyes"},
+    {id:"negotiate",label:"Negotiate",attr:"manipulation",ability:"Etiquette",icon:"chat-bubble"},
+    {id:"lead",label:"Lead",attr:"charisma",ability:"Leadership",icon:"crown"}
+  ]},
+  {label:"Knowledge", actions:[
+    {id:"occult",label:"Occult",attr:"intelligence",ability:"Occult",icon:"spell-book"},
+    {id:"research",label:"Research",attr:"intelligence",ability:"Academics",icon:"archive-research"},
+    {id:"investigate",label:"Investigate",attr:"intelligence",ability:"Investigation",icon:"sherlock-holmes"},
+    {id:"computer",label:"Computer",attr:"intelligence",ability:"Computer",icon:"laptop"},
+    {id:"first-aid",label:"First Aid",attr:"intelligence",ability:"Medicine",icon:"first-aid-kit"}
+  ]}
+];
+const BASIC_ATTRIBUTE_ORDER = ["strength", "dexterity", "stamina", "charisma", "manipulation", "appearance", "perception", "intelligence", "wits"];
+const basicTitle = (str) => String(str ?? "").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/[_-]/g," ").replace(/\b\w/g, ch=>ch.toUpperCase());
+const basicId = (str) => String(str ?? "").toLowerCase().replace(/[^a-z0-9]/g,"");
+const basicIcon = (name) => `modules/${MOD}/icons/${BASIC_ICONS.includes(name) ? name : "dice-six-faces-one"}.svg`;
+const basicItems = (actor) => Array.from(actor?.items ?? []);
+function basicAttributes(actor) {
+  return Object.entries(actor?.system?.attributes ?? {})
+    .filter(([,v]) => v && typeof v === "object" && v.isvisible !== false && Number.isFinite(Number(v.total ?? v.value ?? v.permanent)))
+    .sort(([a],[b]) => {
+      const i = BASIC_ATTRIBUTE_ORDER.indexOf(a.toLowerCase());
+      const j = BASIC_ATTRIBUTE_ORDER.indexOf(b.toLowerCase());
+      return (i === -1 ? 99 : i) - (j === -1 ? 99 : j) || a.localeCompare(b);
+    })
+    .map(([key,trait])=>({id:key, label:basicTitle(key), value:Math.max(0,int(trait.total ?? trait.value ?? trait.permanent))}));
+}
+function basicAbilities(actor) {
+  return basicItems(actor).filter(i => i?.type === "Ability" && i.id && i.system?.settings?.isvisible !== false)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+function basicAbilityByName(actor, requested) {
+  const key = basicId(requested);
+  return basicAbilities(actor).find(item => [item.system?.id,item.system?.slug,item.name].some(v=>basicId(v) === key)) ?? null;
+}
+function basicActionTraits(actor, action) {
+  const attr = basicAttributes(actor).find(a=>a.id === action.attr) ?? null;
+  const ability = action.abilityId ? basicAbilities(actor).find(i=>i.id === action.abilityId) ?? null
+    : action.ability ? basicAbilityByName(actor,action.ability) : null;
+  const missing = !attr ? `Missing Attribute: ${basicTitle(action.attr)}` :
+    (action.abilityId || action.ability) && !ability ? `Missing Ability: ${action.ability || action.abilityId}` : "";
+  const rating = ability ? Math.max(0,int(ability.system?.value ?? ability.system?.permanent ?? ability.system?.rating)) : 0;
+  return {attr, ability, rating, pool:(attr?.value ?? 0)+rating, missing};
+}
+function basicReadSlotMap() {
+  try {
+    const data = JSON.parse(game.settings.get(MOD, BASIC_ACTIONS_SETTING) || "{}");
+    return data && !Array.isArray(data) && typeof data === "object" ? data : {};
+  } catch(error) {
+    console.warn(`${MOD} | Invalid saved Basic Actions configuration`,error);
+    return {};
+  }
+}
+function basicSlots(actor) {
+  const saved = basicReadSlotMap()[actor.uuid];
+  return Array.from({length:5},(_,i) => {
+    const v = Array.isArray(saved) ? saved[i] : null;
+    return v && typeof v === "object" && typeof v.attr === "string" && typeof v.label === "string" ? {
+      label:v.label.slice(0,32),attr:v.attr.slice(0,50),abilityId:String(v.abilityId || "").slice(0,64),
+      icon:BASIC_ICONS.includes(v.icon) ? v.icon : "dice-six-faces-one"
+    } : null;
+  });
+}
+async function basicSaveSlot(actor, index, action) {
+  if (!canUse(actor) || index < 0 || index >= 5) throw new Error("Invalid custom action slot");
+  const map = basicReadSlotMap();
+  const slots = basicSlots(actor);
+  slots[index] = action;
+  if (slots.some(Boolean)) map[actor.uuid] = slots;
+  else delete map[actor.uuid];
+  await game.settings.set(MOD, BASIC_ACTIONS_SETTING, JSON.stringify(map));
+}
+function basicTileHTML(actor, action, dataAttr, custom=false) {
+  const t = basicActionTraits(actor,action);
+  const desc = `${basicTitle(action.attr)}${action.abilityId || action.ability ? ` + ${t.ability?.name || action.abilityId || action.ability}` : ""}`;
+  const pool = t.missing ? "Not on sheet" : `${t.pool}d10`;
+  const tooltip = `${action.label}: ${desc}${t.missing ? ` (${t.missing})` : ` = ${t.pool} dice`}`;
+  return `<button type="button" class="wpa-basic-tile${custom ? " is-custom" : ""}" ${dataAttr}
+    aria-label="${escape(tooltip)}" title="${escape(tooltip)}"${t.missing ? " disabled" : ""}>
+    <img src="${basicIcon(action.icon)}" alt="" loading="lazy">
+    <strong>${escape(action.label)}</strong><span class="wpa-basic-pool${t.missing ? " unavailable" : ""}">${escape(pool)}</span>
+  </button>`;
+}
+function basicDashboardHTML(actor) {
+  const slots = basicSlots(actor);
+  const groups = BASIC_ROWS.map(row=>`<section class="wpa-basic-row" aria-label="${escape(row.label)}">
+    <h3>${escape(row.label)}</h3><div class="wpa-basic-grid">${row.actions.map(action=>basicTileHTML(actor,action,`data-basic-preset="${action.id}"`)).join("")}</div>
+    </section>`).join("");
+  const custom = slots.map((action,i)=>`<div class="wpa-basic-custom-cell">
+    ${action ? basicTileHTML(actor,action,`data-basic-custom="${i}"`,true) :
+     `<button type="button" class="wpa-basic-tile is-empty" data-basic-config="${i}" aria-label="Configure custom action ${i+1}">
+        <span class="wpa-basic-plus" aria-hidden="true">+</span><strong>Configure</strong><span class="wpa-basic-pool">Action ${i+1}</span>
+      </button>`}
+    ${action ? `<button type="button" class="wpa-basic-edit" data-basic-config="${i}" aria-label="Edit or clear ${escape(action.label)}" title="Edit / Clear"><i class="fas fa-pen" aria-hidden="true"></i></button>` : ""}
+  </div>`).join("");
+  const wp = basicItems(actor).find(i=>i.type === "Advantage" && basicId(i.system?.id || i.name) === "willpower");
+  const left = wp?.system?.temporary;
+  const disableWp = Number.isFinite(Number(left)) && left !== null && left !== undefined && Number(left) <= 0;
+  const wpLabel = left == null ? "Spend 1 Willpower" : `Spend 1 Willpower (${int(left)} left)`;
+  return `<div class="wpa-root wpa-basic" aria-label="Basic Actions dashboard">
+    <div class="wpa-basic-heading"><div><span>Rolling as</span><strong>${escape(actor.name)}</strong></div>
+      <button type="button" class="wpa-basic-change" title="Choose another character">Change Character</button>
+    </div>
+    ${groups}
+    <section class="wpa-basic-row" aria-label="My Custom Actions"><h3>My Custom Actions <small>Click Configure to add; pencil to edit or clear</small></h3>
+      <div class="wpa-basic-grid">${custom}</div></section>
+    <div class="wpa-basic-footer">
+      <div class="wpa-basic-difficulty"><span>Difficulty</span><button type="button" data-basic-step="-1" aria-label="Decrease difficulty">&minus;</button>
+        <output data-basic-difficulty aria-live="polite">6</output>
+        <button type="button" data-basic-step="1" aria-label="Increase difficulty">+</button></div>
+      <label class="wpa-basic-willpower"><input type="checkbox" name="basicWillpower" ${disableWp ? "disabled" : ""}><span>${escape(wpLabel)}</span></label>
+    </div><div class="wpa-basic-status" role="status" aria-live="polite">Click an action to roll it immediately using WoD20.</div>
+  </div>`;
+}
+async function performBasicAction(actor, action, difficulty=6, willpower=false) {
+  if (!canUse(actor)) throw new Error("You no longer control this character.");
+  const {attr,ability,pool,missing} = basicActionTraits(actor,action);
+  if (missing) throw new Error(missing + ". Configure the action or update the character sheet.");
+  if (pool <= 0) throw new Error("This action has no dice to roll.");
+  const target = clamp(difficulty, 2, 10);
+  const options = {difficulty:target, bonus:0, useWillpower:!!willpower};
+  // Roll via the native WoD20 Actor API when available so it owns Willpower and chat behavior.
+  if (ability && typeof actor.api?.rollAbility === "function") {
+    await actor.api.rollAbility(ability.id,attr.id,options);
+  } else if (!ability && typeof actor.api?.rollAttribute === "function") {
+    await actor.api.rollAttribute(attr.id,options);
+  } else {
+    // Native WoD20 DiceRoller also works for some NPC Actors without the PC roll API.
+    await runDice(actor,{title:action.label,pool,difficulty:target,
+      extras:[`Attribute: ${attr.label} ${attr.value}`,...(ability ? [`Ability: ${ability.name} ${Math.max(0,int(ability.system?.value ?? ability.system?.permanent ?? ability.system?.rating))}`] : [])],
+      willpower:!!willpower,kind:"general"});
+  }
+}
+async function basicConfigureSlot(actor,index,onSaved) {
+  if (!canUse(actor) || index < 0 || index >= 5) return;
+  const current = basicSlots(actor)[index];
+  const attributes = basicAttributes(actor);
+  const abilities = basicAbilities(actor);
+  if (!attributes.length) return ui.notifications.warn("No Attribute values found on this character.");
+  const selection = current?.attr && attributes.some(a=>a.id === current.attr) ? current.attr : attributes[0].id;
+  const abilityId = current?.abilityId || "";
+  const chosenIcon = current?.icon ?? "dice-six-faces-one";
+  const choices = BASIC_ICONS.map(name=>`<label class="wpa-basic-icon-choice" title="${escape(basicTitle(name))}">
+    <input type="radio" name="icon" value="${name}"${name === chosenIcon ? " checked" : ""}>
+    <span><img src="${basicIcon(name)}" alt=""><small>${escape(basicTitle(name))}</small></span></label>`).join("");
+  const form = `<div class="wpa-root wpa-basic wpa-basic-editor">
+    <p>Configure action ${index+1} for <strong>${escape(actor.name)}</strong>.</p>
+    <label>Button label<input type="text" name="label" maxlength="32" placeholder="e.g. Find Clues" value="${escape(current?.label || "")}"></label>
+    <div class="wpa-basic-editor-traits"><label>Attribute<select name="attribute">
+      ${attributes.map(a=>`<option value="${escape(a.id)}"${selection === a.id ? " selected" : ""}>${escape(a.label)} (${a.value})</option>`).join("")}
+      </select></label><label>Ability<select name="abilityId"><option value="">Attribute only</option>
+      ${abilities.map(a=>`<option value="${escape(a.id)}"${abilityId === a.id ? " selected" : ""}>${escape(a.name)} (${Math.max(0,int(a.system?.value ?? a.system?.permanent ?? a.system?.rating))})</option>`).join("")}
+      </select></label></div>
+    <fieldset class="wpa-basic-icon-picker"><legend>Button icon</legend><div class="wpa-basic-icon-grid">${choices}</div></fieldset>
+  </div>`;
+  const editor = new foundry.applications.api.DialogV2({
+    window:{title:`Custom Action ${index+1}`},position:{width:640},content:form,
+    buttons:[
+      {action:"cancel",label:"Cancel"},
+      ...(current ? [{action:"clear",label:"Clear Slot",callback:()=>({clear:true})}] : []),
+      {action:"save",label:"Save Action",icon:"fas fa-save",default:true,
+       callback:(_event,button)=>Object.fromEntries(new FormData(button.form).entries())}
+    ],
+    submit:async result=>{
+      if (!result || result === "cancel") return;
+      if (result.clear) {
+        await basicSaveSlot(actor,index,null);
+        await onSaved();
+        return;
+      }
+      const attribute = attributes.find(a=>a.id === result.attribute);
+      const ability = abilities.find(a=>a.id === result.abilityId);
+      if (!attribute || (result.abilityId && !ability)) {
+        ui.notifications.warn("That Attribute or Ability is no longer on this character."); return;
+      }
+      const label = String(result.label || "").trim().slice(0,32) ||
+        (ability ? `${attribute.label} + ${ability.name}` : attribute.label).slice(0,32);
+      const iconName = BASIC_ICONS.includes(result.icon) ? result.icon : "dice-six-faces-one";
+      await basicSaveSlot(actor,index,{label,attr:attribute.id,abilityId:ability?.id || "",icon:iconName});
+      await onSaved();
+    }
+  });
+  await editor.render({force:true});
+}
+async function openBasicActions(actor=null) {
+  actor ||= resolveActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor = await chooseCharacter();
+  if (!actor) return;
+  const viewportWidth = Number(globalThis.innerWidth) || 1060;
+  const popup = new foundry.applications.api.DialogV2({
+    window:{title:`Basic Actions - ${actor.name}`},
+    position:{width:Math.min(890,Math.max(320,viewportWidth-50))},
+    content:basicDashboardHTML(actor),
+    buttons:[{action:"close",label:"Close"}]
+  });
+  await popup.render({force:true});
+  const root = popup.element?.querySelector?.(".wpa-basic") || popup.element;
+  if (!root) return;
+  let busy = false;
+  root.addEventListener("click",async event=>{
+    const target = event.target;
+    const step = target.closest?.("[data-basic-step]");
+    if (step) {
+      const output = root.querySelector("[data-basic-difficulty]");
+      const next = clamp(int(output?.textContent,6)+int(step.dataset.basicStep),2,10);
+      if (output) output.textContent = String(next);
+      for (const b of root.querySelectorAll("[data-basic-step]")) {
+        b.disabled = next + int(b.dataset.basicStep) < 2 || next + int(b.dataset.basicStep) > 10;
+      }
+      return;
+    }
+    if (target.closest?.(".wpa-basic-change")) {
+      const selected = await chooseCharacter(actor);
+      if (selected && selected.uuid !== actor.uuid) { await popup.close(); await openBasicActions(selected); }
+      return;
+    }
+    const edit = target.closest?.("[data-basic-config]");
+    if (edit) {
+      const index = int(edit.dataset.basicConfig,-1);
+      await basicConfigureSlot(actor,index,async()=>{await popup.close();await openBasicActions(actor);});
+      return;
+    }
+    const tile = target.closest?.("[data-basic-preset], [data-basic-custom]");
+    if (!tile || tile.disabled || busy) return;
+    const id = tile.dataset.basicPreset;
+    const action = id ? BASIC_ROWS.flatMap(x=>x.actions).find(x=>x.id === id) : basicSlots(actor)[int(tile.dataset.basicCustom,-1)];
+    if (!action) return;
+    busy = true;
+    const status = root.querySelector(".wpa-basic-status");
+    if (status) status.textContent = `Rolling ${action.label}...`;
+    const wpInput = root.querySelector('input[name="basicWillpower"]');
+    const useWillpower = !!wpInput?.checked;
+    try {
+      await performBasicAction(actor,action,int(root.querySelector("[data-basic-difficulty]")?.textContent,6),useWillpower);
+      if (status) status.textContent = `Rolled ${action.label}.`;
+    } catch(error) {
+      console.error(`${MOD} | Basic Action failed`,error);
+      ui.notifications.error(`Basic Action failed: ${error.message}`);
+      if (status) status.textContent = `${action.label} failed; no further action taken here.`;
+    } finally {
+      // Don't accidentally spend Willpower on a second click.
+      if (wpInput) wpInput.checked = false;
+      busy = false;
+    }
+  });
+  // Initialize +/- button states for difficulty 6.
+  root.querySelector('[data-basic-step="-1"]')?.removeAttribute("disabled");
+}
+
 async function execute(actorUuid = null, itemId = null, action = null) {
   let actor;
   try { actor = resolveActor(actorUuid); }
@@ -710,6 +990,11 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+  game.settings.register(MOD, BASIC_ACTIONS_SETTING, {
+    name:"Custom Basic Actions by character",
+    hint:"Five per-character, per-player custom quick actions; no Actor data is changed.",
+    scope:"user",config:false,type:String,default:"{}"
+  });
   Hooks.on("controlToken", (token, controlled) => {
     if (controlled) rememberGmToken(token);
   });
@@ -750,12 +1035,29 @@ async function ensureLauncherMacro() {
   }
 }
 
+// A second optional world Macro launches the Basic Actions grid; neither Macro is assigned to anyone's hotbar.
+const BASIC_LAUNCHER_NAME = "Player Basic Actions";
+const BASIC_LAUNCHER_COMMAND = `const api = game.modules.get("wod20-player-actions")?.api;
+if (!api?.openBasicActions) ui.notifications.warn("Enable WoD20 Player Actions first.");
+else await api.openBasicActions();`;
+async function ensureBasicLauncherMacro() {
+  if (!game.user.isGM) return;
+  if (game.macros?.find(m=>m.getFlag?.(MOD,"basicLauncher") === true || m.name === BASIC_LAUNCHER_NAME)) return;
+  try {
+    await Macro.create({name:BASIC_LAUNCHER_NAME,type:"script",
+      img:basicIcon("dice-six-faces-one"),command:BASIC_LAUNCHER_COMMAND,
+      ownership:{default:CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER},
+      flags:{[MOD]:{basicLauncher:true}}});
+  } catch(error) { console.warn(`${MOD} | Unable to create Basic Actions launcher`,error); }
+}
+
 Hooks.once("ready", () => {
   if (game.system.id !== SYSTEM_ID) return;
   // Retain execute() for old macros. Create only one optional launcher, never touch hotbars.
-  game.modules.get(MOD).api = { execute, openPanel, guidedCast };
+  game.modules.get(MOD).api = { execute, openPanel, guidedCast, openBasicActions };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
   void ensureLauncherMacro();
+  void ensureBasicLauncherMacro();
   console.log(`${MOD} | Ready. Actors tab: Player Magick; shortcut: Shift+J.`);
 });

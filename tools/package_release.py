@@ -1,41 +1,50 @@
-"""Package this Foundry module from its repository root, without modifying world data.
+"""Build the complete installable Foundry module, including curated Game Icons.
 
-Usage: python3 tools/package_release.py
+Usage (repository root): python3 tools/package_release.py
+No world/Actor data is read or modified.
 """
+import hashlib
 import json
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-manifest = json.loads((ROOT / 'module.json').read_text(encoding='utf-8'))
-module_id, version = manifest['id'], manifest['version']
-if module_id != 'wod20-player-actions':
+ROOT=Path(__file__).resolve().parents[1]
+manifest=json.loads((ROOT/'module.json').read_text(encoding='utf-8'))
+module_id,version=manifest['id'],manifest['version']
+if module_id!='wod20-player-actions':
     raise SystemExit('Unexpected module ID; refusing to package.')
-if not version or not manifest.get('manifest') or not manifest.get('download'):
-    raise SystemExit('Version/manifest/download must be populated.')
-zip_name = f'wod20-player-magick-{version}.zip'
-if not manifest['download'].endswith(f'/v{version}/{zip_name}'):
-    raise SystemExit('Download URL does not match module version/asset name.')
-include = [
-    'module.json', 'README.md', 'CHANGELOG.md', 'TEST-REPORT.md',
-    '05-HANDOFF-UPDATE-0.1.4.md', '05-HANDOFF-UPDATE-0.1.6.md', 'PLAYER-MAGICK-LAUNCHER.js',
-    'scripts/player-actions.js', 'styles/player-actions.css',
+name=f'wod20-player-magick-{version}.zip'
+if not version or not manifest.get('manifest') or not manifest.get('download','').endswith(f'/v{version}/{name}'):
+    raise SystemExit('Version/manifest/download mismatch.')
+required=[
+    'module.json','README.md','CHANGELOG.md','TEST-REPORT.md','ICONS-CREDITS.md',
+    'PLAYER-MAGICK-LAUNCHER.js','PLAYER-BASIC-ACTIONS-LAUNCHER.js',
+    'scripts/player-actions.js','styles/player-actions.css',
+    'icons/LICENSE.txt','icons/icon-authors.json'
 ]
-include.extend(str(p.relative_to(ROOT)) for p in sorted((ROOT / 'tests').glob('*.cjs')))
-for path in include:
-    if not (ROOT / path).is_file():
-        raise SystemExit(f'Missing release source: {path}')
-dist = ROOT / 'dist'
+optional=[]
+for pattern in ('05-HANDOFF-UPDATE-*.md','icons/*.svg','tests/*.cjs','tests/*.py'):
+    optional += [str(f.relative_to(ROOT)) for f in ROOT.glob(pattern) if f.is_file()]
+icons=[f for f in optional if f.startswith('icons/') and f.endswith('.svg')]
+if len(icons)!=36:raise SystemExit(f'Expected 36 curated icons, found {len(icons)}.')
+tests=[f for f in optional if f.startswith('tests/') and f.endswith('.cjs')]
+if len(tests)<12:raise SystemExit(f'Expected at least 12 regression tests, found {len(tests)}.')
+paths=sorted(set(required+optional))
+for rel in paths:
+    p=ROOT/rel
+    if not p.is_file() or p.is_symlink() or p.resolve().is_relative_to(ROOT.resolve()) is False:
+        raise SystemExit(f'Unsafe or missing release file: {rel}')
+dist=ROOT/'dist'
 dist.mkdir(exist_ok=True)
-out = dist / zip_name
-with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-    for path in sorted(include):
-        archive.write(ROOT / path, arcname=f'{module_id}/{path}')
+out=dist/name
+with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+    for rel in paths:
+        archive.write(ROOT/rel,arcname=f'{module_id}/{rel}')
 with zipfile.ZipFile(out) as archive:
     assert archive.testzip() is None, 'CRC check failed'
-    assert f'{module_id}/module.json' in archive.namelist()
-    installed = json.loads(archive.read(f'{module_id}/module.json'))
-    assert installed == manifest
-    for path in manifest.get('esmodules', []) + manifest.get('styles', []):
+    assert not any(x.startswith('/') or '..' in Path(x).parts for x in archive.namelist())
+    installed=json.loads(archive.read(f'{module_id}/module.json'))
+    assert installed==manifest
+    for path in manifest.get('esmodules',[])+manifest.get('styles',[]):
         assert f'{module_id}/{path}' in archive.namelist(), path
-print(out)
+print(f'{out} ({out.stat().st_size} bytes, sha256 {hashlib.sha256(out.read_bytes()).hexdigest()}; {len(paths)} files)')
