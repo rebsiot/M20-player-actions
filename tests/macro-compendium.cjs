@@ -54,8 +54,8 @@ ctx.__native({DiceRollContainer:class {constructor(a){this.actor=a;}},DiceRoller
 ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,actor);return 17;}});
 (async()=>{
   const defs=api.definitions();
-  assert.equal(defs.length,39,'20 basic, five custom, five dashboard/magick, nine combat/sheet macros');
-  assert.equal(new Set(defs.map(x=>x.id)).size,39,'stable unique IDs');
+  assert.equal(defs.length,40,'20 basic, five custom, five dashboard/magick, ten combat/sheet macros');
+  assert.equal(new Set(defs.map(x=>x.id)).size,40,'stable unique IDs');
   assert.equal(defs.filter(d=>['Awareness','Movement','Social','Knowledge'].includes(d.group)).length,20);
   assert.equal(defs.filter(d=>d.group==='My Custom Actions').length,5);
   for(const d of defs){
@@ -65,35 +65,57 @@ ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,acto
     assert.ok(fs.existsSync(iconPath),`missing ${d.name} icon`);
     assert.doesNotThrow(()=>new Function('game','ui',`return (async()=>{${d.command}})();`),`bad JS macro ${d.name}`);
   }
-  assert.ok(defs.some(d=>d.name==='Player Magick'&&d.group==='Magick'));
+  assert.ok(defs.some(d=>d.name==='Use Magick'&&d.group==='Magick'));
   assert.ok(defs.some(d=>d.name==='Dodge'&&d.group==='Combat'));
-  assert.ok(defs.some(d=>d.name==='Attack (Choose Type)'&&d.group==='Combat'));
+  assert.ok(defs.some(d=>d.name==='Raw Attack (Choose Type)'&&d.group==='Combat'));
+  assert.ok(defs.some(d=>d.name==='Standard Attack (Targeted)'&&d.group==='Combat'));
+  assert.ok(defs.some(d=>d.name==='Raw Brawl Attack'&&d.group==='Combat'));
   assert.ok(defs.some(d=>d.name==='Initiative'&&d.group==='Combat'));
   assert.ok(defs.some(d=>d.name==='Rotes & Powers'));
   assert.ok(defs.some(d=>d.name==='Roll Any Check'));
   await api.ensure();
-  assert.equal(packCreates,1);assert.equal(packInsertBatches,1);assert.equal(pack.documents.length,39);
+  assert.equal(packCreates,1);assert.equal(packInsertBatches,1);assert.equal(pack.documents.length,40);
   assert.ok(pack.documents.every(x=>x.type==='script'&&x.ownership.default===2&&x.flags['wod20-player-actions'].catalogId));
   assert.equal(packConfigures.at(-1).ownership.PLAYER,'OBSERVER');
   assert.equal(packConfigures.at(-1).ownership.TRUSTED,'OBSERVER');
   assert.equal(pack.locked,true);
-  assert.equal(JSON.parse(settings.get('macroCatalogInstalledIds')).length,39);
+  assert.equal(JSON.parse(settings.get('macroCatalogInstalledIds')).length,40);
   await api.ensure();assert.equal(packInsertBatches,1,'relaunch never duplicates');
+  // Upgrade v0.1.13's shipped labels in a managed pack, but preserve GM customizations.
+  for (const [id, oldName] of [
+    ['dash-magick','Player Magick'], ['attack','Attack (Choose Type)'],
+    ['combat-brawl-attack','Brawl Attack'], ['combat-firearms-attack','Firearms Attack']
+  ]) {
+    const doc=pack.documents.find(d=>d.flags['wod20-player-actions'].catalogId===id);
+    doc.name=oldName;
+    doc.update=async update=>{Object.assign(doc,update);return doc;};
+  }
+  const edited=pack.documents.find(d=>d.flags['wod20-player-actions'].catalogId==='combat-melee-attack');
+  edited.name='Melee Attack';edited.command='CUSTOM GM EDIT';
+  edited.update=async update=>{Object.assign(edited,update);return edited;};
+  await api.ensure();
+  assert.equal(packInsertBatches,1,'renaming shipped macros never recreates pack entries');
+  for (const [id, expected] of [
+    ['dash-magick','Use Magick'], ['attack','Raw Attack (Choose Type)'],
+    ['combat-brawl-attack','Raw Brawl Attack'], ['combat-firearms-attack','Raw Firearms Attack']
+  ]) assert.equal(pack.documents.find(d=>d.flags['wod20-player-actions'].catalogId===id)?.name,expected);
+  assert.equal(edited.name,'Melee Attack','customized GM command must not be renamed or overwritten');
+  assert.equal(edited.command,'CUSTOM GM EDIT');
   // GMs can remove or edit entries; do not overwrite/recreate removed shortcuts.
   pack.documents=pack.documents.filter(d=>d.getFlag('wod20-player-actions','catalogId')!=='basic-notice');
-  await api.ensure();assert.equal(pack.documents.length,38,'removed macro stays removed');
+  await api.ensure();assert.equal(pack.documents.length,39,'removed macro stays removed');
   const notice=defs.find(d=>d.id==='basic-notice');
   await new Function('game','ui',`return (async()=>{${notice.command}})();`)(game,ctx.ui);
   assert.equal(rolls.length,1);assert.equal(rolls[0].action,'Notice');
   assert.equal(rolls[0].difficulty,6);assert.equal(rolls[0].numDices,5);
   await api.rollCombat('dodge');assert.equal(rolls.at(-1).action,'Dodge');
   assert.equal(rolls.at(-1).ability,'abl-1');
-  await api.rollCombat('brawl-attack');assert.equal(rolls.at(-1).action,'Brawl Attack');
+  await api.rollCombat('brawl-attack');assert.equal(rolls.at(-1).action,'Raw Brawl Attack');
   assert.equal(await api.initiative(),17,'native system initiative, not invented roll');
   // Generic Attack must select a declared Ability and use one native roll.
   ctx.foundry.applications.api.DialogV2.input=async()=>({attackType:'firearms-attack',difficulty:8,willpower:true});
   await api.openAttack();
-  assert.equal(rolls.at(-1).action,'Firearms Attack');
+  assert.equal(rolls.at(-1).action,'Raw Firearms Attack');
   assert.equal(rolls.at(-1).ability,'abl-4');
   assert.equal(rolls.at(-1).difficulty,8);
   assert.equal(rolls.at(-1).usewillpower,true);
@@ -114,5 +136,5 @@ ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,acto
   // When disabled/no pack API, compendium initialization fails harmlessly.
   game.user.isGM=true;delete game.packs.get;
   await api.ensure();assert.equal(packInsertBatches,1);
-  console.log('PASS: 39 validated draggable native Script Macro entries, compendium rights, idempotence, retained edits, player safety and native rolls');
+  console.log('PASS: 40 validated draggable native Script Macro entries, compendium rights, idempotence, retained edits, player safety and native rolls');
 })().catch(e=>{console.error(e);process.exitCode=1});

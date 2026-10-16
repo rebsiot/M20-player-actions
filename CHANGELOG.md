@@ -1,3 +1,14 @@
+## v0.1.14 - 2026-10-15 - Combat integration and readability (unpublished test build)
+
+- **Standard Attack (Targeted):** New draggable catalog shortcut requiring exactly one target and an enabled **STL Combat Workflow v0.1.4+** (`stl-combat-workflow`). Calls its published API `api.open({attackerActor: actor})`; the separate Combat Workflow owns native Attack -> Defense -> Damage -> Soak -> Apply/Undo. No duplicate weapon/damage engine and no fallback to the WoD20 weapon dialog.
+- **Raw Attack:** Renamed generic and Brawl/Melee/Firearms hotbar shortcuts to explicitly indicate simple untargeted native WoD20 Attribute + Ability checks. No automatic defense/damage/soak.
+- **Use Magick:** Renamed shipped default Magick launcher, Actors sidebar action and catalog entry. Public API `openPanel()`/Shift+J/actor-bound Rotes remain stable. Unmodified catalog names are migrated without replacing customized macro names, scripts or images; GM-deleted shortcuts are not restored.
+- **Basic Actions readability:** Approximately 15% wider window (770 -> 885 px maximum), bolder/larger high-contrast action text, clearer dice pools and restrained tint. Original 20 presets + 5 private custom slots and 162 licensed SVGs are unchanged.
+- **Improvised Magick:** Effect/Focus description now collapses by default, matching the compact Rote editor. Sphere selection, difficulty, Focus choice, Paradox markers and native roll calculations unchanged.
+- **Catalog/permissions:** 40 catalog macros (was 39), all draggable by players. No hotbar auto-population, Actor migration, or modification of Combat Workflow module.
+- **Verification:** JS syntax, 15 Node/mock suites including new Combat Workflow contract checks and catalog migration, three Chromium fixtures at 1440/820/430 pixels; ZIP package integrity. **No live Foundry v14 / Combat Workflow integration test completed.**
+- **Upgrade/rollback:** Back up `Z:\Data\modules\wod20-player-actions` **and the world** before upgrading. Restore v0.1.13 code to roll back; world compendium edits and gameplay resource/health updates require separate backups or in-game Undo.
+
 ## v0.1.13 — 2026-10-15 — Player Macro compendium (test build)
 
 - **Added:** Native GM-provisioned world Macro compendium **Player Actions — Hotbar Macros** with 39 Script Macros: 20 preset actions, 5 per-player/per-Actor custom slots, 2 dashboard/freeform tools, 3 Magick tools, and 9 combat/sheet shortcuts. Players drag any Macro themselves; no automatic hotbar assignments.

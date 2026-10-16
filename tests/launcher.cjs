@@ -15,9 +15,9 @@ const ctx={Hooks:{once:(event,fn)=>hooks[event]=fn,on:()=>{}},game,
 (async()=>{
   vm.runInNewContext(src,ctx);hooks.init();hooks.ready();await new Promise(setImmediate);
   assert.equal(macros.length,2,'exactly one optional macro per dashboard');
-  const mage=macros.find(x=>x.name==='Player Magick');
+  const mage=macros.find(x=>x.name==='Use Magick');
   const basic=macros.find(x=>x.name==='Player Basic Actions');
-  assert.ok(mage&&basic,'retain Player Magick and add Basic Actions launcher');
+  assert.ok(mage&&basic,'rename Magick launcher while retaining Basic Actions launcher');
   assert.match(mage.command,/api\.openPanel\(\)/);
   assert.match(basic.command,/api\.openBasicActions\(\)/);
   assert.equal(basic.flags['wod20-player-actions'].basicLauncher,true);

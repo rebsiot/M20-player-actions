@@ -119,7 +119,13 @@ with sync_playwright() as p:
         page.locator('input[name="useFocus"]').check()
         fd=page.evaluate('Object.fromEntries(new FormData(document.querySelector("form")).entries())')
         assert fd['quint']=='2' and fd['modifier']=='-3' and fd['useFocus']=='on',(width,fd)
-        assert not page.locator('.wpa-cast-help').evaluate('(e)=>e.open')
+        assert not page.locator('.wpa-optional-description').evaluate('(e)=>e.open'), 'effect/focus must start collapsed'
+        assert not page.locator('.wpa-cast-help').last.evaluate('(e)=>e.open'), 'casting rules must start collapsed'
+        page.locator('.wpa-optional-description summary').click()
+        assert page.locator('.wpa-optional-description').evaluate('(e)=>e.open')
+        assert page.locator('.wpa-optional-description input[name=effect]').is_visible()
+        page.locator('.wpa-optional-description summary').click()
+        assert not page.locator('.wpa-optional-description').evaluate('(e)=>e.open')
         metrics=page.evaluate('''() => {
          const root=document.querySelector('.wpa-cast'), settings=document.querySelector('.wpa-cast-settings'), summary=document.querySelector('.wpa-cast-summary');
          const overflow=[...document.querySelectorAll('.wpa-cast, .wpa-cast-summary, .wpa-cast-settings, .wpa-stepper')].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>({className:e.className,width:e.clientWidth,scrollWidth:e.scrollWidth}));

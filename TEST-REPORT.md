@@ -1,3 +1,23 @@
+# v0.1.14 Test Report - 2026-10-15
+
+## Automated results
+
+- **15 Node/mock suites:** PASS, including `standard-attack-workflow.cjs`, all existing Magick/Paradox/GM-token/compendium regressions, and protection of previously customized catalog entries. The new test asserts exactly one targeted token, enabled Combat Workflow v0.1.4, and the exact `api.open({attackerActor: actor})` call with a synthetic unlinked GM-token Actor. An unavailable integration never triggers a substitute attack roll.
+- **System contract verified in source:** Public repository `rebsiot/combat-workflow` currently has module ID `stl-combat-workflow`, version 0.1.4. Its ready hook exports `game.modules.get(MODULE).api = {open}`, and its `open({attackerActor})` accepts that Actor, checks one target and online GM, chooses weapon/unarmed, then runs the native combat chat workflow. The actual 0.1.4 source was inspected; this is **not** a successful live integration test.
+- **Three Chromium fixtures:** PASS at 1440, 820 and 430 pixels. Expanded action labels and 885px maximum dashboard width fit; no horizontal overflow. Improvised optional Effect/Focus description and rules help start collapsed, with field visible when expanded; Rote quick-cast still works.
+- **JavaScript syntax:** `node --check scripts/player-actions.js` PASS; macro-compendium command compilation PASS. Package integrity and manifest checks PASS after release ZIP creation.
+- **Preserved:** All 162 bundled SVGs and attribution, 20 Basic Actions and 5 user-owned custom actions, GM token priority, native Magick chat and Paradox markers, module ID, world macro catalog IDs and no automatic hotbar assignment.
+
+## Live Foundry status - NOT VERIFIED
+
+This build has **not** been installed/tested by the user with Foundry v14 + WoD20 7.3.1 + Combat Workflow 0.1.4. Before using it in a game, verify Standard Attack requires one target, starts the Workflow weapon picker from the actual character, proceeds to defender, damage, soak and GM Apply/Undo in two client sessions; test a plain Raw Attack with no target; confirm Use Magick label and custom macro preservation.
+
+## Install, prerequisites and rollback
+
+Optional `stl-combat-workflow` **v0.1.4+** is needed for Standard Attack only, and its own workflow requires an online GM. Back up world data and `Z:\Data\modules\wod20-player-actions`; install this versioned module ZIP, restart Foundry and hard-refresh. Restore v0.1.13 files for code rollback. The world compendium remains, and module restoration does not undo in-game damage or Willpower/Quintessence spent.
+
+---
+
 ## v0.1.13 — Macro compendium: automated verification
 
 - `node --check scripts/player-actions.js`: **pass**.

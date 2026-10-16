@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.13: player macro catalog, Basic Actions and Magick. */
+/* WoD20 Player Actions v0.1.14: STL Combat Workflow integration, readability and Magick UI polish. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -283,7 +283,7 @@ function castDetailsHTML(availableQuint, {quick = false} = {}) {
       <label><input type="checkbox" name="ritual"> Extended casting / ritual</label>
     </div>
     <div class="wpa-preview" aria-live="polite" hidden></div>
-    ${quick ? `<details class="wpa-cast-help wpa-optional-description"><summary>Optional effect description</summary>${description}</details>` : description}
+    <details class="wpa-cast-help wpa-optional-description"><summary>${quick ? "Optional variation / focus description" : "Optional effect / focus description"}</summary>${description}</details>
     <details class="wpa-cast-help"><summary>Casting rules and Storyteller notes</summary>
       <p>Highest chosen Sphere determines base difficulty. Multiple Spheres may be combined; the Storyteller decides the effect requirements.</p>
       <p>M20 default: highest Sphere +3/+4/+5, then modifiers. Quintessence reduces difficulty one per point, subject to Storyteller ruling. The roll difficulty is capped at 10 here; harder effects can require additional successes.</p>
@@ -898,7 +898,7 @@ async function openBasicActions(actor=null) {
   const viewportWidth = Number(globalThis.innerWidth) || 1060;
   const popup = new foundry.applications.api.DialogV2({
     window:{title:`Basic Actions - ${actor.name}`},
-    position:{width:Math.min(770,Math.max(320,viewportWidth-50))},
+    position:{width:Math.min(885,Math.max(320,viewportWidth-50))},
     content:basicDashboardHTML(actor),
     buttons:[{action:"close",label:"Close"}]
   });
@@ -963,9 +963,9 @@ const COMBAT_SHORTCUTS = Object.freeze({
   dodge: {label:"Dodge",attr:"dexterity",ability:"Athletics",icon:"dodge"},
   block: {label:"Block",attr:"dexterity",ability:"Brawl",icon:"shield"},
   parry: {label:"Parry",attr:"dexterity",ability:"Melee",icon:"crossed-swords"},
-  "brawl-attack": {label:"Brawl Attack",attr:"dexterity",ability:"Brawl",icon:"fist"},
-  "melee-attack": {label:"Melee Attack",attr:"dexterity",ability:"Melee",icon:"crossed-swords"},
-  "firearms-attack": {label:"Firearms Attack",attr:"dexterity",ability:"Firearms",icon:"crosshair"}
+  "brawl-attack": {label:"Raw Brawl Attack",attr:"dexterity",ability:"Brawl",icon:"fist"},
+  "melee-attack": {label:"Raw Melee Attack",attr:"dexterity",ability:"Melee",icon:"crossed-swords"},
+  "firearms-attack": {label:"Raw Firearms Attack",attr:"dexterity",ability:"Firearms",icon:"crosshair"}
 });
 function shortcutActor() {
   const actor = resolveActor();
@@ -1014,12 +1014,11 @@ async function openAttackShortcut() {
   if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
   if (!canUse(actor)) actor=await chooseCharacter();
   if (!actor) return;
-  // These are hit/check rolls, NOT weapon-specific damage/soak automation.
-  // Player chooses the ability; absent abilities are shown explicitly, never
-  // silently replaced by another skill.
+  // Raw attacks are plain Attribute + Ability checks without target, weapon,
+  // damage, soak or any automatic combat encounter. Standard Attack is separate.
   const modes=["brawl-attack","melee-attack","firearms-attack"];
-  const content=`<div class="wpa-root wpa-basic"><p>Attack check for <strong>${escape(actor.name)}</strong>.</p>
-    <p>Select an attack pool. Weapon properties, damage and soak stay with the WoD20 sheet and Storyteller.</p>
+  const content=`<div class="wpa-root wpa-basic"><p>Raw attack check for <strong>${escape(actor.name)}</strong>. No target required.</p>
+    <p>Select a dice pool. For the targeted STL Combat Workflow (attack, defense, damage and soak), use <strong>Standard Attack</strong>.</p>
     <label>Attack type<select name="attackType">${modes.map(id=>{
       const a=COMBAT_SHORTCUTS[id], t=basicActionTraits(actor,a);
       return `<option value="${id}"${t.missing?' disabled':''}>${escape(a.label)} — Dexterity + ${escape(a.ability)}${t.missing?' (not on sheet)':` (${t.pool}d10)`}</option>`;
@@ -1029,11 +1028,49 @@ async function openAttackShortcut() {
   if (!modes.some(id=>!basicActionTraits(actor,COMBAT_SHORTCUTS[id]).missing)) {
     ui.notifications.warn("No Brawl, Melee or Firearms Ability found on this character.");return;
   }
-  const data=await foundry.applications.api.DialogV2.input({window:{title:`Attack — ${actor.name}`},content,
-    ok:{label:"Roll Attack"}});
+  const data=await foundry.applications.api.DialogV2.input({window:{title:`Raw Attack — ${actor.name}`},content,
+    ok:{label:"Roll Raw Attack"}});
   if (!data?.attackType || !modes.includes(data.attackType)) return;
   return shortcutRun(actor,COMBAT_SHORTCUTS[data.attackType],clamp(data.difficulty,2,10),!!data.willpower);
 }
+/**
+ * Standard Attack is a thin launcher into the separate STL Combat Workflow
+ * v0.1.4 (module ID stl-combat-workflow). That module, not Player Actions,
+ * owns targeting, weapon choice, defense, damage, soak and GM health/Undo.
+ * Its published API accepts a real Actor document, including the synthetic
+ * Actor resolved from a controlled or previously controlled GM token.
+ *
+ * Contract: game.modules.get("stl-combat-workflow").api.open({attackerActor})
+ * See the Combat Workflow 16-series handoff before changing this API.
+ */
+async function openStandardAttackShortcut() {
+  let actor = shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0) > 1) return;
+  if (!canUse(actor)) actor = await chooseCharacter();
+  if (!actor) return;
+
+  // Same single-target condition required by Combat Workflow v0.1.4.
+  // A sheet- or Actor-bound launch does not require an attacker token.
+  const targets = [...(game.user?.targets ?? [])];
+  if (targets.length !== 1 || !targets[0]?.actor || !targets[0]?.document?.uuid) {
+    ui.notifications.warn("Standard Attack requires exactly one targeted defender token. Target one token first, then try again.");
+    return;
+  }
+
+  const module = game.modules?.get?.("stl-combat-workflow");
+  const api = module?.api ?? game.stlCombatWorkflow;
+  if (!module?.active || typeof api?.open !== "function") {
+    ui.notifications.warn("Standard Attack requires STL Combat Workflow v0.1.4 or later to be enabled. Use Raw Attack for a simple untargeted roll.");
+    return;
+  }
+  try {
+    return await api.open({attackerActor: actor});
+  } catch (error) {
+    console.error(`${MOD} | Standard Attack / STL Combat Workflow failed`, error);
+    ui.notifications.error(`Standard Attack failed: ${error.message}`);
+  }
+}
+
 async function openAnyCheckShortcut() {
   let actor=shortcutActor();
   if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
@@ -1095,15 +1132,36 @@ function catalogMacroDefinitions() {
     "dice-six-faces-one","rollCustomShortcut",i);
   add("dash-basic","Basic Actions","Dashboards","dice-six-faces-one","openBasicActions");
   add("any-check","Roll Any Check","Dashboards","dice-six-faces-one","openAnyCheckShortcut");
-  add("dash-magick","Player Magick","Magick","spell-book","openPanel");
+  add("dash-magick","Use Magick","Magick","spell-book","openPanel");
   add("cast-improvised","Improvised Magick","Magick","crystal-ball","openImprovisedShortcut");
   add("browse-rotes","Rotes & Powers","Magick","black-book","openPanel");
-  add("attack","Attack (Choose Type)","Combat","crossed-swords","openAttackShortcut");
+  add("standard-attack","Standard Attack (Targeted)","Combat","target-arrows","openStandardAttackShortcut");
+  add("attack","Raw Attack (Choose Type)","Combat","crossed-swords","openAttackShortcut");
   for(const [id,action] of Object.entries(COMBAT_SHORTCUTS))
     add(`combat-${id}`,action.label,"Combat",action.icon,"rollCombatShortcut",id);
   add("initiative","Initiative","Combat","alarm-clock","rollInitiativeShortcut");
   add("sheet","Character Sheet (Weapon / Soak)","Combat","riot-shield","openSheetShortcut");
   return defs;
+}
+// Update only unedited shipped default names inside our managed compendium.
+// A GM's renamed, re-scripted or re-iconed macros are never modified. No
+// attempt is made to rename hotbar copies the player has already personalized.
+const LEGACY_CATALOG_NAMES = Object.freeze({
+  "dash-magick":"Player Magick",
+  "attack":"Attack (Choose Type)",
+  "combat-brawl-attack":"Brawl Attack",
+  "combat-melee-attack":"Melee Attack",
+  "combat-firearms-attack":"Firearms Attack"
+});
+function unmodifiedCatalogNamesToUpdate(existing, definitions) {
+  const current = new Map(definitions.map(d=>[d.id,d]));
+  return existing.flatMap(doc=>{
+    const id = doc.getFlag?.(MOD,"catalogId") || doc.flags?.[MOD]?.catalogId;
+    const before = LEGACY_CATALOG_NAMES[id], after = current.get(id);
+    if (!before || !after || doc.name !== before || doc.command !== after.command ||
+        doc.img !== after.img || typeof doc.update !== "function") return [];
+    return [{doc,newName:after.name}];
+  });
 }
 function catalogReadInstalledIds() {
   try {
@@ -1138,12 +1196,16 @@ async function ensureMacroCompendium() {
     return;
   }
   const definitions=catalogMacroDefinitions();
+  const renamed = created ? [] : unmodifiedCatalogNamesToUpdate(existing,definitions);
   const fresh=definitions.filter(d=>!everInstalled.has(d.id) && !foundIds.has(d.id));
-  if (fresh.length) {
+  if (fresh.length || renamed.length) {
     const wasLocked=!!pack.locked;
     if (wasLocked) await pack.configure({locked:false});
     try {
-      await Macro.createDocuments(fresh.map(d=>({
+      // Locked compendiums cannot be edited, even by the GM. Rename only
+      // documented shipped defaults while unlocked; preserve all user edits.
+      for (const entry of renamed) await entry.doc.update({name:entry.newName});
+      if (fresh.length) await Macro.createDocuments(fresh.map(d=>({
         name:d.name,type:"script",img:d.img,command:d.command,
         ownership:{default:CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER},
         flags:{[MOD]:{catalogId:d.id,category:d.group}}
@@ -1183,7 +1245,7 @@ async function chooseCharacter(current = null) {
   actors.sort((a, b) => a.name.localeCompare(b.name));
   const options = actors.map(a => `<option value="${escape(a.uuid)}"${a.uuid === current?.uuid ? " selected" : ""}>${escape(a.name)}</option>`).join("");
   const data = await foundry.applications.api.DialogV2.input({
-    window: {title: "Player Magick — Choose Character"},
+    window: {title: "Use Magick — Choose Character"},
     content: `<div class="wpa-root"><label>Character<select name="actorUuid" autofocus>${options}</select></label></div>`,
     ok: {label: "Open Actions"}
   });
@@ -1210,7 +1272,7 @@ async function openPanel(actor = null) {
   const powers = items.filter(i => i.type === "Power");
   const rows = list => list.map(i => `<div class="wpa-action" data-item-id="${escape(i.id)}"><img src="${escape(icon(i))}" alt=""><span>${escape(i.name)}</span><button type="button" class="wpa-run" data-item-id="${escape(i.id)}" title="${i.type === "Rote" ? "Cast this Rote" : "Use this Power"}">${i.type === "Rote" ? "Cast" : "Use"}</button></div>`).join("");
   const Dialog = foundry.applications.api.DialogV2;
-  const panel = new Dialog({window:{title:`Player Magick • ${actor.name}`}, position:{width:620}, content:
+  const panel = new Dialog({window:{title:`Use Magick • ${actor.name}`}, position:{width:620}, content:
     `<div class="wpa-root wpa-panel">
       <div class="wpa-panel-header"><div><small>Casting as</small><strong>${escape(actor.name)}</strong></div>
       <button type="button" class="wpa-change-character"><i class="fas fa-users"></i> Change Character</button></div>
@@ -1251,8 +1313,8 @@ function attachDirectoryButton(html) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "wpa-directory-button";
-  button.title = "Open Player Magick (Shift+J)";
-  button.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Player Magick';
+  button.title = "Use Magick (Shift+J)";
+  button.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Use Magick';
   button.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); void openPanel(); });
   wrap.append(button);
   if (header === root) root.prepend(wrap);
@@ -1304,7 +1366,7 @@ Hooks.once("init", () => {
   });
   // Keybindings must be registered during init, not ready.
   game.keybindings.register(MOD,"openPanel", {
-    name: "Open Player Magick",
+    name: "Use Magick",
     hint: "Open Mage casting and known Rotes",
     editable: [{key:"KeyJ", modifiers:["SHIFT"]}],
     onDown: () => {void openPanel(); return true;},
@@ -1317,14 +1379,24 @@ Hooks.once("init", () => {
 
 // Publish one optional world Macro (not a hotbar assignment) for players to drag themselves.
 // GM-only, idempotent, and leaves any existing macro with the same name intact.
-const LAUNCHER_NAME = "Player Magick";
+const LAUNCHER_NAME = "Use Magick";
 const LAUNCHER_COMMAND = `const api = game.modules.get("wod20-player-actions")?.api;
 if (!api?.openPanel) ui.notifications.warn("Enable the WoD20 Player Magick module first.");
 else await api.openPanel();`;
 async function ensureLauncherMacro() {
   if (!game.user.isGM) return;
-  const existing = game.macros?.find(m => m.getFlag?.(MOD, "launcher") === true || m.name === LAUNCHER_NAME);
-  if (existing) return;
+  const existing = game.macros?.find(m => m.getFlag?.(MOD, "launcher") === true ||
+    m.name === LAUNCHER_NAME || m.name === "Player Magick");
+  if (existing) {
+    // Rename the original unmodified launcher once; retain custom GM macros.
+    if (existing.getFlag?.(MOD,"launcher") === true && existing.name === "Player Magick" &&
+        existing.command === LAUNCHER_COMMAND && existing.img === "icons/svg/dice-target.svg" &&
+        typeof existing.update === "function") {
+      try { await existing.update({name:LAUNCHER_NAME}); }
+      catch(error) { console.warn(`${MOD} | Could not rename existing Magick launcher`,error); }
+    }
+    return;
+  }
   try {
     await Macro.create({
       name: LAUNCHER_NAME,
@@ -1361,7 +1433,7 @@ Hooks.once("ready", () => {
   game.modules.get(MOD).api = {
     execute,openPanel,guidedCast,openBasicActions,
     rollPresetAction,rollCustomShortcut,rollCombatShortcut,
-    openAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut
+    openAttackShortcut,openStandardAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut
   };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
@@ -1372,5 +1444,5 @@ Hooks.once("ready", () => {
     console.error(`${MOD} | Macro compendium setup failed`,error);
     ui.notifications?.warn?.("Player Actions Macro compendium setup failed; see console.");
   });
-  console.log(`${MOD} | Ready. Actors tab: Player Magick; shortcut: Shift+J.`);
+  console.log(`${MOD} | Ready. Actors tab: Use Magick; shortcut: Shift+J.`);
 });

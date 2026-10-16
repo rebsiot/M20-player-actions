@@ -97,7 +97,7 @@ with sync_playwright() as p:
         .filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>({cls:el.className,content:el.textContent.trim().slice(0,70)}))
     })''')
     assert compact['iconSizes']==['19px']*20,(width,compact)
-    assert compact['tileHeight']<=65,(width,compact)
+    assert compact['tileHeight']<=(70 if width==430 else 70),(width,compact)
     assert compact['panelHeight']<=(660 if width>=820 else 790),(width,compact)
     assert not compact['clipping'],(width,compact)
     assert page.locator('.wpa-basic-footer').evaluate('(el) => getComputedStyle(el).position')==('static' if width==430 else 'sticky')
