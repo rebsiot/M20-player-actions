@@ -1,6 +1,6 @@
 # v0.1.16 Test Report - 2026-10-16
 
-**Status:** Candidate archive built locally; not installed, published to GitHub, or verified in live Foundry. v0.1.15 was published on GitHub on 2026-10-16.
+**Status:** v0.1.16 merged and published on GitHub on 2026-10-16 (PR #12; GitHub Actions run 38952834950: success). The automated suites and release packaging passed; the module has not been installed or verified in live Foundry, and cross-module smoke tests remain pending.
 
 ## Automated checks - PASS
 
