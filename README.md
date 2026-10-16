@@ -1,7 +1,7 @@
 # WoD20 Player Magick
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.9 (2026-10-15)  
+**Release:** v0.1.10 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
@@ -9,15 +9,26 @@ A focused, player-facing Mage: The Ascension 20th Anniversary casting interface 
 ## What the player sees
 
 1. Open **Actors > Player Magick** or press **Shift+J**.
-2. **First launch:** use the character assigned in Foundry User Configuration (`game.user.character`), regardless of token selection. **After Change Character:** remember the player's manually selected Actor across future opens and reconnects, using a hidden Foundry v14 `user`-scope setting (per user, per world). If that Actor is deleted or the player loses ownership, fall back to the assigned character, then an owned selected token, or the chooser.
+2. **Players:** Start with the character assigned in Foundry User Configuration (`game.user.character`). After manually choosing another, remember that Actor with the existing per-user preference until changed again, including across reconnects. **GMs:** Use a *single currently selected token* first; if none is selected, use the most recently controlled token (including an unlinked NPC token). Only if that token is no longer available fall back to the remembered/assigned Actor or character chooser. Do not guess when multiple tokens are selected.
 3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. The panel retains its existing **Change Character** control, but the casting window now presents **Casting as [character dropdown]**, so you can switch directly without a second dialog.
 4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the **live Difficulty displayed in the top header** and roll using WoD20's native dice roller.
 
 The casting window scales up to 1020 px wide on a suitable desktop and shrinks with the viewport. Sphere cards display in 3 columns on wide screens, 2 on medium screens, and 1 on narrow screens. The caster dropdown, Arete, current Difficulty and available Quintessence share a compact strip on desktop; they wrap responsively on narrow screens.
 
+## GM token-first casting (v0.1.10)
+
+For a **GM** opening the Player Magick panel from the Actors sidebar, Shift+J, or the optional launcher Macro, caster selection now follows this order:
+
+1. **Exactly one selected token** on the current canvas: use that token's Actor, not the GM's assigned or remembered Actor.
+2. **No selected token:** use the **last token the GM selected** (`controlToken`), even if it was deselected before opening Player Magick. The selection is saved as a Foundry TokenDocument UUID in a hidden **user-scoped** world setting, so an unlinked NPC's synthetic Actor is preserved and the choice can survive a reconnect.
+3. **No valid recent token (deleted/scene unavailable):** fall back to the existing manually remembered character, assigned character, then normal chooser.
+4. **Multiple selected tokens:** warn instead of choosing one silently. Deselect down to one token and reopen.
+
+This rule is for GMs only. **Players still use their own saved/assigned character preference** (selected tokens remain a fallback), and existing Rote macros explicitly bound to an Actor UUID keep that binding. A manually chosen different character remains available in the casting dropdown, but the GM's next *unbound* launch follows token-first priority again. A non-Mage token can still open its Power actions, but **Mage casting requires a Mage Actor**. Neither token selection nor opening an interface spends Quintessence, Willpower, or Paradox.
+
 ## Character dropdown and current difficulty (v0.1.9)
 
-- The caster dropdown defaults to the already active/last-used Mage and lists **only Mages owned by the player** (or all accessible Mages for a GM). The existing per-user preference continues to determine subsequent launches across devices.
+- The caster dropdown defaults to the currently resolved Mage and lists **only Mages owned by the player** (or accessible Mages for a GM). Players' existing per-user preference continues to determine subsequent launches; for GMs, token-first selection takes priority over the preference.
 - Switching characters via that dropdown persists the new choice and opens the chosen Mage's **fresh improvised casting screen** immediately. Previously selected Rotes and Sphere choices from the previous Actor are not carried over; this prevents mixing two Actors' magical data. If a selected Actor becomes unavailable, the selection is rejected rather than casting with the wrong character.
 - The top header now displays a **large, high-contrast Difficulty —** until at least one Sphere is selected. Once a Sphere level is chosen, Difficulty displays the same clamped value sent to WoD20, updating with Sphere ranks, Reality, Quintessence spent, and GM modifier. The supporting metrics are Arete dice, highest Sphere, Quintessence deduction, and the Willpower option. The old redundant lower dice-pool preview is removed. Willpower shows its native bonus as +1 success or +3 dice according to the installed WoD20 setting when checked; no new rules are applied.
 - Reality classification option wording is explicit: **Coincidental (+3 to highest Sphere)**, **Vulgar, no witnesses (+4 to highest Sphere)**, **Vulgar, witnessed (+5 to highest Sphere)**. Only the labels changed; the underlying rules/difficulty calculation are unchanged.
@@ -78,15 +89,15 @@ Player Magick **does not** read, roll, update, or account for Paradox and does n
 
 ## Rollback
 
-Restore your backup of the `wod20-player-actions` module directory or the original `wod20-player-actions-0.1.3.zip`, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
+Restore your backed-up `wod20-player-actions` module directory or the v0.1.9 ZIP, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
 
 ## Testing and known limits
 
-Tests run: JS syntax verification and ten Node-based mock/contract tests including native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 improvised and Rote dialogs were rendered and exercised in Chromium fixtures at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls, Rote presets, Advanced opening and no-horizontal-overflow checks passed.
+Tests run: JS syntax verification and eleven Node-based mock/contract tests, including GM selected/previous token precedence and unlinked token preservation, native roll-card deduplication and per-user preference persistence, three WoD20 localized spell-label matches, native roll routing, Power delegation, launcher idempotency, and no automatic hotbar changes. The v0.1.9 improvised and Rote dialogs were rendered and exercised in Chromium fixtures at 1440px, 820px and 430px; the new dropdown, saved actor selection, live Difficulty, Sphere/GM/Quintessence controls, Rote presets, Advanced opening and no-horizontal-overflow checks passed.
 
-**Live Foundry v14 of v0.1.9: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.9 controls and the Rote quick-cast path have not yet been observed in a live Foundry client. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
+**Live Foundry v14 of v0.1.10: not yet tested.** The user supplied a live screenshot of the v0.1.8 header to guide this update. The v0.1.10 GM token-selection behavior has not yet been observed in a live Foundry client. The existing v0.1.9 UI fixtures remain historical tests of the casting layout. Screenshots/render checks are browser fixtures rather than an installed Foundry UI. The external Dice Improvements/Paradox module was not installed or executed live; behavior is based on its published v0.2.0 listener contract.
 
-See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.9.md`.
+See `CHANGELOG.md`, `TEST-REPORT.md`, and `05-HANDOFF-UPDATE-0.1.10.md`.
 
 Fan-made Storyteller tools. Not affiliated with or endorsed by Paradox Interactive. This package includes no paid creator artwork.
 

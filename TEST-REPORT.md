@@ -1,3 +1,27 @@
+# v0.1.10 Test Report — 2026-10-15
+
+## Automated verification
+
+- `node --check scripts/player-actions.js`: **passed**.
+- **11** Node/mock tests under `tests/*.cjs`: **passed**, including new `gm-token-priority.cjs`.
+- The GM token test covers a currently selected unlinked NPC Token Actor overriding preferred/assigned Actors; automatic capture and persistence of `controlToken` selection; still using that token after deselection; replacing the cached token on a new selection; restoring it from a hidden per-user setting in a simulated new session; no casting from a deleted token; warning/aborting when multiple tokens are selected; explicit Actor UUID overrides; unchanged player preferences and zero hotbar assignment.
+- Existing Rote, dice/chat, Paradox compatibility, picker, cast control, launcher and menu tests remain green.
+- The v0.1.9 responsive Chromium fixtures were run against the unchanged casting dialogs; those checks are regression checks only, **not a live Foundry test**.
+- Complete module archive checked for `wod20-player-actions/module.json`, v0.1.10 metadata/download URL, CRC integrity, safe paths and no symlink entries.
+
+## Not verified live
+
+The real Foundry v14 `controlToken` hook event, TokenDocument UUID resolution for linked/unlinked tokens, per-user `game.settings.set` persistence, and the full cast/chat/Paradox workflow have **not** been tested in the user's Foundry world. The tests above are simulated APIs and local browser fixtures only.
+
+## First live test
+
+1. As GM on a test scene, select one **Mage NPC token** (preferably an unlinked token with a different rating from its base Actor).
+2. Deselect that token and click **Player Magick** (or use Shift+J); verify the shown caster and Arete are that token's Actor, not your previously selected Mage.
+3. Try a low-impact improvised cast. Check the native chat card names the selected Mage and any enabled Dice Improvements Paradox display occurs once.
+4. If incorrect, roll back by restoring the backed-up **v0.1.9** module folder and restarting Foundry. This patch does not migrate world data; resources spent during testing are not automatically reversed.
+
+---
+
 # v0.1.9 Test Report — 2026-10-15
 
 ## Automated and browser verification

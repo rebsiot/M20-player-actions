@@ -1,7 +1,8 @@
-/* WoD20 Player Magick v0.1.9: prominent casting difficulty, resource preview, and quick Rote casting. */
+/* WoD20 Player Magick v0.1.10: GM selected/previous token casting; native WoD20 roll path. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
+const LAST_GM_TOKEN_SETTING = "lastGmTokenUuid";
 const SPHERES = ["Correspondence", "Entropy", "Forces", "Life", "Matter", "Mind", "Prime", "Spirit", "Time"];
 // Original, concise M20 Sphere prompts. These are reminders, not rules adjudications.
 // Each entry describes what the corresponding dot broadly makes possible.
@@ -73,6 +74,10 @@ const SPHERE_GUIDE = {
 const DOT_TIERS = ["Sense", "Influence", "Alter", "Command", "Mastery"];
 
 let wodDice = null;
+// The GM's most recently controlled token is a TokenDocument UUID, not an Actor ID.
+// This preserves the separate Actor instance of an unlinked NPC token.
+let lastGmTokenUuid = "";
+let gmTokenSave = Promise.resolve();
 
 const escape = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 const int = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback;
@@ -84,23 +89,65 @@ const supported = (item) => ownedItem(item) && ["Rote", "Power"].includes(item.t
 const icon = (item) => item?.img && !item.img.includes("mystery-man") ? item.img : "icons/svg/dice-target.svg";
 const actorAdv = (actor, key) => actor?.api?.getAdvantage?.(key) || actor?.items?.find(i => i.type === "Advantage" && String(i.system?.id || i.name).toLowerCase() === key);
 
+function rememberGmToken(token) {
+  if (!game.user.isGM) return;
+  const uuid = token?.document?.uuid;
+  if (!uuid || uuid === lastGmTokenUuid) return;
+  lastGmTokenUuid = uuid;
+  // Queue writes in control order. A rapid sequence of token selections should
+  // never persist an earlier selection over a later one.
+  gmTokenSave = gmTokenSave.catch(() => {}).then(() =>
+    game.settings.set(MOD, LAST_GM_TOKEN_SETTING, uuid)
+  ).catch(error => console.warn(`${MOD} | Could not remember GM token`, error));
+}
+
+function previouslySelectedGmTokenActor() {
+  const uuid = lastGmTokenUuid || game.settings.get(MOD, LAST_GM_TOKEN_SETTING);
+  if (!uuid) return null;
+  let tokenDocument = null;
+  try { tokenDocument = fromUuidSync(uuid); }
+  catch (error) { console.warn(`${MOD} | Last GM token cannot be resolved`, error); }
+  // Resolve the TokenDocument each time: don't retain deleted or stale Actors.
+  if (tokenDocument?.documentName !== "Token") return null;
+  return canUse(tokenDocument.actor) ? tokenDocument.actor : null;
+}
+
 function resolveActor(actorUuid = null) {
-  // Existing macros with an explicit Actor UUID retain their original binding.
+  // Existing actor-bound Rote macros keep their binding, even when the GM
+  // selects a different token while the macro is available.
   if (actorUuid) return fromUuidSync(actorUuid);
-  // A manually selected character is preferred until the player changes it again.
-  // User-scope Foundry settings persist per player and world across devices.
+
+  const controlled = canvas?.tokens?.controlled || [];
+  if (game.user.isGM) {
+    if (controlled.length > 1) {
+      ui.notifications.warn("Select one token to cast as a GM.");
+      return null;
+    }
+    if (controlled.length === 1) {
+      const token = controlled[0];
+      rememberGmToken(token);
+      if (canUse(token.actor)) return token.actor;
+    }
+    const previous = previouslySelectedGmTokenActor();
+    if (previous) return previous;
+  }
+
+  // For players, the manually selected Mage remains the default. A GM without
+  // a usable selected/previous token can still fall back to this preference.
   const savedUuid = game.settings.get(MOD, PREFERRED_ACTOR_SETTING);
   if (savedUuid) {
     let saved = null;
-    try { saved = fromUuidSync(savedUuid); } catch (error) { console.warn(`${MOD} | Saved character cannot be resolved`, error); }
+    try { saved = fromUuidSync(savedUuid); }
+    catch (error) { console.warn(`${MOD} | Saved character cannot be resolved`, error); }
     if (canUse(saved)) return saved;
   }
-  // First-time users default to their assigned character; token is a fallback.
   const assigned = game.user.character;
   if (canUse(assigned)) return assigned;
-  const tokens = canvas?.tokens?.controlled || [];
-  if (tokens.length > 1) { ui.notifications.warn("Select a single token for this action."); return null; }
-  return canUse(tokens[0]?.actor) ? tokens[0].actor : null;
+  if (controlled.length > 1) {
+    ui.notifications.warn("Select a single token for this action.");
+    return null;
+  }
+  return canUse(controlled[0]?.actor) ? controlled[0].actor : null;
 }
 async function rememberCharacter(actor) {
   // Only an explicit manual selection changes the preference. Never save
@@ -574,6 +621,9 @@ async function chooseCharacter(current = null) {
 
 async function openPanel(actor = null) {
   actor ||= resolveActor();
+  // Do not open a different character's action panel after warning the GM
+  // that multiple token selections make the active caster ambiguous.
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0) > 1) return;
   if (!canUse(actor)) actor = await chooseCharacter();
   if (!actor) return;
   const items = actor.items.filter(supported).sort((a,b) => a.name.localeCompare(b.name));
@@ -651,6 +701,17 @@ Hooks.once("init", () => {
     config: false,
     type: String,
     default: ""
+  });
+  game.settings.register(MOD, LAST_GM_TOKEN_SETTING, {
+    name: "Last selected GM token",
+    hint: "Remembers the last token controlled by this GM for casting when none is selected.",
+    scope: "user",
+    config: false,
+    type: String,
+    default: ""
+  });
+  Hooks.on("controlToken", (token, controlled) => {
+    if (controlled) rememberGmToken(token);
   });
   // Keybindings must be registered during init, not ready.
   game.keybindings.register(MOD,"openPanel", {

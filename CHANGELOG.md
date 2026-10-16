@@ -1,5 +1,13 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.10 — 2026-10-15
+
+- **GM caster priority:** When a GM launches Player Magick without an explicitly bound Actor, use the single selected canvas token first; if none is selected, resolve the last token selected. Previously remembered/assigned Actors are only fallback options. Previously selected synthetic/unlinked NPC tokens retain their own token Actor rather than reverting to the world base Actor.
+- **Token persistence:** A `controlToken` hook remembers the selected TokenDocument UUID in a hidden per-user Foundry v14 setting (`lastGmTokenUuid`). Deselecting the token does not clear it; deleting the token invalidates the reference and falls back safely. Quick consecutive selections queue setting writes in order. Multiple selected tokens prompt for a single selection rather than guessing.
+- **Preserved:** Regular players retain the v0.1.9 actor preference; explicit Actor UUID macro bindings are not overridden by token selection. Existing quick Rotes, casting options, native WoD20 roll/Paradox classification, world data and hotbars stay unchanged.
+- **Automated tests:** All **11** Node/mock tests passed, including new `gm-token-priority.cjs` covering current/previous tokens, per-GM persistence, unlinked synthetic Actors, stale token fallback, multi-selection, player isolation, and bound macros. Syntax and ZIP integrity checks passed. **Not live-tested in Foundry v14.**
+- **Upgrade/rollback:** Back up the world and module directory before upgrading; install the complete ZIP, restart and refresh. Restore v0.1.9 to roll back. No migration is run. Casting can still deduct in-world resources after pressing Roll.
+
 ## v0.1.9 — 2026-10-15
 
 - **Improved roll clarity:** Make final Difficulty the dominant, high-contrast value in the upper-right casting summary, with readable Arete dice, highest chosen Sphere, Quintessence reduction, and Willpower effect alongside it. Remove the extra lower roll-summary line. Willpower shows +1 success or +3 dice according to the installed WoD20 setting; no new bonus is calculated.
