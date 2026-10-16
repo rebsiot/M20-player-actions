@@ -1,3 +1,27 @@
+
+## Draggable player Macro compendium (v0.1.13)
+
+The GM's **first world login with v0.1.13 enabled** provisions a new native **world** Macro compendium named **Player Actions — Hotbar Macros**. It contains **39 ready-to-drag Script Macros**, with artwork from the bundled licensed SVG icons. Open **Compendium Packs**, locate that name and drag any desired Macro to your own Hotbar. Foundry also supports importing individual Macros from a compendium. The module **never assigns a hotbar slot**, deletes prior world Macros, modifies Actors or changes existing hotbar settings.
+
+| Category | Macros | Use |
+|---|---|---|
+| Basic Awareness (5) | Notice, Sense Magick, Search, Read Someone, React | Native Attribute + Ability checks |
+| Basic Movement (5) | Sneak, Climb, Run, Jump, Track | Same native Basic Actions check |
+| Basic Social (5) | Charm, Deceive, Intimidate, Negotiate, Lead | Same native Basic Actions check |
+| Basic Knowledge (5) | Occult, Research, Investigate, Computer, First Aid | Same native Basic Actions check |
+| Custom (5) | Custom Action 1–5 | Roll that player's saved slot for the *current* Actor. A blank slot opens its Configure editor. |
+| Dashboards (2) | Basic Actions, Roll Any Check | Open the 25-button panel or choose any sheet Attribute and Ability |
+| Magick (3) | Player Magick, Improvised Magick, Rotes & Powers | Existing Mage casting tools; Rotes & Powers opens the Player Magick panel |
+| Combat and sheet (9) | Attack (Choose Type), Brawl Attack, Melee Attack, Firearms Attack, Dodge, Block, Parry, Initiative, Character Sheet (Weapon / Soak) | See combat limitations below |
+
+**Attack (Choose Type)** opens a small menu (Brawl / Melee / Firearms, difficulty, optional Willpower) and makes **one** native WoD20 *attack check*, not damage or soak. The dedicated Brawl/Melee/Firearms buttons make the listed Dexterity + Ability check immediately at default difficulty 6. **Dodge** uses Dexterity + Athletics, **Block** Dexterity + Brawl, and **Parry** Dexterity + Melee; these are check shortcuts only, subject to Storyteller rulings. **Initiative** calls WoD20's own `CombatHelper.RollInitiative` rather than inventing a roll. The **Character Sheet (Weapon / Soak)** macro opens the native sheet for equipment-specific rolls rather than guessing weapon damage, armor, or soak.
+
+The presets, direct combat checks and Custom slots use the **current Actor every time**: players use their assigned/remembered character; GMs use the selected token or last selected token, including unlinked NPCs. Shortcut rolls default to difficulty **6**, with situational adjustments via the Basic Actions dashboard or the freeform/Attack picker. Native WoD20 wounds, specialty rules and Willpower apply to these checks. There is no automatic damage or Paradox handling.
+
+**Permissions and persistence:** The world compendium is player/Trusted Player **OBSERVER** (read/drag), GM **OWNER** and locked after initial seeding. The GM can unlock/customize its masters if desired; this module **never overwrites existing macro documents** or restores individual macros that the GM deleted. Its world setting records previously shipped identifiers; future updates may add new identifiers only. The compendium **persists with the world** if the module is later disabled or removed. Back up the **world data**, not just the module directory, before upgrading. Foundry's global **Use Script Macros** permission must allow player Script Macros (a standard core permission, not a new module gate). Players cannot edit the reference compendium.
+
+If another pack already uses the reserved world ID `world.wod20-player-actions-macros`, the module leaves it untouched and logs a warning rather than replacing anything. **No world pack is created by player logins**; the GM must enter the world once after upgrading. An existing Macro Directory `Player Magick` / `Player Basic Actions` launcher is left untouched. **Live Foundry v14 testing of new compendium creation and drag-and-roll remains pending.**
+
 # WoD20 Player Actions (Player Magick + Basic Actions)
 
 **Module ID:** `wod20-player-actions`  

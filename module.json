@@ -1,8 +1,8 @@
 {
   "id": "wod20-player-actions",
   "title": "WoD20 Player Actions",
-  "description": "Compact 20-action Basic Actions dashboard with soft dice-pool tint, correctly titled native WoD20 chat rolls and 162 searchable custom SVG icons; five private custom slots plus Player Magick.",
-  "version": "0.1.12",
+  "description": "Player-readable 39-macro hotbar compendium with 20 native Basic Action shortcuts, five custom slots, combat/Dodge/Attack/Initiative and Magick; compact dashboards and 162 SVG icons.",
+  "version": "0.1.13",
   "authors": [
     {
       "name": "Community tools"
@@ -33,5 +33,5 @@
   "readme": "README.md",
   "url": "https://github.com/rebsiot/M20-player-actions",
   "manifest": "https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json",
-  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.12/wod20-player-magick-0.1.12.zip"
+  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.13/wod20-player-magick-0.1.13.zip"
 }

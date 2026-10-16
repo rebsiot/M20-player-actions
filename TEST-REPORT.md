@@ -1,3 +1,13 @@
+## v0.1.13 — Macro compendium: automated verification
+
+- `node --check scripts/player-actions.js`: **pass**.
+- Node regression suite `tests/*.cjs`: **14/14 pass**. New `macro-compendium.cjs` uses a controlled mock of Foundry's native `CompendiumCollection.createCompendium`, `Macro.createDocuments`, pack ownership, per-world ledger and Actor resolution. It checks 39 script command strings, unique stable IDs, all referenced icon paths, no assignments to hotbar, first GM pack creation, player non-creation, repeated logins, deleted document preservation, direct native Notice/Dodge/Brawl/Firearms checks, native initiative helper, freeform roll and custom slots. Existing Player Magick, Rotes, casting chat/Paradox, GM token precedence and Basic Actions tests remain green.
+- Browser fixtures: `browser-basic-actions.py`, `browser-ui.py`, `browser-rote-quick.py` pass at desktop, medium and narrow viewports (1440, 820 and 430 px). No UI layout changes to existing tools.
+- Full package ZIP: safe module-root layout; CRC check; module ID, manifest URL/version/download fields; all 162 curated SVGs and original license/artist credits; no credentials or creator paid art.
+- **Not a live Foundry test:** Runtime world-compendium provisioning, permission display, player drag-and-drop from Compendium Packs to Hotbar, user Script Macro permission, system combat helper on the installed WoD20 version, and actual in-world roll results require user verification.
+- **No Actor migration.** World creation writes a new world compendium and hidden world setting after GM first login. Rollback of the module alone does **not** delete the world compendium.
+
+
 # v0.1.12 Test Report — 2026-10-15
 
 **Live evidence:** The user supplied a real Foundry v14 screenshot of published v0.1.11: Basic Actions 20+5 dashboard, native chat rolls and Ability-only headings such as **Alertness** (instead of the clicked **Notice**). That screenshot does **not** verify the new v0.1.12 behavior.
