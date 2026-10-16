@@ -14,7 +14,7 @@ MOCK=r'''() => {
   const test=window.__resourceMock={writes:[],dialogs:[],warnings:[],hooks:{}};
   const module={api:{}};
   const mage={id:'mage1',uuid:'Actor.mage1',type:'PC',documentName:'Actor',name:'Eli Smith',isOwner:true,
-    system:{settings:{splat:'mage'},health:{damage:{bashing:2,lethal:1,aggravated:0},
+    system:{settings:{splat:'mage',usechimerical:false},health:{damage:{bashing:2,lethal:1,aggravated:0,chimerical:{bashing:1,lethal:0,aggravated:0}},
       bruised:{total:1},hurt:{total:1},injured:{total:1},wounded:{total:1},mauled:{total:1},crippled:{total:1},incapacitated:{total:1}}},items:[],
     async update(changes){test.writes.push({source:'actor',changes});for(const [path,n] of Object.entries(changes)){
       const keys=path.split('.');let obj=this;for(const k of keys.slice(0,-1))obj=obj[k];obj[keys.at(-1)]=n;}}};
@@ -43,7 +43,7 @@ MOCK=r'''() => {
 }'''
 with sync_playwright() as p:
   b=p.chromium.launch(headless=True,executable_path=shutil.which('chromium') or shutil.which('google-chrome'),args=['--no-sandbox'])
-  for width in (1440,820,430):
+  for width in (1440,820,430,320):
     page=b.new_page(viewport={'width':width,'height':920},device_scale_factor=1)
     page.set_content('<!doctype html><html><head><meta charset="utf-8"><style>'+BASE+CSS+'</style></head><body></body></html>')
     page.evaluate(MOCK)
@@ -52,26 +52,36 @@ with sync_playwright() as p:
     page.evaluate('window.__resourceMock.hooks.ready()')
     page.evaluate('window.__resourceMock.open()')
     page.locator('.wpa-resources').wait_for()
-    assert page.locator('.wpa-resource-section').count()==2
+    assert page.locator('.wpa-resource-section').count()==2, 'dormant chimerical data is not shown'
+    assert page.locator('[data-wpa-resource-row^="health:chimerical"]').count()==0
     assert page.locator('[data-wpa-resource-row]').count()==6
     assert 'Willpower' in page.locator('[data-wpa-resource-row="pool:willpower"]').inner_text()
-    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='4 / 7'
+    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='4/7'
     assert page.locator('[data-wpa-resource-row="health:physical:aggravated"] button[data-wpa-resource-delta="-1"]').is_disabled()
     sizes=page.evaluate('''() => ({width:window.innerWidth,document:document.documentElement.scrollWidth,
       outer:[...document.querySelectorAll('.wpa-resources,.wpa-resource-row,.wpa-resource-controls,.wpa-resource-stack')].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className)})''')
     assert sizes['document']<=sizes['width']+1 and not sizes['outer'],(width,sizes)
-    page.screenshot(path=str(ROOT.parent/f'preview-quick-resources-{width}.png'),full_page=True)
+    frame=page.locator('.fake-foundry-dialog').bounding_box()
+    assert frame['width']<=360 and frame['height']<=410,(width,frame)
+    page.locator('.fake-foundry-dialog').screenshot(path=str(ROOT.parent/f'preview-quick-resources-{width}.png'))
     page.locator('[data-wpa-resource-row="pool:willpower"] button[data-wpa-resource-delta="-1"]').click()
-    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='3 / 7'
+    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='3/7'
     assert page.evaluate('window.__resourceMock.writes.at(-1).changes["system.temporary"]')==3
     page.locator('[data-wpa-resource-action="undo"]').click()
-    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='4 / 7'
+    assert page.locator('[data-wpa-resource-row="pool:willpower"] .wpa-resource-value').inner_text()=='4/7'
     page.locator('[data-wpa-resource-row="health:physical:aggravated"] button[data-wpa-resource-delta="1"]').click()
     assert page.evaluate('window.__resourceMock.actor.system.health.damage.aggravated')==1
     assert page.evaluate('window.__resourceMock.actor.system.health.damage.lethal')==1
     assert page.evaluate('window.__resourceMock.actor.system.health.damage.bashing')==2
     assert page.evaluate('window.__resourceMock.writes.at(-1).source')=='actor'
+    page.evaluate('window.__resourceMock.actor.system.settings.usechimerical = true')
+    page.locator('[data-wpa-resource-action="refresh"]').click()
+    assert page.locator('.wpa-resource-section').count()==3
+    assert page.locator('[data-wpa-resource-row="health:chimerical:bashing"]').count()==1
+    page.locator('[data-wpa-resource-row="health:chimerical:bashing"] button[data-wpa-resource-delta="-1"]').click()
+    assert page.evaluate('window.__resourceMock.actor.system.health.damage.chimerical.bashing')==0
+    assert page.evaluate('window.__resourceMock.actor.system.health.damage.bashing')==2
     assert not page.evaluate('window.__resourceMock.warnings')
     page.close()
-    print(f'PASS Quick Resources at {width}px: no clipping, one-click native save, Undo Last, separate aggravated damage')
+    print(f'PASS compact Quick Resources at {width}px: narrow popup, no clipping, native save, Undo, gated chimerical damage')
   b.close()

@@ -2,7 +2,7 @@
 
 **Quick native WoD20 checks, Use Magick and optional attack workflow from Foundry VTT.**
 
-**Current version:** v0.1.19 (Quick Resources: native, immediate resource and health adjustments)  
+**Current version:** v0.1.20 (smaller Quick Resources window and Chimerical damage visibility fix)  
 **Requires:** Foundry VTT v14 and `worldofdarkness` (WoD20) v7.3.1 or later in the verified system series.  
 **Optional for targeted combat:** [STL Combat Workflow](https://github.com/rebsiot/combat-workflow) v0.1.4+.
 
@@ -53,7 +53,9 @@ Drag **Quick Resources** from the Macro Compendium to your hotbar, select it in 
 
 Each `+` or `-` press **saves immediately**; there is no Save/Apply step. The window shows only tracked pools actually on the selected Actor. Available pools include **temporary Willpower** (never permanent Willpower), Quintessence, **temporary Paradox** (never permanent Paradox), Blood Pool and other supported existing pools such as Rage, Gnosis or Glamour. The Mage Quintessence/Paradox controls account for the shared wheel capacity and permanent Paradox. Players may only update Actors they own; the GM can use the normal token-first selection, including synthetic NPC token Actors.
 
-**Health** shows independent **Bashing**, **Lethal**, and **Aggravated** rows. If the Actor has a separate Chimerical damage track, that is shown separately. Changes write directly to WoD20's `system.health.damage` values and leave the system responsible for wound levels and penalties. Once health is full, use the character sheet and Storyteller ruling for damage overflow or severity upgrades rather than having this window automatically convert types. Resource totals and health counts cannot be raised above their applicable limits; an existing out-of-range value is not silently rewritten.
+**Health** shows independent **Bashing**, **Lethal**, and **Aggravated** rows. Chimerical damage is shown only when the character sheet enables the track (newer PC characters: `system.settings.usechimerical`; compatible legacy Changeling sheets retain their enabled track). Merely having dormant Chimerical data on a Mage does not display the controls or erase stored damage. Changes write directly to WoD20's `system.health.damage` values and leave the system responsible for wound levels and penalties. Once health is full, use the character sheet and Storyteller ruling for damage overflow or severity upgrades rather than having this window automatically convert types. Resource totals and health counts cannot be raised above their applicable limits; an existing out-of-range value is not silently rewritten.
+
+The v0.1.20 window is compact (about 328px on desktop and responsive at narrow widths) while retaining keyboard-accessible buttons, full labels/tooltips and immediate updates. No new macros or hotbar assignments are introduced in this release.
 
 **Undo Last** reverses only the last adjustment made in that open window, and only if the current value still matches the recorded result and the old value remains legal. If another player or module changed it, the action refuses to overwrite their update. **Refresh** reads the current sheet values. Undo does not attempt to reverse automatic combat damage, spell effects or Paradox accounting; the independent owning modules are unchanged.
 
@@ -89,7 +91,7 @@ Players use their selected/remembered eligible Actor. When a GM opens an unbound
 - The GM provisions the existing native world Macro pack and its new entries; players can read/drag reference macros but not edit masters.
 - Existing world compendiums, hotbar assignments, characters, customization and local preferences are not reset. The optional tutorial setup fills only empty slots on the logged-in user's hotbar and never creates a character or changes another player's shortcuts.
 - Back up the entire world (the Macro compendium is world data) and `Z:\Data\modules\wod20-player-actions`. Stop Foundry for file replacement through Samba, restart, enable in the intended world and hard-refresh clients.
-- Roll back the code to your backed-up v0.1.18 installation. No data migration is performed in v0.1.19; reverting module files does not undo gameplay changes or prior hotbar assignments.
+- Roll back the code to your backed-up v0.1.19 installation. v0.1.20 performs no data migration; reverting module files does not undo gameplay changes or prior hotbar assignments.
 
 ## Verification and references
 

@@ -1,4 +1,4 @@
-/* v0.1.19 native source, damage-type separation, capacity, per-click save and undo. */
+/* v0.1.20 native resource regressions and sheet-gated Chimerical damage. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const script=fs.readFileSync(path.join(__dirname,'../scripts/player-actions.js'),'utf8');
 const notices=[],writes=[],dialogues=[];
 const mage={id:'mage',uuid:'Actor.mage',name:'Eli Smith',type:'PC',isOwner:true,
-  system:{settings:{splat:'mage'},health:{damage:{bashing:2,lethal:1,aggravated:0,chimerical:{bashing:1,lethal:0,aggravated:0}},
+  system:{settings:{splat:'mage',usechimerical:false},health:{damage:{bashing:2,lethal:1,aggravated:0,chimerical:{bashing:1,lethal:0,aggravated:0}},
     bruised:{total:1},hurt:{total:1},injured:{total:1},wounded:{total:1},mauled:{total:1},crippled:{total:1},incapacitated:{total:1}},
     traits:{health:{totalhealthlevels:{max:7}}}},items:[],updates:[],
   async update(changes){this.updates.push(changes);for(const [key,value] of Object.entries(changes)){
@@ -54,13 +54,31 @@ const action=async(name)=>{const el={dataset:{wpaResourceAction:name},disabled:f
 (async()=>{
   const start=t.snapshot(mage);
   assert.equal(start.resources.length,3,'only existing visible pools; never invent missing Resources');
-  assert.equal(start.healthTracks.length,2,'physical and optional chimerical have separate tracks');
+  assert.equal(start.healthTracks.length,1,'dormant chimerical fields do not expose a track for Mage');
   assert.equal(get(mage,'willpower').max,7,'Willpower cap is permanent rating, not global max');
   assert.equal(get(mage,'quintessence').max,17,'shared wheel holds 2 temporary + 1 permanent Paradox');
   assert.equal(get(mage,'paradox').max,11,'Paradox capacity reserves existing Quintessence and permanent Paradox');
   assert.match(t.html(mage),/Paradox \(temporary\)/);
   assert.match(t.html(mage),/Aggravated/);
+  assert.doesNotMatch(t.html(mage),/Chimerical Damage/,'Mage without enabled sheet option sees physical damage only');
+  assert.equal(t.entry(mage,'health:chimerical:bashing'),null);
+  await assert.rejects(()=>t.change(mage,'health:chimerical:bashing',1),/not on the current character/i);
+  mage.system.settings.usechimerical=true;
+  assert.equal(t.snapshot(mage).healthTracks.length,2,'enabled PC sheet shows the optional chimerical track');
   assert.match(t.html(mage),/Chimerical Damage/);
+  // Legacy Changeling character sheets expose this through their computed
+  // `haschimericalhealth` flag rather than the newer PC toggle.
+  const legacyChangeling={...vampire,id:'changeling',uuid:'Actor.changeling',type:'Changeling',
+    system:{...vampire.system,settings:{isupdated:true},
+      listdata:{settings:{haschimericalhealth:true}},
+      health:{...vampire.system.health,damage:{...vampire.system.health.damage,
+        chimerical:{bashing:2,lethal:0,aggravated:0}}}}};
+  assert.equal(t.snapshot(legacyChangeling).healthTracks.length,2,
+    'existing enabled legacy Changeling health continues to work');
+  const legacyMage={...legacyChangeling,id:'old-mage',uuid:'Actor.old-mage',type:'Mage',
+    system:{...legacyChangeling.system,listdata:{settings:{haschimericalhealth:false}}}};
+  assert.equal(t.snapshot(legacyMage).healthTracks.length,1,
+    'legacy Mage with chimerical-shaped data but no active sheet track stays compact');
   assert.doesNotMatch(t.html(mage),/Gnosis/,'hidden resource not exposed');
   assert.ok(t.html(mage).includes('data-wpa-resource-id="health:physical:lethal"'));
   const incr=await t.change(mage,'pool:willpower',1);
@@ -89,6 +107,10 @@ const action=async(name)=>{const el={dataset:{wpaResourceAction:name},disabled:f
   assert.equal((await t.change(mage,'health:chimerical:bashing',-1)).after,0);
   assert.equal(mage.system.health.damage.chimerical.bashing,0);
   assert.equal(mage.system.health.damage.bashing,2,'chimerical change does not alter physical track');
+  mage.system.settings.usechimerical=false;
+  assert.equal(t.snapshot(mage).healthTracks.length,1,'disabling the sheet option hides chimerical without deleting data');
+  assert.equal(mage.system.health.damage.chimerical.bashing,0,'disabled track retains existing damage values');
+  mage.system.settings.usechimerical=true;
   // Respect custom wound track capacity, and never erase/promote other damage types.
   mage.system.health.damage.bashing=5;mage.system.health.damage.lethal=2;mage.system.health.damage.aggravated=0;
   assert.equal((await t.change(mage,'health:physical:aggravated',1)).changed,false);
@@ -109,9 +131,9 @@ const action=async(name)=>{const el={dataset:{wpaResourceAction:name},disabled:f
   mage.isOwner=true;
   await t.open(mage);
   assert.match(root.innerHTML,/Quick Resources/);
-  assert.match(root.innerHTML,/Temporary Resources/);
-  assert.match(root.innerHTML,/Undo Last/);
-  assert.match(root.innerHTML,/Click \+ or - to update/);
+  assert.match(root.innerHTML,/Resources/);
+  assert.match(root.innerHTML,/Undo/);
+  assert.match(root.innerHTML,/Updates save immediately/);
   await click('pool:willpower',-1);
   assert.equal(wp.system.temporary,3,'one click saved without Save button');
   await action('undo');
@@ -124,5 +146,5 @@ const action=async(name)=>{const el={dataset:{wpaResourceAction:name},disabled:f
   assert.equal(quint.system.temporary,13);
   assert.ok(notices.at(-1).includes('changed'));
   assert.deepEqual(writes,[]);
-  console.log('PASS: immediate native Advantage and Actor writes, shared Quintessence/Paradox capacity, separate health types including chimerical, legacy pool compatibility, safe undo and permission guards');
+  console.log('PASS: immediate native Advantage and Actor writes, shared Quintessence/Paradox capacity, gated chimerical health, compact controls, legacy pool compatibility, safe undo and permissions');
 })().catch(error=>{console.error(error);process.exitCode=1});
