@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.19: Native quick resources and damage adjustments. */
+/* WoD20 Player Actions v0.1.20: Compact resources and enabled chimerical damage. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -1337,9 +1337,17 @@ function quickResourceSnapshot(actor) {
   const reportedMax=health?.totalhealthlevels?.max ?? actor?.system?.traits?.health?.totalhealthlevels?.max;
   const capacity=capacityFromLevels || (finitePoolNumber(reportedMax)?int(reportedMax):0);
   const healthTracks=[];
+  // The current PC sheet explicitly gates chimerical damage on usechimerical.
+  // Older Changeling sheets expose their enabled track through listdata.
+  // Data existing by itself is not enough: Mage Actors can carry dormant fields.
+  const chimericalEnabled=actor?.type==="PC"
+    ? actor?.system?.settings?.usechimerical===true
+    : actor?.system?.settings?.usechimerical===true ||
+      actor?.system?.listdata?.settings?.haschimericalhealth===true ||
+      (actor?.type==="Changeling" && !!health?.damage?.chimerical);
   if (capacity>0 && health?.damage && typeof health.damage==="object") {
     for(const track of [{key:"physical",label:"Health / Damage",data:health.damage},
-      {key:"chimerical",label:"Chimerical Damage",data:health.damage.chimerical}]) {
+      {key:"chimerical",label:"Chimerical Damage",data:chimericalEnabled?health.damage.chimerical:null}]) {
       if (!track.data || !QUICK_DAMAGE_TYPES.every(d=>finitePoolNumber(track.data?.[d.key]))) continue;
       const counts=Object.fromEntries(QUICK_DAMAGE_TYPES.map(d=>[d.key,int(track.data[d.key])]));
       const total=Object.values(counts).reduce((a,b)=>a+b,0);
@@ -1358,31 +1366,33 @@ function quickResourceEntry(actor,id) {
 function quickResourcesRowHTML(row) {
   const atLow=row.current<=0,atHigh=row.current>=row.max;
   const text=`${row.label}: ${row.current} of ${row.max}`;
+  // A shorter visible label keeps this a compact utility; full names remain in
+  // the accessible value, labels and tooltips.
+  const label=row.label==="Paradox (temporary)" ? "Paradox" : row.label;
+  const permanentNote=row.note ? `<small title="${escape(row.note)}">${escape(row.note.replace(/ permanent \(read only\)/," perm"))}</small>` : "";
   return `<div class="wpa-resource-row" data-wpa-resource-row="${escape(row.id)}">
-    <div class="wpa-resource-trait"><strong>${row.mark ? `<span class="wpa-resource-mark">${escape(row.mark)}</span> ` : ""}${escape(row.label)}</strong>
-      ${row.note ? `<small>${escape(row.note)}</small>` : ""}</div>
+    <div class="wpa-resource-trait" title="${escape(row.label)}"><strong>${row.mark ? `<span class="wpa-resource-mark">${escape(row.mark)}</span> ` : ""}${escape(label)}</strong>${permanentNote}</div>
     <div class="wpa-resource-controls">
-      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="-1" aria-label="Remove one ${escape(row.label)}" title="Remove one" ${atLow ? "disabled" : ""}>&minus;</button>
-      <output aria-label="${escape(text)}" class="wpa-resource-value">${row.current}<span> / ${row.max}</span></output>
-      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="1" aria-label="Add one ${escape(row.label)}" title="Add one" ${atHigh ? "disabled" : ""}>+</button>
+      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="-1" aria-label="Remove one ${escape(row.label)}" title="Remove one ${escape(row.label)}" ${atLow ? "disabled" : ""}>&minus;</button>
+      <output aria-label="${escape(text)}" class="wpa-resource-value">${row.current}<span>/${row.max}</span></output>
+      <button type="button" data-wpa-resource-id="${escape(row.id)}" data-wpa-resource-delta="1" aria-label="Add one ${escape(row.label)}" title="Add one ${escape(row.label)}" ${atHigh ? "disabled" : ""}>+</button>
     </div>
   </div>`;
 }
-function quickResourcesContentHTML(actor,history=null,status="Click + or - to update the character immediately.") {
+function quickResourcesContentHTML(actor,history=null,status="Updates save immediately.") {
   const {resources,healthTracks}=quickResourceSnapshot(actor);
   const pools=resources.length ? resources.map(quickResourcesRowHTML).join("") :
-    `<p class="wpa-resource-empty">No editable temporary resource pools are present on this character.</p>`;
+    `<p class="wpa-resource-empty">No temporary pools on this character.</p>`;
   const tracks=healthTracks.map(track=>`<section class="wpa-resource-section" aria-label="${escape(track.label)}">
-    <div class="wpa-resource-section-title"><h3>${escape(track.label)}</h3><span>${track.total} / ${track.capacity} marked</span></div>
+    <div class="wpa-resource-section-title"><h3>${escape(track.key==="physical"?"Damage":"Chimerical Damage")}</h3><span>${track.total}/${track.capacity}</span></div>
     ${track.rows.map(quickResourcesRowHTML).join("")}
   </section>`).join("");
   return `<div class="wpa-resource-stack">
-    <section class="wpa-resource-section" aria-label="Temporary resources"><h3>Temporary Resources</h3>${pools}</section>
-    ${tracks || `<p class="wpa-resource-empty">This character has no supported damage track to edit.</p>`}
-    <div class="wpa-resource-footer"><div class="wpa-resource-status" role="status" aria-live="polite">${escape(status)}</div>
-      <div class="wpa-resource-footer-actions"><button type="button" data-wpa-resource-action="undo" ${history?"":"disabled"}>Undo Last</button>
-        <button type="button" data-wpa-resource-action="refresh">Refresh</button></div></div>
-    <p class="wpa-resource-hint">Only temporary pools and damage counts change. Permanent traits, wound penalties, combat automation and Paradox rules remain with WoD20 and their owning modules.</p>
+    <section class="wpa-resource-section" aria-label="Temporary resources"><h3>Resources</h3>${pools}</section>
+    ${tracks || `<p class="wpa-resource-empty">No supported damage track.</p>`}
+    <div class="wpa-resource-footer"><div class="wpa-resource-status" role="status" aria-live="polite" title="${escape(status)}">${escape(status)}</div>
+      <div class="wpa-resource-footer-actions"><button type="button" data-wpa-resource-action="undo" ${history?"":"disabled"} title="Undo last adjustment">Undo</button>
+        <button type="button" data-wpa-resource-action="refresh" title="Refresh current values">Refresh</button></div></div>
   </div>`;
 }
 async function quickResourceWrite(actor,entry,next) {
@@ -1437,10 +1447,10 @@ async function openQuickResources(actor=null) {
   const viewport=Number(globalThis.innerWidth)||780;
   const dialog=new foundry.applications.api.DialogV2({
     window:{title:`Quick Resources - ${actor.name}`},
-    position:{width:Math.min(540,Math.max(310,viewport-44))},
+    position:{width:Math.min(328,Math.max(280,viewport-32))},
     content:`<div class="wpa-root wpa-resources" aria-label="Quick Resources">
-      <div class="wpa-resource-heading"><div><small>Adjusting</small><strong>${escape(actor.name)}</strong></div>
-      <button type="button" data-wpa-resource-action="change">Change Character</button></div>
+      <div class="wpa-resource-heading"><strong>${escape(actor.name)}</strong>
+      <button type="button" data-wpa-resource-action="change" aria-label="Change Character" title="Select another character">Change</button></div>
       <div data-wpa-resource-content>${quickResourcesContentHTML(actor)}</div>
     </div>`,
     buttons:[{action:"close",label:"Close"}]
@@ -1468,21 +1478,21 @@ async function openQuickResources(actor=null) {
         return;
       }
       if (action==="refresh") {
-        redraw("Current values refreshed from the character sheet.");
+        redraw("Refreshed from character sheet.");
         return;
       }
       if (action==="undo") {
         const undone=await quickResourceUndo(actor,history);
         if(undone.changed) {history=null;redraw("Last adjustment undone.");}
-        else {history=null;redraw("No adjustment to undo.");}
+        else {history=null;redraw("Nothing to undo.");}
         return;
       }
       const id=button.dataset.wpaResourceId,delta=int(button.dataset.wpaResourceDelta);
       const result=await quickResourceChange(actor,id,delta);
       if (result.changed) {
         history={id,before:result.before,after:result.after,identity:result.row.identity};
-        redraw(`${result.row.label}: ${result.before} to ${result.after}. Saved.`);
-      } else redraw("This resource is already at its limit.");
+        redraw(`${result.row.label}: ${result.before} → ${result.after}`);
+      } else redraw("Resource is at its limit.");
     } catch(error) {
       console.warn(`${MOD} | Quick Resources adjustment failed`,error);
       ui.notifications.error(`Quick Resources: ${error.message}`);
