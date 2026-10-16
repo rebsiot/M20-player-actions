@@ -2,7 +2,7 @@
 
 **Quick native WoD20 checks, Use Magick and optional attack workflow from Foundry VTT.**
 
-**Current version:** v0.1.16 (four new gameplay utilities and first-login Quick Tutorial)  
+**Current version:** v0.1.17 (opt-in hotbar setup at the end of the Quick Tutorial)  
 **Requires:** Foundry VTT v14 and `worldofdarkness` (WoD20) v7.3.1 or later in the verified system series.  
 **Optional for targeted combat:** [STL Combat Workflow](https://github.com/rebsiot/combat-workflow) v0.1.4+.
 
@@ -11,16 +11,23 @@
 ## Start here
 
 1. Back up the world and installed module, then install the full versioned ZIP into `Z:\Data\modules\wod20-player-actions`; restart Foundry and enable the module for the desired world.
-2. A GM enters the world once to add new, optional shortcuts to the existing **Player Actions - Hotbar Macros** world compendium. The module does not assign or replace hotbar slots.
-3. Players can drag individual macros from Compendium Packs or open the existing **Player Basic Actions** and **Use Magick** launchers.
+2. A GM enters the world once to provision the protected **Player Actions - Hotbar Macros** compendium and three world launchers (Use Magick, Player Basic Actions, Player Combat). Nothing is put on players' hotbars during login.
+3. Players can either select optional hotbar shortcuts from the Quick Tutorial or drag individual macros from Compendium Packs. The tutorial's shortcut setup uses only available hotbar slots, never replacing player or GM assignments.
 4. The **Actors** sidebar offers Use Magick; Shift+J opens it. Player Basic Actions opens the standalone dashboard.
 5. On the first login after this update, each user is offered a **four-step Quick Tutorial** about rolling, Magick, combat and optional hotbar shortcuts. No character needs to be selected to read it.
 
 ### First-login Quick Tutorial
 
-Use **Next** and **Back** to move through the four short pages. On the last page, **Don't show again** saves a private per-user preference for this world, so the walkthrough does not pop up on later logins. Closing it without choosing that option will offer it again on the next login.
+Use **Next** and **Back** to move through four short pages. The final screen asks what, if anything, you would like to add to **your** hotbar. All four checkboxes start unchecked:
 
-The tutorial remains available at any time through the small **Quick Tutorial** link in **Basic Actions** (under the roll controls) and **Use Magick** (beside Change Character). Reopening it does not clear the saved preference. The tutorial is informational only: it does not roll dice, spend resources, modify characters, change world content or assign hotbar shortcuts.
+- **Use Magick** — add the existing Magick launcher.
+- **Combat — Standard Attack (Targeted)** — add the targeted Combat launcher; it still requires STL Combat Workflow, a single target and an online GM to actually start combat.
+- **Basic Actions** — add the dashboard launcher.
+- **Open the Player Actions Macro Compendium** — open the reference collection after finishing, to browse the rest of the 48 optional shortcuts.
+
+Choose **Finish** to apply the checked choices while letting the tutorial return next login, or **Don't show again** to apply them and save a per-user opt-out. Closing the window without either choice does **not** modify hotbars or suppress the tutorial. A completed tutorial with no boxes checked leaves the hotbar unchanged. Reopening the tutorial is always possible through **Quick Tutorial** in Basic Actions or Use Magick.
+
+The macro options require the GM to have logged in once after updating. The module uses the native Foundry `assignHotbarMacro` operation and the existing player-visible world launcher macros. Existing hotbar slots, Actor data and world compendium masters are not overwritten. If a shortcut is already on the hotbar, it is skipped; if there are no empty slots, the player is told. The Macro Compendium remains player-readable and GM-controlled.
 
 ## Available actions
 
@@ -36,7 +43,7 @@ The tutorial remains available at any time through the small **Quick Tutorial** 
 | **Standard Attack (Targeted)** | Target exactly one token to hand off to the independent STL Combat Workflow module. |
 | **Dodge / Block / Parry and Initiative** | Native defensive checks and WoD20's own initiative behavior. |
 
-**48 draggable Script Macros** are supplied (25 preset actions, five custom slots and 18 other actions/utilities). The 162 bundled Game Icons and [attribution](ICONS-CREDITS.md) remain intact. No macros are automatically assigned to your hotbar.
+**48 draggable Script Macros** are supplied (25 preset actions, five custom slots and 18 other actions/utilities). The 162 bundled Game Icons and [attribution](ICONS-CREDITS.md) remain intact. Hotbar assignments are **only made when an individual player explicitly checks boxes and finishes the tutorial**; ordinary login does not assign anything.
 
 ### Modern scene actions
 
@@ -66,14 +73,14 @@ Players use their selected/remembered eligible Actor. When a GM opens an unbound
 
 - Players need Foundry permission to run Script Macros and to control the Actor being rolled.
 - The GM provisions the existing native world Macro pack and its new entries; players can read/drag reference macros but not edit masters.
-- Existing world compendiums, user hotbars, characters, customization and local preferences are not reset.
+- Existing world compendiums, hotbar assignments, characters, customization and local preferences are not reset. The optional tutorial setup fills only empty slots on the logged-in user's hotbar and never creates a character or changes another player's shortcuts.
 - Back up the entire world (the Macro compendium is world data) and `Z:\Data\modules\wod20-player-actions`. Stop Foundry for file replacement through Samba, restart, enable in the intended world and hard-refresh clients.
-- To return to the current live baseline, restore the last known working v0.1.14 installation (or your exact backed-up v0.1.15 files) and the matching world backup if you need to undo newly added world Macro documents. Code rollback alone does not delete new compendium entries or reverse gameplay resource changes.
+- Roll back the code to your backed-up v0.1.16 installation and restore the matching world backup if you must undo newly created world launcher documents or player hotbar assignments. Reverting module files alone does not undo User document hotbar updates or in-game damage/resources.
 
 ## Verification and references
 
 Automated tests and archive checks are documented in [TEST-REPORT.md](TEST-REPORT.md); full live Foundry/Paradox/Combat Workflow testing is **not yet confirmed**. The installation has not been changed by generating this ZIP.
 
-Historical technical details: [technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md), [technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md), and [developer handoffs](05-HANDOFF-UPDATE-0.1.16.md).
+Historical technical details: [technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md), [technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md), and [developer handoffs](05-HANDOFF-UPDATE-0.1.17.md).
 
 This is an unofficial personal-use World of Darkness utility, not an official WoD20/Foundry product.

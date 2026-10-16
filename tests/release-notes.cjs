@@ -9,7 +9,7 @@ const changelog=read('CHANGELOG.md');
 const notes=read('RELEASE-NOTES.md');
 const readme=read('README.md');
 assert.equal(manifest.id,'wod20-player-actions');
-assert.equal(manifest.version,'0.1.16');
+assert.equal(manifest.version,'0.1.17');
 assert.equal(manifest.download,`https://github.com/rebsiot/M20-player-actions/releases/download/v${manifest.version}/wod20-player-magick-${manifest.version}.zip`);
 assert.equal(notes.split('\n')[0],`# Player Actions v${manifest.version}`);
 assert.ok(notes.length>300 && notes.length<6000);
@@ -20,12 +20,12 @@ assert.match(readme,/\[What's in this release\]\(RELEASE-NOTES\.md\)/);
 assert.match(readme,/\[Full version history\]\(CHANGELOG\.md\)/);
 assert.ok(readme.toLowerCase().includes(`current version:** v${manifest.version}`));
 const releases=[...changelog.matchAll(/^## v0\.1\.(\d+)\s+-/gm)].map(m=>+m[1]);
-assert.deepEqual(releases,Array.from({length:17},(_,i)=>16-i),'0.1.16 through 0.1.0 in order');
+assert.deepEqual(releases,Array.from({length:18},(_,i)=>17-i),'0.1.17 through 0.1.0 in order');
 assert.match(changelog,/v0\.1\.14[^]*?40 shortcuts/);
-for(const f of ['docs/README-TECHNICAL-THROUGH-v0.1.14.md','docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md','05-HANDOFF-UPDATE-0.1.15.md','05-HANDOFF-UPDATE-0.1.16.md']) {
+for(const f of ['docs/README-TECHNICAL-THROUGH-v0.1.14.md','docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md','05-HANDOFF-UPDATE-0.1.15.md','05-HANDOFF-UPDATE-0.1.16.md','05-HANDOFF-UPDATE-0.1.17.md']) {
   assert.ok(fs.statSync(path.join(root,f)).size>50,f);
 }
 const workflow=read('.github/workflows/publish-release.yml');
 assert.match(workflow,/--notes-file RELEASE-NOTES\.md/);
 assert.doesNotMatch(workflow,/with 39 draggable shortcuts/);
-console.log('PASS: v0.1.16 release docs, documentation-only v0.1.15 continuity, technical archive and versioned workflow');
+console.log('PASS: v0.1.17 release docs, documentation-only v0.1.15 continuity, technical archive and versioned workflow');

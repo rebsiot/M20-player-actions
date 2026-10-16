@@ -90,7 +90,10 @@ const action = async (dialog,name) => {
     await action(dialog,'next');
     assert.match(dialog.root.page.innerHTML,new RegExp(`Step ${index+1} of 4`));
   }
-  assert.match(dialog.root.page.innerHTML,/Compendium Packs/);
+  assert.match(dialog.root.page.innerHTML,/Macro Compendium/);
+  assert.equal((dialog.root.page.innerHTML.match(/data-wpa-tutorial-choice=/g)||[]).length,4,'three hotbar checkboxes plus compendium checkbox');
+  assert.doesNotMatch(dialog.root.page.innerHTML,/data-wpa-tutorial-choice=\"[^\"]+\" checked/,'all choices unchecked by default');
+  assert.match(dialog.root.page.innerHTML,/data-wpa-tutorial-action=\"finish\"/);
   const button = await action(dialog,'dismiss');
   assert.equal(button.disabled,true,'opt-out button blocks double-submission');
   assert.equal(saved.get('tutorialDontShowAgain'),true);

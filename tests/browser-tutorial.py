@@ -71,6 +71,14 @@ with sync_playwright() as p:
         page.locator('[data-wpa-tutorial-action="next"]').click()
         page.locator('[data-wpa-tutorial-action="next"]').click()
         assert page.locator('[data-wpa-tutorial-action="dismiss"]').is_visible()
+        assert page.locator('[data-wpa-tutorial-action="finish"]').is_visible()
+        checkboxes=page.locator('[data-wpa-tutorial-choice]')
+        assert checkboxes.count()==4 and all(not checkboxes.nth(i).is_checked() for i in range(4))
+        page.locator('[data-wpa-tutorial-choice="basic"]').check()
+        page.locator('[data-wpa-tutorial-action="back"]').click()
+        page.locator('[data-wpa-tutorial-action="next"]').click()
+        assert page.locator('[data-wpa-tutorial-choice="basic"]').is_checked()
+        page.locator('[data-wpa-tutorial-choice="basic"]').uncheck()
         dims=page.evaluate('''() => ({viewport:window.innerWidth,
             document:document.documentElement.scrollWidth,
             dialog:Math.round(document.querySelector('.fake-foundry-dialog').getBoundingClientRect().width),
