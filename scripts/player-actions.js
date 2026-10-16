@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.16: Resistance, Countermagick, Modern Scenes, Favorite Rotes. */
+/* WoD20 Player Actions v0.1.17: Optional first-login hotbar setup. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -82,8 +82,9 @@ let lastGmTokenUuid = "";
 let gmTokenSave = Promise.resolve();
 let tutorialDialog = null;
 
-// Short, system-agnostic orientation: the tutorial never touches an Actor,
-// makes a roll, assigns hotbars or requires permission to control a token.
+// Four-step orientation. Only explicit checked tutorial choices can assign
+// world macros to this user's unused hotbar slots; the tutorial never rolls
+// dice or changes Actors, and closing early never changes the hotbar.
 const TUTORIAL_STEPS = Object.freeze([
   {
     title: "Welcome to Player Actions",
@@ -106,8 +107,8 @@ const TUTORIAL_STEPS = Object.freeze([
   {
     title: "Combat, hotbars and help",
     body: `<p><strong>Raw Attack</strong> makes one attack check. For the full combat sequence, <strong>Standard Attack (Targeted)</strong> needs exactly one targeted defender, an online GM and the separate STL Combat Workflow module.</p>
-      <p>Look in <strong>Compendium Packs → Player Actions — Hotbar Macros</strong> to drag only the shortcuts you want. Nothing is automatically placed on your hotbar.</p>
-      <p>You can open this walkthrough again using <strong>Quick Tutorial</strong> in either the Basic Actions or Use Magick window.</p>`
+      <p>Choose any optional shortcuts below, or leave everything unchecked. We only fill empty hotbar slots. You can also open <strong>Player Actions — Hotbar Macros</strong> to explore all 48 shortcuts.</p>
+      <p>Reopen this walkthrough using <strong>Quick Tutorial</strong> in Basic Actions or Use Magick.</p>`
   }
 ]);
 
@@ -1370,6 +1371,100 @@ async function ensureMacroCompendium() {
   }
 }
 
+// Tutorial choices are separate from the protected macro compendium. Existing
+// world launchers are assigned by Foundry's native per-user API, never copied
+// or replaced in the user's hotbar. Only a GM may seed launcher documents.
+const TUTORIAL_HOTBAR_SHORTCUTS = Object.freeze([
+  {key:"magick",label:"Use Magick",flag:"launcher",name:"Use Magick"},
+  {key:"combat",label:"Combat — Standard Attack (Targeted)",flag:"combatLauncher",name:"Player Combat (Targeted)"},
+  {key:"basic",label:"Basic Actions",flag:"basicLauncher",name:"Player Basic Actions"}
+]);
+
+function tutorialShortcutMacro(choice) {
+  const expected = choice.key === "magick" ? LAUNCHER_COMMAND :
+    choice.key === "combat" ? COMBAT_LAUNCHER_COMMAND : BASIC_LAUNCHER_COMMAND;
+  return game.macros?.find?.(m => m.getFlag?.(MOD,choice.flag) === true) ||
+    game.macros?.find?.(m => m.name === choice.name && m.command === expected) || null;
+}
+
+async function addTutorialHotbarShortcuts(selected = new Set()) {
+  const wanted=TUTORIAL_HOTBAR_SHORTCUTS.filter(choice=>selected.has(choice.key));
+  if (!wanted.length) return {added:0,already:0,missing:0,full:0,failed:0};
+  const user=game.user;
+  // If Foundry cannot tell us which slots are occupied, do not guess.
+  if (typeof user?.assignHotbarMacro !== "function" || !user.hotbar || typeof user.hotbar !== "object") {
+    ui.notifications.warn("Your hotbar cannot be edited here. Use the Player Actions Macro Compendium instead.");
+    return {added:0,already:0,missing:wanted.length,full:0,failed:0};
+  }
+  const occupancy=new Map();
+  for (const [slot,macroId] of Object.entries(user.hotbar)) {
+    const n=Number(slot);
+    if (Number.isInteger(n) && n>=1 && n<=50 && macroId) occupancy.set(n,String(macroId));
+  }
+  // Prefer the visible page, then every other page. Never displace an occupied
+  // slot or touch macros placed by the GM or by an existing player configuration.
+  const page=clamp(ui.hotbar?.page || 1,1,5);
+  const order=[...Array.from({length:10},(_,i)=>(page-1)*10+i+1),
+    ...Array.from({length:50},(_,i)=>i+1).filter(n=>Math.ceil(n/10)!==page)];
+  const result={added:0,already:0,missing:0,full:0,failed:0};
+  for (const choice of wanted) {
+    const macro=tutorialShortcutMacro(choice);
+    if (!macro?.id) {
+      result.missing++;
+      ui.notifications.warn(`${choice.label} is not yet available. Ask the GM to log in once to prepare Player Actions shortcuts.`);
+      continue;
+    }
+    // A matching script already on the bar should not be added a second time,
+    // even if it came from a player's prior compendium import.
+    const catalogIds={magick:"dash-magick",combat:"standard-attack",basic:"dash-basic"};
+    const exists=[...occupancy.values()].some(id=>{
+      const placed=game.macros?.get?.(id);
+      return id===macro.id || (placed && (placed.command===macro.command ||
+        placed.getFlag?.(MOD,"catalogId")===catalogIds[choice.key]));
+    });
+    if (exists) {result.already++;continue;}
+    const slot=order.find(n=>!occupancy.has(n));
+    if (!slot) {
+      result.full++;
+      ui.notifications.warn(`No free hotbar slot for ${choice.label}. Your existing hotbar was not changed.`);
+      continue;
+    }
+    try {
+      await user.assignHotbarMacro(macro,slot);
+      occupancy.set(slot,String(macro.id));
+      result.added++;
+    } catch(error) {
+      result.failed++;
+      console.warn(`${MOD} | Hotbar setup failed for ${choice.label}`,error);
+      ui.notifications.warn(`Could not add ${choice.label} to the hotbar. You can drag it manually from the Macro Compendium.`);
+    }
+  }
+  if (result.added) ui.notifications.info(`Added ${result.added} Player Actions shortcut${result.added===1?"":"s"} to your hotbar.`);
+  return result;
+}
+
+async function openPlayerActionsMacroCompendium() {
+  const pack=game.packs?.get?.(MACRO_PACK_ID);
+  if (!pack || pack.documentName!=="Macro") {
+    ui.notifications.warn("Player Actions Macro Compendium is not available. Ask a GM to enter this world once.");
+    return false;
+  }
+  try {
+    ui.sidebar?.tabs?.compendium?.activate?.();
+    const existing=Array.from(pack.apps||[]).find(app=>app?.rendered);
+    if (existing) {existing.bringToFront?.();return true;}
+    const App=pack.applicationClass || foundry.applications?.sidebar?.apps?.Compendium;
+    if (typeof App!=="function") throw new Error("Compendium window API unavailable");
+    const window=new App({collection:pack});
+    await window.render({force:true});
+    return true;
+  } catch(error) {
+    console.warn(`${MOD} | Could not open the Macro Compendium`,error);
+    ui.notifications.warn("Could not open the Macro Compendium automatically; use the Compendium Packs sidebar.");
+    return false;
+  }
+}
+
 async function execute(actorUuid = null, itemId = null, action = null) {
   let actor;
   try { actor = resolveActor(actorUuid); }
@@ -1528,20 +1623,26 @@ async function openPanel(actor = null) {
   });
 }
 
-function tutorialPageHTML(index) {
+function tutorialPageHTML(index, selected = new Set()) {
   const step = clamp(index,0,TUTORIAL_STEPS.length-1);
   const entry = TUTORIAL_STEPS[step];
   const last = step === TUTORIAL_STEPS.length-1;
+  const choices = last ? `<fieldset class="wpa-tutorial-choices">
+    <legend>Would you like me to add shortcuts to your hotbar?</legend>
+    ${TUTORIAL_HOTBAR_SHORTCUTS.map(choice=>`<label class="wpa-tutorial-checkbox"><input type="checkbox" data-wpa-tutorial-choice="${choice.key}" ${selected.has(choice.key)?"checked":""}><span>${choice.label}</span></label>`).join("")}
+    <label class="wpa-tutorial-checkbox wpa-tutorial-compendium-choice"><input type="checkbox" data-wpa-tutorial-choice="compendium" ${selected.has("compendium")?"checked":""}><span>Open the Player Actions Macro Compendium</span></label>
+    <p class="wpa-tutorial-hint">All options start unchecked. Only empty hotbar slots will be used; existing shortcuts are preserved.</p>
+    </fieldset>` : "";
   return `<div class="wpa-tutorial-step" aria-live="polite" data-wpa-tutorial-step="${step}">
     <div class="wpa-tutorial-count">Step ${step+1} of ${TUTORIAL_STEPS.length}</div>
     <h2>${entry.title}</h2>
-    <div class="wpa-tutorial-body">${entry.body}</div>
+    <div class="wpa-tutorial-body">${entry.body}${choices}</div>
     <div class="wpa-tutorial-navigation">
       <button type="button" data-wpa-tutorial-action="back" ${step===0 ? "disabled" : ""}>Back</button>
-      ${last ? `<button type="button" class="wpa-tutorial-finish" data-wpa-tutorial-action="dismiss">Don't show again</button>`
+      ${last ? `<div class="wpa-tutorial-finish-actions"><button type="button" data-wpa-tutorial-action="finish">Finish</button><button type="button" class="wpa-tutorial-finish" data-wpa-tutorial-action="dismiss">Don't show again</button></div>`
         : `<button type="button" class="wpa-tutorial-next" data-wpa-tutorial-action="next">Next</button>`}
     </div>
-    ${last ? `<p class="wpa-tutorial-hint">Choose “Don't show again” to hide this on future logins. Closing the window instead will offer it again next time.</p>` : ""}
+    ${last ? `<p class="wpa-tutorial-hint">Both Finish and “Don't show again” apply your checked choices. Only “Don't show again” hides the tutorial on future logins.</p>` : ""}
   </div>`;
 }
 
@@ -1554,7 +1655,7 @@ async function openTutorial() {
   const viewportWidth = Number(globalThis.innerWidth) || 820;
   const dialog = new Dialog({
     window: {title:"Player Actions — Quick Tutorial"},
-    position: {width:Math.min(530,Math.max(310,viewportWidth-44))},
+    position: {width:Math.min(550,Math.max(310,viewportWidth-44))},
     content:`<div class="wpa-root wpa-tutorial" aria-label="Player Actions quick tutorial"><div data-wpa-tutorial-page>${tutorialPageHTML(0)}</div></div>`,
     buttons:[{action:"close",label:"Close for now"}]
   });
@@ -1565,21 +1666,32 @@ async function openTutorial() {
   if (!root) return dialog;
   let index = 0;
   let saving = false;
+  const selected=new Set();
+  root.addEventListener("change",event=>{
+    const input=event.target.closest?.("[data-wpa-tutorial-choice]");
+    if (!input || saving) return;
+    const key=input.dataset.wpaTutorialChoice;
+    if (!["magick","combat","basic","compendium"].includes(key)) return;
+    if (input.checked) selected.add(key);
+    else selected.delete(key);
+  });
   root.addEventListener("click",async event=>{
     const button = event.target.closest?.("[data-wpa-tutorial-action]");
     if (!button || saving) return;
     const action = button.dataset.wpaTutorialAction;
-    if (action === "dismiss") {
+    if (action === "finish" || action === "dismiss") {
       saving = true;
       button.disabled = true;
       try {
-        // User-scope Foundry setting: per-player, per-world, survives relogin.
-        // The preference is changed ONLY by this explicit opt-out button.
-        await game.settings.set(MOD,TUTORIAL_DISMISSED_SETTING,true);
+        // Preserve the prior per-user opt-out semantics. A plain Finish must
+        // never suppress the tutorial on the user's next login.
+        if (action === "dismiss") await game.settings.set(MOD,TUTORIAL_DISMISSED_SETTING,true);
+        await addTutorialHotbarShortcuts(selected);
         await dialog.close();
+        if (selected.has("compendium")) await openPlayerActionsMacroCompendium();
       } catch(error) {
-        console.warn(`${MOD} | Could not save tutorial preference`,error);
-        ui.notifications.error("Could not save 'Don't show again'; try once more.");
+        console.warn(`${MOD} | Tutorial finish failed`,error);
+        ui.notifications.error("Tutorial setup could not finish; please try again.");
         button.disabled = false;
       } finally { saving = false; }
       return;
@@ -1589,8 +1701,8 @@ async function openTutorial() {
     else return;
     const page = root.querySelector("[data-wpa-tutorial-page]");
     if (page) {
-      page.innerHTML = tutorialPageHTML(index);
-      page.querySelector("[data-wpa-tutorial-action='next'],[data-wpa-tutorial-action='dismiss'],[data-wpa-tutorial-action='back']:not(:disabled)")?.focus?.();
+      page.innerHTML = tutorialPageHTML(index,selected);
+      page.querySelector("[data-wpa-tutorial-action='next'],[data-wpa-tutorial-action='finish'],[data-wpa-tutorial-action='back']:not(:disabled)")?.focus?.();
     }
   });
   return dialog;
@@ -1745,6 +1857,22 @@ async function ensureBasicLauncherMacro() {
   } catch(error) { console.warn(`${MOD} | Unable to create Basic Actions launcher`,error); }
 }
 
+// GM-seeded world launcher for the tutorial's Combat checkbox. Like the two
+// existing launchers, this delegates to the independent Combat Workflow API.
+const COMBAT_LAUNCHER_NAME = "Player Combat (Targeted)";
+const COMBAT_LAUNCHER_COMMAND = macroCommand("openStandardAttackShortcut");
+async function ensureCombatLauncherMacro() {
+  if (!game.user.isGM) return;
+  if (game.macros?.find?.(m=>m.getFlag?.(MOD,"combatLauncher")===true ||
+      (m.name===COMBAT_LAUNCHER_NAME && m.command===COMBAT_LAUNCHER_COMMAND))) return;
+  try {
+    await Macro.create({name:COMBAT_LAUNCHER_NAME,type:"script",
+      img:basicIcon("target-arrows"),command:COMBAT_LAUNCHER_COMMAND,
+      ownership:{default:CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER},
+      flags:{[MOD]:{combatLauncher:true}}});
+  } catch(error) { console.warn(`${MOD} | Unable to create optional Combat launcher`,error); }
+}
+
 Hooks.once("ready", () => {
   if (game.system.id !== SYSTEM_ID) return;
   // Retain execute() for old macros. Create only one optional launcher, never touch hotbars.
@@ -1758,6 +1886,7 @@ Hooks.once("ready", () => {
   ensureDirectoryButton();
   void ensureLauncherMacro();
   void ensureBasicLauncherMacro();
+  void ensureCombatLauncherMacro();
   // A new world compendium is provisioned only on the GM's first ready.
   void ensureMacroCompendium().catch(error=>{
     console.error(`${MOD} | Macro compendium setup failed`,error);
