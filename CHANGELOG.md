@@ -1,3 +1,12 @@
+## v0.1.13 — 2026-10-15 — Player Macro compendium (test build)
+
+- **Added:** Native GM-provisioned world Macro compendium **Player Actions — Hotbar Macros** with 39 Script Macros: 20 preset actions, 5 per-player/per-Actor custom slots, 2 dashboard/freeform tools, 3 Magick tools, and 9 combat/sheet shortcuts. Players drag any Macro themselves; no automatic hotbar assignments.
+- **Combat:** Attack chooser and direct Brawl/Melee/Firearms checks, Dodge/Block/Parry, native system Initiative, and Character Sheet link for weapon-specific damage/soak. No alternate dice, automated weapon damage or guessed soak rolls.
+- **Preserved:** All player-created custom slots, native WoD20 Attribute/Ability rolls, Actor selection (including GM last token), Magick/Rotes, Paradox classification, current world Macros and hotbar slots.
+- **World data:** One new compendium and hidden creation ledger are created on a GM's first login; no Actor/Item changes. Reference compendium is readable by players and not editable. Existing compendium documents are never overwritten; deleted macros are not restored on reload.
+- **Upgrade/rollback:** Back up the module directory **and world**. Upgrade the full v0.1.13 ZIP, restart and hard-refresh. Reinstall v0.1.12 to roll back code; the new world compendium will remain unless the GM chooses to remove it separately.
+- **Tests:** Node mock/syntax, module ZIP checks; live Foundry macro dragging and initiative pending.
+
 # Changes — WoD20 Player Magick
 
 ## v0.1.12 — 2026-10-15 (Basic Actions clarity and icon expansion)

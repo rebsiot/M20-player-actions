@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.12: Basic Actions and Player Magick, native WoD20 dice path. */
+/* WoD20 Player Actions v0.1.13: player macro catalog, Basic Actions and Magick. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -956,6 +956,211 @@ async function openBasicActions(actor=null) {
   root.querySelector('[data-basic-step="-1"]')?.removeAttribute("disabled");
 }
 
+// Public shortcuts used by the player-readable Macro compendium. Resolve the
+// current user/GM token at execution time, never bind catalog macros to the GM
+// actor that generated them. The optional 5 custom slots stay per user+Actor.
+const COMBAT_SHORTCUTS = Object.freeze({
+  dodge: {label:"Dodge",attr:"dexterity",ability:"Athletics",icon:"dodge"},
+  block: {label:"Block",attr:"dexterity",ability:"Brawl",icon:"shield"},
+  parry: {label:"Parry",attr:"dexterity",ability:"Melee",icon:"crossed-swords"},
+  "brawl-attack": {label:"Brawl Attack",attr:"dexterity",ability:"Brawl",icon:"fist"},
+  "melee-attack": {label:"Melee Attack",attr:"dexterity",ability:"Melee",icon:"crossed-swords"},
+  "firearms-attack": {label:"Firearms Attack",attr:"dexterity",ability:"Firearms",icon:"crosshair"}
+});
+function shortcutActor() {
+  const actor = resolveActor();
+  // Multiple GM-controlled tokens must not silently fall back to another Actor.
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return null;
+  return actor;
+}
+async function shortcutRun(actor, action, difficulty=6, useWillpower=false) {
+  if (!actor || !canUse(actor)) {
+    ui.notifications.warn("Select a character you control before using this shortcut.");
+    return false;
+  }
+  try {
+    await performBasicAction(actor,action,difficulty,useWillpower);
+    return true;
+  } catch(error) {
+    console.error(`${MOD} | Macro roll failed`,error);
+    ui.notifications.error(`Action failed: ${error.message}`);
+    return false;
+  }
+}
+async function rollPresetAction(id, difficulty=6) {
+  const action = BASIC_ROWS.flatMap(x=>x.actions).find(x=>x.id===id);
+  if (!action) return ui.notifications.warn("Unknown Basic Action shortcut.");
+  return shortcutRun(shortcutActor(),action,difficulty);
+}
+async function rollCustomShortcut(index, difficulty=6) {
+  index=int(index,-1);
+  if (index<0 || index>=5) return ui.notifications.warn("Unknown custom action slot.");
+  let actor = shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor=await chooseCharacter();
+  if (!actor) return;
+  const saved = basicSlots(actor)[index];
+  // Empty slots behave like Configure in the dashboard; nothing is rolled.
+  if (!saved) return basicConfigureSlot(actor,index,async()=>{});
+  return shortcutRun(actor,saved,difficulty);
+}
+async function rollCombatShortcut(id, difficulty=6) {
+  const action = COMBAT_SHORTCUTS[id];
+  if (!action) return ui.notifications.warn("Unknown combat action shortcut.");
+  return shortcutRun(shortcutActor(),action,difficulty);
+}
+async function openAttackShortcut() {
+  let actor=shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor=await chooseCharacter();
+  if (!actor) return;
+  // These are hit/check rolls, NOT weapon-specific damage/soak automation.
+  // Player chooses the ability; absent abilities are shown explicitly, never
+  // silently replaced by another skill.
+  const modes=["brawl-attack","melee-attack","firearms-attack"];
+  const content=`<div class="wpa-root wpa-basic"><p>Attack check for <strong>${escape(actor.name)}</strong>.</p>
+    <p>Select an attack pool. Weapon properties, damage and soak stay with the WoD20 sheet and Storyteller.</p>
+    <label>Attack type<select name="attackType">${modes.map(id=>{
+      const a=COMBAT_SHORTCUTS[id], t=basicActionTraits(actor,a);
+      return `<option value="${id}"${t.missing?' disabled':''}>${escape(a.label)} — Dexterity + ${escape(a.ability)}${t.missing?' (not on sheet)':` (${t.pool}d10)`}</option>`;
+    }).join("")}</select></label>
+    <label>Difficulty <input type="number" name="difficulty" min="2" max="10" value="6"></label>
+    <label><input type="checkbox" name="willpower"> Spend 1 Willpower</label></div>`;
+  if (!modes.some(id=>!basicActionTraits(actor,COMBAT_SHORTCUTS[id]).missing)) {
+    ui.notifications.warn("No Brawl, Melee or Firearms Ability found on this character.");return;
+  }
+  const data=await foundry.applications.api.DialogV2.input({window:{title:`Attack — ${actor.name}`},content,
+    ok:{label:"Roll Attack"}});
+  if (!data?.attackType || !modes.includes(data.attackType)) return;
+  return shortcutRun(actor,COMBAT_SHORTCUTS[data.attackType],clamp(data.difficulty,2,10),!!data.willpower);
+}
+async function openAnyCheckShortcut() {
+  let actor=shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor=await chooseCharacter();
+  if (!actor) return;
+  const attrs=basicAttributes(actor), abilities=basicAbilities(actor);
+  if (!attrs.length) return ui.notifications.warn("No Attributes available on this character.");
+  const content=`<div class="wpa-root wpa-basic"><p>Choose any Attribute and Ability on <strong>${escape(actor.name)}</strong>.</p>
+    <label>Attribute<select name="attribute">${attrs.map(a=>`<option value="${escape(a.id)}">${escape(a.label)} (${a.value})</option>`).join("")}</select></label>
+    <label>Ability<select name="abilityId"><option value="">Attribute only</option>${abilities.map(a=>`<option value="${escape(a.id)}">${escape(a.name)} (${Math.max(0,int(a.system?.value))})</option>`).join("")}</select></label>
+    <label>Difficulty<input name="difficulty" type="number" value="6" min="2" max="10"></label>
+    <label><input type="checkbox" name="willpower"> Spend 1 Willpower</label></div>`;
+  const result=await foundry.applications.api.DialogV2.input({window:{title:`Roll Any Check — ${actor.name}`},content,ok:{label:"Roll Check"}});
+  if (!result?.attribute) return;
+  const attr=attrs.find(a=>a.id===result.attribute),ability=abilities.find(a=>a.id===result.abilityId);
+  if (!attr || (result.abilityId && !ability)) return ui.notifications.warn("Trait no longer available on this character.");
+  return shortcutRun(actor,{label:ability?`${attr.label} + ${ability.name}`:attr.label,
+    attr:attr.id,abilityId:ability?.id||""},clamp(result.difficulty,2,10),!!result.willpower);
+}
+async function rollInitiativeShortcut() {
+  const actor=shortcutActor();
+  if (!actor || !canUse(actor)) return ui.notifications.warn("Select a character to roll initiative.");
+  try {
+    const CombatHelper=await loadBasicCombatHelper();
+    if (typeof CombatHelper.RollInitiative!=="function") throw new Error("WoD20 initiative API unavailable");
+    return await CombatHelper.RollInitiative(actor);
+  } catch(error) {
+    console.error(`${MOD} | Initiative failed`,error);
+    ui.notifications.error(`Initiative failed: ${error.message}`);
+  }
+}
+async function openImprovisedShortcut() {
+  const actor=shortcutActor();
+  if (!actor) return;
+  return guidedCast(actor);
+}
+async function openSheetShortcut() {
+  const actor=shortcutActor();
+  if (!actor || !canUse(actor)) return ui.notifications.warn("Select a character to open their sheet.");
+  return actor.sheet?.render(true);
+}
+
+// World Macro compendium: created ONCE in Foundry by the GM through native APIs.
+// No LevelDB stub files, foreign compendium mutations, or hotbar assignments.
+// The world owns the pack; replacing this module does not delete it.
+const MACRO_PACK_ID="world.wod20-player-actions-macros";
+const MACRO_PACK_NAME="wod20-player-actions-macros";
+const MACRO_CATALOG_SETTING="macroCatalogInstalledIds";
+const macroCommand=(method,...args)=>`const api = game.modules.get("${MOD}")?.api;\n`+
+  `if (!api?.${method}) ui.notifications.warn("Enable WoD20 Player Actions to use this Macro.");\n`+
+  `else await api.${method}(${args.map(x=>JSON.stringify(x)).join(", ")});`;
+function catalogMacroDefinitions() {
+  const defs=[];
+  const add=(id,name,group,iconName,method,...args)=>defs.push({id,name,group,
+    img:basicIcon(iconName),command:macroCommand(method,...args)});
+  for(const row of BASIC_ROWS) for(const action of row.actions)
+    add(`basic-${action.id}`,action.label,row.label,action.icon,"rollPresetAction",action.id);
+  for(let i=0;i<5;i++) add(`custom-${i+1}`,`Custom Action ${i+1}`,"My Custom Actions",
+    "dice-six-faces-one","rollCustomShortcut",i);
+  add("dash-basic","Basic Actions","Dashboards","dice-six-faces-one","openBasicActions");
+  add("any-check","Roll Any Check","Dashboards","dice-six-faces-one","openAnyCheckShortcut");
+  add("dash-magick","Player Magick","Magick","spell-book","openPanel");
+  add("cast-improvised","Improvised Magick","Magick","crystal-ball","openImprovisedShortcut");
+  add("browse-rotes","Rotes & Powers","Magick","black-book","openPanel");
+  add("attack","Attack (Choose Type)","Combat","crossed-swords","openAttackShortcut");
+  for(const [id,action] of Object.entries(COMBAT_SHORTCUTS))
+    add(`combat-${id}`,action.label,"Combat",action.icon,"rollCombatShortcut",id);
+  add("initiative","Initiative","Combat","alarm-clock","rollInitiativeShortcut");
+  add("sheet","Character Sheet (Weapon / Soak)","Combat","riot-shield","openSheetShortcut");
+  return defs;
+}
+function catalogReadInstalledIds() {
+  try {
+    const parsed=JSON.parse(game.settings.get(MOD,MACRO_CATALOG_SETTING)||"[]");
+    return Array.isArray(parsed)?parsed.filter(x=>typeof x==="string"):[];
+  }catch {return [];}
+}
+async function ensureMacroCompendium() {
+  if (!game.user.isGM) return;
+  const compendiumClass=globalThis.foundry?.documents?.collections?.CompendiumCollection;
+  // Do not error at readiness in tests or older, unsupported Foundry versions.
+  if (!game.packs?.get || typeof compendiumClass?.createCompendium!=="function" || typeof Macro?.createDocuments!=="function") return;
+  let pack=game.packs.get(MACRO_PACK_ID),created=false;
+  const everInstalled=new Set(catalogReadInstalledIds());
+  if (!pack) {
+    // If the pack was intentionally removed, don't silently recreate it.
+    if (everInstalled.size) return;
+    pack=await compendiumClass.createCompendium({name:MACRO_PACK_NAME,label:"Player Actions — Hotbar Macros",type:"Macro",package:"world",
+      ownership:{PLAYER:"OBSERVER",TRUSTED:"OBSERVER",ASSISTANT:"OWNER",GAMEMASTER:"OWNER"}});
+    created=true;
+  }
+  if (!pack || pack.documentName!=="Macro") {
+    console.warn(`${MOD} | Macro compendium ID is occupied by a non-Macro pack`);
+    return;
+  }
+  const existing=await pack.getDocuments();
+  const foundIds=new Set(existing.map(m=>m.getFlag?.(MOD,"catalogId")||m.flags?.[MOD]?.catalogId).filter(Boolean));
+  // Avoid taking over an unrelated pre-existing compendium using this name.
+  if (!created && !everInstalled.size && !foundIds.size &&
+      !(existing.length===0 && pack.title==="Player Actions — Hotbar Macros")) {
+    console.warn(`${MOD} | Existing macro compendium is not managed by this module; leaving it untouched.`);
+    return;
+  }
+  const definitions=catalogMacroDefinitions();
+  const fresh=definitions.filter(d=>!everInstalled.has(d.id) && !foundIds.has(d.id));
+  if (fresh.length) {
+    const wasLocked=!!pack.locked;
+    if (wasLocked) await pack.configure({locked:false});
+    try {
+      await Macro.createDocuments(fresh.map(d=>({
+        name:d.name,type:"script",img:d.img,command:d.command,
+        ownership:{default:CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER},
+        flags:{[MOD]:{catalogId:d.id,category:d.group}}
+      })),{pack:pack.collection});
+    }finally { if(wasLocked) await pack.configure({locked:true}); }
+  }
+  // Remember all installed IDs, not just current pack contents. A GM who
+  // removes or edits a shortcut will not see it silently restored next boot.
+  const installed=new Set([...everInstalled,...foundIds,...fresh.map(d=>d.id)]);
+  if (installed.size!==everInstalled.size)
+    await game.settings.set(MOD,MACRO_CATALOG_SETTING,JSON.stringify([...installed].sort()));
+  if(created) {
+    // Players can browse/drag, not edit the reference masters.
+    await pack.configure({ownership:{PLAYER:"OBSERVER",TRUSTED:"OBSERVER",ASSISTANT:"OWNER",GAMEMASTER:"OWNER"},locked:true});
+  }
+}
+
 async function execute(actorUuid = null, itemId = null, action = null) {
   let actor;
   try { actor = resolveActor(actorUuid); }
@@ -1089,6 +1294,11 @@ Hooks.once("init", () => {
     hint:"Five per-character, per-player custom quick actions; no Actor data is changed.",
     scope:"user",config:false,type:String,default:"{}"
   });
+  game.settings.register(MOD, MACRO_CATALOG_SETTING, {
+    name:"Player Actions macro catalog creation ledger",
+    hint:"Tracks shipped shortcuts added to the world's Player Actions Macro compendium. Does not change player hotbars.",
+    scope:"world",config:false,type:String,default:"[]"
+  });
   Hooks.on("controlToken", (token, controlled) => {
     if (controlled) rememberGmToken(token);
   });
@@ -1148,10 +1358,19 @@ async function ensureBasicLauncherMacro() {
 Hooks.once("ready", () => {
   if (game.system.id !== SYSTEM_ID) return;
   // Retain execute() for old macros. Create only one optional launcher, never touch hotbars.
-  game.modules.get(MOD).api = { execute, openPanel, guidedCast, openBasicActions };
+  game.modules.get(MOD).api = {
+    execute,openPanel,guidedCast,openBasicActions,
+    rollPresetAction,rollCustomShortcut,rollCombatShortcut,
+    openAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut
+  };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
   void ensureLauncherMacro();
   void ensureBasicLauncherMacro();
+  // A new world compendium is provisioned only on the GM's first ready.
+  void ensureMacroCompendium().catch(error=>{
+    console.error(`${MOD} | Macro compendium setup failed`,error);
+    ui.notifications?.warn?.("Player Actions Macro compendium setup failed; see console.");
+  });
   console.log(`${MOD} | Ready. Actors tab: Player Magick; shortcut: Shift+J.`);
 });

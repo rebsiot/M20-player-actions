@@ -48,5 +48,5 @@ jobs:
             gh release create "$tag" "$zip" \
               --target "$GITHUB_SHA" \
               --title "WoD20 Player Actions $tag" \
-              --notes "Foundry v14 / WoD20 Player Actions: 20 icon-led Basic Actions, five private per-character custom buttons, curated Game Icons SVGs with author credits, and the existing Player Magick casting tools. All rolls use native WoD20 mechanisms; no automatic hotbar assignment or duplicate Paradox accounting. Automated tests passed; live Foundry client verification pending. Back up your module and world before upgrading; restore the previous version to roll back."
+              --notes "WoD20 Player Actions: GM-provisioned player-readable world Macro compendium with 39 draggable shortcuts (20 Basic Actions, five custom slots, Dodge, Attack, Initiative, Magick, Rotes, dashboards). No automatic hotbar assignments; native WoD20 dice, wound, specialty and Paradox contracts preserved. The world compendium persists after code rollback. Back up world and module before upgrading. Automated tests passed; live Foundry v14 drag-and-roll verification pending."
           fi
