@@ -1,3 +1,17 @@
+# v0.1.19 Test Report - Quick Resources (2026-10-16)
+
+**Owner:** Player Actions 05.2. **Status:** Local test candidate, not published or deployed. No new handoff document. Older chat handoffs are source-only under `docs/handoffs/`.
+
+- **Scope:** Real-time changes to native WoD20 Advantage Item `system.temporary` or legacy `system.advantages` resources; separate physical/Chimerical `system.health.damage` fields; guarded per-window Undo Last, Refresh, and fifth opt-in tutorial checkbox. No changes to native spell, combat, soak or Paradox calculations.
+- **Static/Node/mock tests:** PASS: Node syntax check plus 21 Node/mock suites, including `quick-resources.cjs`, hotbar tutorial setup, macros/catalog permissions, Paradox/chat contract, and existing action/Combat Workflow regressions. Tests cover native Item vs Actor updates, separate damage severity and Chimerical track, temporary vs permanent resources, max boundaries, shared Quintessence/Paradox pool, guarding undo from external changes, and absent/hidden Traits.
+- **Browser Chromium fixtures:** PASS: five Chromium scripts at 1440 / 820 / 430px for Basic Actions, first-login tutorial checkboxes, full magick, Rote quick cast, and new Quick Resources direct click/update/undo behavior. No horizontal clipping in simulated browser UI.
+- **ZIP integrity:** PASS: complete module-root ZIP with 162 curated Game Icons, 21 Node suites, 5 browser fixtures, manifest/version consistency, CRC/path safety. All chat handoffs excluded from installed files.
+- **Live Foundry v14 and installed WoD20 7.3.x:** NOT VERIFIED. Cross-module resource/Paradox/Combat interactions require a backed-up test world.
+
+**Installation:** Back up world and `Z:\Data\modules\wod20-player-actions` before upgrade; let GM enter the world to seed new player-readable Macro. **Rollback:** restore backed-up v0.1.18 folder and matching world snapshot to revert any newly created world/user documents or gameplay changes.
+
+---
+
 # v0.1.18 Test Report — Standard M20/V20 Pick Lock support (2026-10-16)
 
 **Scope:** Correct the existing Pick Lock button's Ability fallback order for standard character sheets; archive chat handoffs under `docs/handoffs/` and exclude them from the Foundry installation ZIP. No new macro, native dice mechanic, Actor modification, game system customization or data migration was introduced.
@@ -8,7 +22,7 @@
 - **Chromium fixtures:** Four test scripts PASS at **1440, 820 and 430 px**. The Basic Actions fixture additionally confirms Pick Lock is enabled on a standard Mage carrying the real Crafts Ability (internal ID `craft`), renders the correct pairing, produces a native five-die check and preserves dashboard layout.
 - **Package:** Complete v0.1.18 installable ZIP built with manifest/ZIP filename consistency; 162 Game Icons retained. Archive CRC, entry paths and required runtime files validated. Historical chat handoffs are present in the **source archive only**, not in the installable module ZIP.
 - **Live Foundry v14 / WoD20:** **NOT TESTED.** The required first live test is a standard Mage with Dexterity 3 and Crafts 2 clicking Pick Lock, confirming `5d10` in a native WoD20 chat card. Test V20 Larceny separately if available.
-- **GitHub publication / Foundry deployment:** **NOT PERFORMED** for v0.1.18. This is a candidate for review/testing. Existing v0.1.17 remains the latest published baseline.
+- **GitHub publication / Foundry deployment:** **NOT PERFORMED** for v0.1.18. This is a candidate for review/testing. v0.1.18 was later published successfully on GitHub; this paragraph records prepublication local testing.
 
 **Upgrade:** Back up the world and `Z:\Data\modules\wod20-player-actions`, stop Foundry before replacing files via Samba, restart and refresh clients. **Rollback:** restore the backed-up v0.1.17 module; v0.1.18 performs no Actor, User or world-data migration. Do not confuse restored code with undoing prior gameplay or user hotbar changes.
 

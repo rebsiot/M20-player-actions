@@ -1,26 +1,22 @@
-# Player Actions v0.1.18
+# Player Actions v0.1.19
 
-**Pick Lock works with the Abilities on your actual character sheet.**
+## Quick Resources: adjust pools and damage in one window
 
-## What's fixed
+Open **Quick Resources** from Basic Actions, drag its Macro from **Player Actions - Hotbar Macros**, or select its unchecked box on the last page of the first-login Quick Tutorial. The Game Master must enter the world once after the upgrade to make the new optional launcher available. Nothing is automatically placed on player hotbars.
 
-- Mage M20: **Pick Lock** now uses **Dexterity + Crafts** on a standard sheet (the system's internal Ability ID is `craft`).
-- Vampire V20: **Pick Lock** uses **Dexterity + Larceny**. Characters with the optional Security Skill can also use Security.
-- The dashboard uses an existing character Ability Item and displays the selected pairing and dice pool. It does not create or grant Security, Larceny, or any other Ability.
-- Electronic security and unusual methods remain subject to the Storyteller; use Roll Any Check for Technology/Computer or other appropriate pairings.
+- Tap **+** or **-** to update the real WoD20 character **immediately**, with no Save button. Temporary Willpower, Quintessence, temporary Paradox, Blood Pool and other available consumable pools appear only when the character actually has them. Permanent traits remain unchanged.
+- Record **Bashing, Lethal, and Aggravated** damage separately. Chimerical damage appears separately when the sheet contains it. WoD20 itself remains responsible for wound levels and penalties.
+- **Undo Last** reverses a single previous click if the value has not been changed by something else; **Refresh** reads the latest sheet values. Existing maximums and Mage's shared Quintessence/Paradox wheel capacity are respected.
+- The Quick Tutorial now offers a fifth independent checkbox for **Quick Resources**. Leaving it unchecked does nothing. Checked shortcuts fill only free slots, never overwriting or duplicating existing player hotbar entries.
 
-## What's unchanged
+The protected Macro Compendium now has **49 optional shortcuts**. Existing actions, characters, Rotes, world macros, hotbar assignments and the separate Combat Workflow and Paradox rules are preserved. No schema migration or additional resource storage is introduced.
 
-All **48 optional macros**, first-login tutorial and opt-in hotbar checkboxes, native WoD20 rolling, existing characters, Rotes, and Combat Workflow / Paradox integration are preserved. No user or world data migration is performed.
+## Install / upgrade
 
-## Developer documentation cleanup
+Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry while replacing the existing module folder from the complete v0.1.19 ZIP, then restart Foundry, enable it in the intended world and hard-refresh browsers. Enter the world as GM once to seed the new Macro and world launcher. Older customized or intentionally removed entries will not be overwritten or silently reintroduced.
 
-Historical chat handoffs are archived under `docs/handoffs/` in the source repository and are **not included in the installable Foundry ZIP**. No new per-release handoff is generated.
+To roll back, restore the backed-up **v0.1.18** module folder and (if reversing a session's adjustments or new world Macros/hotbar assignments) the matching world backup. Restoring module code alone does not undo gameplay changes.
 
-## Upgrade, rollback and testing
+**Testing:** 21 Node/mock regression suites and five Chromium fixtures passed locally across desktop, tablet and mobile widths. Live Foundry v14, actual WoD20 7.3.x resources and cross-module Paradox/Combat integration remain **unverified** until tested in the user's game.
 
-Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry before manually replacing the module folder through Samba, then restart and refresh clients. Roll back to the backed-up **v0.1.17** module if needed; no schema migration is involved.
-
-**Verification:** automated Node/mock and packaging tests were run; a live Foundry v14 / WoD20 test of the new Pick Lock check is still required. See [TEST-REPORT.md](TEST-REPORT.md).
-
-[Full history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md) | [Setup guide](https://github.com/rebsiot/M20-player-actions/blob/main/README.md)
+[Full version history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md)

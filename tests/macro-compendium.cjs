@@ -54,8 +54,8 @@ ctx.__native({DiceRollContainer:class {constructor(a){this.actor=a;}},DiceRoller
 ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,actor);return 17;}});
 (async()=>{
   const defs=api.definitions();
-  assert.equal(defs.length,48,'25 basic, five custom, eight dashboard/magick, ten combat/sheet macros');
-  assert.equal(new Set(defs.map(x=>x.id)).size,48,'stable unique IDs');
+  assert.equal(defs.length,49,'25 basic, five custom, nine dashboard/magick, ten combat/sheet macros');
+  assert.equal(new Set(defs.map(x=>x.id)).size,49,'stable unique IDs');
   assert.equal(defs.filter(d=>['Awareness','Movement','Social','Knowledge'].includes(d.group)).length,20);
   assert.equal(defs.filter(d=>d.group==='Modern Scenes').length,5);
   assert.equal(defs.filter(d=>d.group==='My Custom Actions').length,5);
@@ -76,12 +76,12 @@ ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,acto
   assert.ok(defs.some(d=>d.name==='Roll Any Check'));
   for(const id of ['resistance','countermagick','favorite-rotes','basic-drive-pursue','basic-repair-equipment']) assert.ok(defs.some(d=>d.id===id));
   await api.ensure();
-  assert.equal(packCreates,1);assert.equal(packInsertBatches,1);assert.equal(pack.documents.length,48);
+  assert.equal(packCreates,1);assert.equal(packInsertBatches,1);assert.equal(pack.documents.length,49);
   assert.ok(pack.documents.every(x=>x.type==='script'&&x.ownership.default===2&&x.flags['wod20-player-actions'].catalogId));
   assert.equal(packConfigures.at(-1).ownership.PLAYER,'OBSERVER');
   assert.equal(packConfigures.at(-1).ownership.TRUSTED,'OBSERVER');
   assert.equal(pack.locked,true);
-  assert.equal(JSON.parse(settings.get('macroCatalogInstalledIds')).length,48);
+  assert.equal(JSON.parse(settings.get('macroCatalogInstalledIds')).length,49);
   await api.ensure();assert.equal(packInsertBatches,1,'relaunch never duplicates');
   // Upgrade v0.1.13's shipped labels in a managed pack, but preserve GM customizations.
   for (const [id, oldName] of [
@@ -105,7 +105,7 @@ ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,acto
   assert.equal(edited.command,'CUSTOM GM EDIT');
   // GMs can remove or edit entries; do not overwrite/recreate removed shortcuts.
   pack.documents=pack.documents.filter(d=>d.getFlag('wod20-player-actions','catalogId')!=='basic-notice');
-  await api.ensure();assert.equal(pack.documents.length,47,'removed macro stays removed');
+  await api.ensure();assert.equal(pack.documents.length,48,'removed macro stays removed');
   const notice=defs.find(d=>d.id==='basic-notice');
   await new Function('game','ui',`return (async()=>{${notice.command}})();`)(game,ctx.ui);
   assert.equal(rolls.length,1);assert.equal(rolls[0].action,'Notice');
@@ -138,5 +138,5 @@ ctx.__combat({ignoresPain:()=>false,RollInitiative:async a=>{assert.equal(a,acto
   // When disabled/no pack API, compendium initialization fails harmlessly.
   game.user.isGM=true;delete game.packs.get;
   await api.ensure();assert.equal(packInsertBatches,1);
-  console.log('PASS: 48 validated draggable native Script Macro entries, compendium rights, idempotence, retained edits, player safety and native rolls');
+  console.log('PASS: 49 validated draggable native Script Macro entries, compendium rights, idempotence, retained edits, player safety and native rolls');
 })().catch(e=>{console.error(e);process.exitCode=1});

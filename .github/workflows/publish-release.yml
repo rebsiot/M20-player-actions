@@ -25,20 +25,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply verified v0.1.18 runtime delta
+      - name: Apply verified v0.1.19 runtime delta
         shell: bash
         run: |
           set -euo pipefail
           version=$(python3 -c 'import json;print(json.load(open("module.json"))["version"])')
-          if [[ "$version" == "0.1.18" ]]; then
-            old_sha="300134a9d6512867c32241ca3340cb19c5e069326a00c8e05ae0d7fd464d771c"
-            new_sha="252046263cbb34d35bff4e173160f18a77aa8df4cefc0ee81e19305a03845fa9"
+          if [[ "$version" == "0.1.19" ]]; then
+            old_sha="252046263cbb34d35bff4e173160f18a77aa8df4cefc0ee81e19305a03845fa9"
+            new_sha="1f2f5716287c09f037e0d963aeff4f5d643fdb9fa8d472e724d506b306ece6b4"
             actual_sha=$(sha256sum scripts/player-actions.js | cut -d' ' -f1)
             if [[ "$actual_sha" == "$old_sha" ]]; then
-              git apply --check patches/v0.1.18-runtime.patch
-              git apply patches/v0.1.18-runtime.patch
+              git apply --check patches/v0.1.19-runtime.patch
+              git apply patches/v0.1.19-runtime.patch
             elif [[ "$actual_sha" != "$new_sha" ]]; then
-              echo "Unexpected runtime source SHA; refusing to build v0.1.18"
+              echo "Unexpected runtime source SHA; refusing to build v0.1.19"
               exit 1
             fi
             test "$(sha256sum scripts/player-actions.js | cut -d' ' -f1)" = "$new_sha"
@@ -60,7 +60,7 @@ jobs:
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add scripts/player-actions.js
-            git commit -m 'build: commit verified v0.1.18 Player Actions runtime'
+            git commit -m 'build: commit verified v0.1.19 Player Actions runtime'
             git push origin HEAD:main
           fi
       - name: Publish GitHub Release with installable ZIP
