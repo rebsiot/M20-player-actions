@@ -2,7 +2,7 @@
 
 **Owner:** 05-series Player Actions, `rebsiot/M20-player-actions`; module ID `wod20-player-actions`.  
 **Baseline:** v0.1.15 merged docs (runtime identical to v0.1.14), later published on 2026-10-16.  
-**Status:** Installable v0.1.16 candidate with tutorial; NOT merged, deployed or live verified.
+**Status:** v0.1.16 merged (PR #12) and published via GitHub Actions on 2026-10-16. Deployment and live Foundry verification remain pending.
 
 ## New behavior
 
@@ -38,4 +38,4 @@ Back up `Z:\Data\modules\wod20-player-actions` plus the world. Stop Foundry, ins
 
 Owner-05 handoff should be updated after live verification. `GLOBAL-02` native-roll/Paradox boundary and `GLOBAL-03` release/test status may need update when tests pass; do not make source edits in module 08/09 or Combat Workflow from this thread.
 
-**GitHub status:** v0.1.15 is already published. The v0.1.16 package is still a local candidate, and the previous direct source upload to GitHub was blocked. Do not claim this tutorial or v0.1.16 is merged or published until confirmed.
+**GitHub status:** PR #12 merged, publishing run 38952834950 succeeded, and the public v0.1.16 release includes `wod20-player-magick-0.1.16.zip`. The reviewed runtime is committed to `main`; first-login tutorial and gameplay work are automated/mock-tested but not live Foundry-verified. A one-time checked patch enabled upload of the large runtime source without modifying Foundry or world data.
