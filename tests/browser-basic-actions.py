@@ -16,6 +16,7 @@ SETUP=r'''() => {
     const a={id,uuid:'Actor.'+id,name,type:'PC',documentName:'Actor',isOwner:true,
       system:{settings:{splat:'mage'},attributes:Object.fromEntries(Object.entries(attributes).map(([k,v])=>[k,{total:v,value:v}]))},
       items:abilities.map((n,i)=>({id:'a'+i,name:n,type:'Ability',system:{id:n.toLowerCase(),value:(i+1)%5}}))};
+    a.items.push({id:'craft',name:'Crafts',type:'Ability',system:{id:'craft',value:2}});
     a.items.push({id:'wp',name:'Willpower',type:'Advantage',system:{id:'willpower',temporary:3}});
     a.api={rollAbility:async(id,attr,opts)=>{test.rolls.push({id,attr,opts,actor:a.uuid});}};
     return a;
@@ -101,7 +102,9 @@ with sync_playwright() as p:
     assert compact['panelHeight']<=(720 if width>=820 else 790),(width,compact)
     assert not compact['clipping'],(width,compact)
     assert page.locator('.wpa-basic-resistance').is_visible()
-    assert page.locator('[data-basic-preset="pick-lock"]').is_disabled()
+    assert page.locator('[data-basic-preset="pick-lock"]').is_enabled()
+    assert page.locator('[data-basic-preset="pick-lock"] .wpa-basic-pair').inner_text() == 'Dex + Crafts'
+    assert 'Dexterity + Crafts' in page.locator('[data-basic-preset="pick-lock"]').get_attribute('title')
     assert page.locator('.wpa-basic-footer').evaluate('(el) => getComputedStyle(el).position')==('static' if width==430 else 'sticky')
     if width==820:
       (ROOT.parent/'preview-basic-actions-820.png').parent.mkdir(parents=True,exist_ok=True)
@@ -118,6 +121,10 @@ with sync_playwright() as p:
     rolls=page.evaluate('window.__basicTest.rolls')
     assert len(rolls)==1 and rolls[0]['id']=='a0' and rolls[0]['attr']=='perception' and rolls[0]['opts']['difficulty']==7 and rolls[0]['opts']['useWillpower'] and rolls[0]['action']=='Notice'
     assert not page.locator('input[name="basicWillpower"]').is_checked()
+    # Standard Mage has Crafts (internal ID craft) but no Security or Larceny.
+    page.locator('[data-basic-preset="pick-lock"]').click()
+    rolls=page.evaluate('window.__basicTest.rolls')
+    assert len(rolls)==2 and rolls[-1]['action']=='Pick Lock' and rolls[-1]['id']=='craft' and rolls[-1]['numDices']==5
     # Blank action opens the config editor with curated icons.
     page.locator('[data-basic-config="0"]').click()
     assert page.locator('.wpa-basic-icon-choice').count()==162
@@ -145,12 +152,12 @@ with sync_playwright() as p:
     assert page.locator('[data-basic-difficulty]').inner_text()=='6','reopens with default difficulty'
     page.locator('[data-basic-custom="0"]').click()
     rolls=page.evaluate('window.__basicTest.rolls')
-    assert len(rolls)==2 and rolls[-1]['id']=='a2' and rolls[-1]['action']=='Find Clues'
+    assert len(rolls)==3 and rolls[-1]['id']=='a2' and rolls[-1]['action']=='Find Clues'
     # Edit and clear should restore an empty configurable slot without touching the sheet.
     page.locator('.wpa-basic-edit[data-basic-config="0"]').click()
     page.evaluate('''async () => {const d=window.__basicTest.dialogues.at(-1);await d.options.submit({clear:true});await d.close();}''')
     assert page.locator('.wpa-basic-tile.is-empty').count()==5
-    assert page.evaluate('window.__basicTest.actor.items.length')==17
+    assert page.evaluate('window.__basicTest.actor.items.length')==18
     print('Basic Actions width',width,'layout',counts,'native rolls',len(rolls))
     page.close()
   b.close()

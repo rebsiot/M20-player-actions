@@ -1,8 +1,8 @@
 {
   "id": "wod20-player-actions",
   "title": "WoD20 Player Actions",
-  "description": "Native WoD20 actions, 48 optional macros, first-login tutorial with opt-in hotbar shortcuts and Compendium access.",
-  "version": "0.1.17",
+  "description": "Native WoD20 actions, correct M20/V20 lockpicking traits, 48 optional macros and first-login tutorial with opt-in shortcuts.",
+  "version": "0.1.18",
   "authors": [
     {
       "name": "Community tools"
@@ -33,5 +33,5 @@
   "readme": "README.md",
   "url": "https://github.com/rebsiot/M20-player-actions",
   "manifest": "https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json",
-  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.17/wod20-player-magick-0.1.17.zip"
+  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.18/wod20-player-magick-0.1.18.zip"
 }

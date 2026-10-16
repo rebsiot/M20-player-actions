@@ -1,3 +1,19 @@
+# v0.1.18 Test Report — Standard M20/V20 Pick Lock support (2026-10-16)
+
+**Scope:** Correct the existing Pick Lock button's Ability fallback order for standard character sheets; archive chat handoffs under `docs/handoffs/` and exclude them from the Foundry installation ZIP. No new macro, native dice mechanic, Actor modification, game system customization or data migration was introduced.
+
+- **Source basis:** Published Player Actions v0.1.17 runtime (`300134a9d6512867c32241ca3340cb19c5e069326a00c8e05ae0d7fd464d771c`) and the WoD20 upstream ability list (`mage.modern.skills` contains `craft` but not `security` or `larceny`; Vampire uses `larceny`). The published runtime was rechecked against GitHub.
+- **Syntax:** `node --check scripts/player-actions.js` PASS.
+- **Automated Node/mock:** **20/20 suites PASS**, including the dedicated `lockpicking-presets.cjs` regression for Mage Dexterity + Crafts, localized skill with `system.id=craft`, Vampire Dexterity + Larceny, optional Security, hidden Skills, absent Skills, tooltips, pools and native WoD20 DiceRoller routing. The other 19 suites retain existing macro, tutorial, casting, Paradox-label, GM token and Combat Workflow contracts.
+- **Chromium fixtures:** Four test scripts PASS at **1440, 820 and 430 px**. The Basic Actions fixture additionally confirms Pick Lock is enabled on a standard Mage carrying the real Crafts Ability (internal ID `craft`), renders the correct pairing, produces a native five-die check and preserves dashboard layout.
+- **Package:** Complete v0.1.18 installable ZIP built with manifest/ZIP filename consistency; 162 Game Icons retained. Archive CRC, entry paths and required runtime files validated. Historical chat handoffs are present in the **source archive only**, not in the installable module ZIP.
+- **Live Foundry v14 / WoD20:** **NOT TESTED.** The required first live test is a standard Mage with Dexterity 3 and Crafts 2 clicking Pick Lock, confirming `5d10` in a native WoD20 chat card. Test V20 Larceny separately if available.
+- **GitHub publication / Foundry deployment:** **NOT PERFORMED** for v0.1.18. This is a candidate for review/testing. Existing v0.1.17 remains the latest published baseline.
+
+**Upgrade:** Back up the world and `Z:\Data\modules\wod20-player-actions`, stop Foundry before replacing files via Samba, restart and refresh clients. **Rollback:** restore the backed-up v0.1.17 module; v0.1.18 performs no Actor, User or world-data migration. Do not confuse restored code with undoing prior gameplay or user hotbar changes.
+
+---
+
 # v0.1.17 Test Report — opt-in tutorial hotbar setup (2026-10-16)
 
 **Implementation scope:** tutorial fourth screen, opt-in native hotbar assignment, Macro Compendium open, new GM-seeded targeted Combat launcher, styling and player-facing documentation. No Actor schema, roll semantics, Paradox behavior, or independent Combat Workflow source was changed.
@@ -7,13 +23,13 @@
 - Chromium tutorial fixture: PASS at 1440, 820, and 430px for step navigation, checkbox layout, opt-out, reopened help and clipping.
 - Full installable ZIP, versioned release notes, native module folder layout and CRC: PASS on local package build.
 - **Live Foundry v14:** NOT VERIFIED. Follow the handoff smoke-test steps before considering this live-confirmed.
-- **Published GitHub release:** PASS — v0.1.17 merged through PR #13; GitHub Actions run 38955801932 completed successfully. The published ZIP `wod20-player-magick-0.1.17.zip` has recorded SHA-256 `62292d111fbe3e876f83a91e1456311e36d19fea697d573ff01f013f9ee099b3`. The complete patched runtime source was committed to `main`. This does not establish live Foundry verification.
+- **Published GitHub release:** Confirmed — v0.1.17 merged via PR #13 and published 2026-10-16 (GitHub Actions run 38955801932: success). Live Foundry verification remains pending.
 
 ---
 
 # v0.1.16 Test Report - 2026-10-16
 
-**Status:** v0.1.16 was merged and published on GitHub on 2026-10-16 (PR #12; Actions run 38952834950: success). The automated suites and ZIP packaging passed, but live Foundry and cross-module checks remain unverified.
+**Status:** Candidate archive built locally; not installed, published to GitHub, or verified in live Foundry. v0.1.15 was published on GitHub on 2026-10-16.
 
 ## Automated checks - PASS
 

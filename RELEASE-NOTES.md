@@ -1,31 +1,26 @@
-# Player Actions v0.1.17
+# Player Actions v0.1.18
 
-**A faster first login: choose your Player Actions shortcuts directly from the Quick Tutorial.**
+**Pick Lock works with the Abilities on your actual character sheet.**
 
-## What's new
+## What's fixed
 
-The last Quick Tutorial screen offers four optional, initially unchecked choices:
+- Mage M20: **Pick Lock** now uses **Dexterity + Crafts** on a standard sheet (the system's internal Ability ID is `craft`).
+- Vampire V20: **Pick Lock** uses **Dexterity + Larceny**. Characters with the optional Security Skill can also use Security.
+- The dashboard uses an existing character Ability Item and displays the selected pairing and dice pool. It does not create or grant Security, Larceny, or any other Ability.
+- Electronic security and unusual methods remain subject to the Storyteller; use Roll Any Check for Technology/Computer or other appropriate pairings.
 
-- **Use Magick** — put the Magick launcher in your hotbar.
-- **Combat — Standard Attack (Targeted)** — put the targeted Combat launcher in your hotbar.
-- **Basic Actions** — put the dice/action dashboard in your hotbar.
-- **Open the Player Actions Macro Compendium** — open the collection to explore all 48 optional macros.
+## What's unchanged
 
-**Finish** applies the checked choices. **Don't show again** applies them and hides the tutorial on future logins. Players can reopen Quick Tutorial later from Basic Actions or Use Magick.
+All **48 optional macros**, first-login tutorial and opt-in hotbar checkboxes, native WoD20 rolling, existing characters, Rotes, and Combat Workflow / Paradox integration are preserved. No user or world data migration is performed.
 
-## Your hotbar stays yours
+## Developer documentation cleanup
 
-- Nothing is assigned without your selection. Existing occupied slots are never replaced; duplicate shortcuts are skipped.
-- Empty slots on your currently selected hotbar page are filled first, then other empty slots if necessary. No space? You'll be told.
-- Each player decides separately. Players do not need to edit the shared reference compendium; the GM seeds three world launcher macros once.
-- The standard attack shortcut still needs a target, online GM and STL Combat Workflow v0.1.4+ when used.
+Historical chat handoffs are archived under `docs/handoffs/` in the source repository and are **not included in the installable Foundry ZIP**. No new per-release handoff is generated.
 
-All v0.1.16 Magick, Rotes, custom action, native WoD20 rolling and Paradox separation behavior is retained.
+## Upgrade, rollback and testing
 
-## Installation and verification
+Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry before manually replacing the module folder through Samba, then restart and refresh clients. Roll back to the backed-up **v0.1.17** module if needed; no schema migration is involved.
 
-Back up both your Foundry world and `Z:\Data\modules\wod20-player-actions`; install the complete versioned ZIP, restart Foundry, and have the GM enter the world before players choose new hotbar shortcuts. To roll back, restore the backed-up module folder and, if needed, the matching world snapshot for user hotbars and newly created launcher Macros.
-
-**Automated tests:** see `TEST-REPORT.md`. **Live Foundry v14, player hotbar, and Combat Workflow end-to-end verification:** pending.
+**Verification:** automated Node/mock and packaging tests were run; a live Foundry v14 / WoD20 test of the new Pick Lock check is still required. See [TEST-REPORT.md](TEST-REPORT.md).
 
 [Full history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md) | [Setup guide](https://github.com/rebsiot/M20-player-actions/blob/main/README.md)
