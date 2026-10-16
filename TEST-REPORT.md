@@ -1,6 +1,19 @@
+# v0.1.17 Test Report — opt-in tutorial hotbar setup (2026-10-16)
+
+**Implementation scope:** tutorial fourth screen, opt-in native hotbar assignment, Macro Compendium open, new GM-seeded targeted Combat launcher, styling and player-facing documentation. No Actor schema, roll semantics, Paradox behavior, or independent Combat Workflow source was changed.
+
+- Node syntax: PASS (`node --check scripts/player-actions.js`).
+- Native/compendium/macro regression suite: 19 Node/mock suites, including `tutorial-hotbar.cjs`: PASS. Tests cover unchecked defaults, three checked assignments to free slots on selected page, repeat selection with no duplicates, GM-seeded launcher availability, full hotbar, API assignment failure, preserved occupied slots, checkbox persistence across navigation, separate Compendium checkbox, Finish versus Don't show again and no automatic hotbar writes on login.
+- Chromium tutorial fixture: PASS at 1440, 820, and 430px for step navigation, checkbox layout, opt-out, reopened help and clipping.
+- Full installable ZIP, versioned release notes, native module folder layout and CRC: PASS on local package build.
+- **Live Foundry v14:** NOT VERIFIED. Follow the handoff smoke-test steps before considering this live-confirmed.
+- **Published GitHub release:** NOT YET VERIFIED as of source preparation; record publication separately after it succeeds.
+
+---
+
 # v0.1.16 Test Report - 2026-10-16
 
-**Status:** v0.1.16 merged and published on GitHub on 2026-10-16 (PR #12; GitHub Actions run 38952834950: success). The automated suites and release packaging passed; the module has not been installed or verified in live Foundry, and cross-module smoke tests remain pending.
+**Status:** Candidate archive built locally; not installed, published to GitHub, or verified in live Foundry. v0.1.15 was published on GitHub on 2026-10-16.
 
 ## Automated checks - PASS
 

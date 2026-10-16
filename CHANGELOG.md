@@ -2,6 +2,14 @@
 
 Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
+## v0.1.17 - Optional first-login hotbar setup
+
+- The Quick Tutorial now has independent checkboxes for Use Magick, Combat (Standard Attack), Basic Actions, and opening the Macro Compendium.
+- Checked macros are assigned only after explicit Finish / Don't show again, using empty slots on the player's current hotbar page first. Unchecked items, occupied slots and pre-existing duplicates are not changed.
+- Adds one GM-provisioned Combat launcher world Macro; reuses the previous Magick and Basic world launchers. World reference compendium stays at **48** protected macros.
+- **Finish** keeps the tutorial available on the next login; **Don't show again** retains the separate user opt-out. Closing early changes neither preference nor hotbar.
+- Native WoD20 rolls, Paradox and Combat Workflow ownership, players' characters, existing macros and GM customizations remain unchanged.
+
 ## v0.1.16 - More everyday actions
 
 - Added a compact **Quick Tutorial** on first login: four pages, explicit **Don't show again** per-user preference, and a small Help link to reopen from either main panel. Closing without opting out allows it to appear again on the next login.

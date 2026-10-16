@@ -30,8 +30,8 @@ icons = [x for x in optional if x.startswith('icons/') and x.endswith('.svg')]
 if len(icons) != 162:
     raise SystemExit(f'Expected 162 curated icons, found {len(icons)}.')
 tests=[x for x in optional if x.startswith('tests/') and x.endswith('.cjs')]
-if len(tests)<17:
-    raise SystemExit(f'Expected at least 17 Node tests, found {len(tests)}.')
+if len(tests)<19:
+    raise SystemExit(f'Expected at least 19 Node tests, found {len(tests)}.')
 paths = sorted(set(required + optional))
 for rel in paths:
     p = ROOT/rel

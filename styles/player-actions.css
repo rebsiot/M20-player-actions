@@ -547,3 +547,18 @@
   .wpa-panel .wpa-panel-header > .wpa-panel-header-actions {justify-content:flex-start;}
   .wpa-tutorial {padding:8px;}
 }
+
+/* Opt-in first-login hotbar setup: readable checkbox rows, no hidden defaults. */
+.wpa-tutorial-choices {display:grid;gap:7px;min-width:0;margin:2px 0 0;padding:11px 12px;border:1px solid var(--color-border-light-tertiary,#686868);border-radius:6px;}
+.wpa-tutorial-choices legend {padding:0 4px;font-size:13px;font-weight:700;}
+.wpa-root .wpa-tutorial-choices .wpa-tutorial-checkbox {display:flex;flex-direction:row;gap:9px;align-items:flex-start;font-size:13px;font-weight:500;line-height:1.35;cursor:pointer;}
+.wpa-tutorial-checkbox input[type="checkbox"] {flex:none;min-width:16px;width:16px;height:16px;margin:1px 0 0;accent-color:var(--color-checkbox-checked,#518ec7);cursor:pointer;}
+.wpa-tutorial-compendium-choice {padding-top:8px;border-top:1px solid var(--color-border-light-tertiary,#686868);}
+.wpa-tutorial-finish-actions {display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.wpa-tutorial-finish-actions button {min-width:93px;}
+@media (max-width:460px) {
+  .wpa-tutorial-navigation {flex-wrap:wrap;}
+  .wpa-tutorial-finish-actions {flex:1;}
+  .wpa-tutorial-finish-actions button {min-width:0;flex:1;}
+  .wpa-tutorial-choices {padding:8px;}
+}
