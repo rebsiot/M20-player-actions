@@ -1,8 +1,10 @@
-/* WoD20 Player Actions v0.1.14: STL Combat Workflow integration, readability and Magick UI polish. */
+/* WoD20 Player Actions v0.1.16: Resistance, Countermagick, Modern Scenes, Favorite Rotes. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
 const LAST_GM_TOKEN_SETTING = "lastGmTokenUuid";
+const FAVORITE_ROTES_SETTING = "favoriteRotesByActor";
+const TUTORIAL_DISMISSED_SETTING = "tutorialDontShowAgain";
 const SPHERES = ["Correspondence", "Entropy", "Forces", "Life", "Matter", "Mind", "Prime", "Spirit", "Time"];
 // Original, concise M20 Sphere prompts. These are reminders, not rules adjudications.
 // Each entry describes what the corresponding dot broadly makes possible.
@@ -78,6 +80,36 @@ let wodDice = null;
 // This preserves the separate Actor instance of an unlinked NPC token.
 let lastGmTokenUuid = "";
 let gmTokenSave = Promise.resolve();
+let tutorialDialog = null;
+
+// Short, system-agnostic orientation: the tutorial never touches an Actor,
+// makes a roll, assigns hotbars or requires permission to control a token.
+const TUTORIAL_STEPS = Object.freeze([
+  {
+    title: "Welcome to Player Actions",
+    body: `<p>Make common rolls, use Magick and start combat without digging through character sheets.</p>
+      <p>To begin, open <strong>Basic Actions</strong> from its optional hotbar macro, or use <strong>Use Magick</strong> in the Actors sidebar (shortcut: <kbd>Shift+J</kbd>).</p>
+      <p>Player Actions uses your selected or assigned character. The character name appears at the top of each window, where you can choose another one.</p>`
+  },
+  {
+    title: "Quick rolls and custom actions",
+    body: `<p><strong>Basic Actions</strong> shows your actual dice pools. Click a tile to roll. You can adjust the Difficulty and optionally spend Willpower before rolling.</p>
+      <p>Use <strong>Willpower / Resistance</strong> for a standalone trait check; that particular shortcut does <em>not</em> spend Willpower.</p>
+      <p>Five <strong>My Custom Actions</strong> slots are yours to configure. Modern Scenes buttons, like Pick Lock or Drive / Pursue, are disabled if the character lacks a relevant Ability.</p>`
+  },
+  {
+    title: "Magick and favorite Rotes",
+    body: `<p><strong>Use Magick</strong> lets a Mage cast an improvised Effect or use a known Rote. Click a star beside a Rote to add it to <strong>Favorite Rotes</strong>.</p>
+      <p><strong>Basic Countermagick</strong> is a defensive Arete check; it is not an ordinary spell cast. Your Storyteller rules on whether it works and what it cancels.</p>
+      <p>Player Actions uses WoD20's existing roll system. The separate Paradox module handles eligible spell consequences.</p>`
+  },
+  {
+    title: "Combat, hotbars and help",
+    body: `<p><strong>Raw Attack</strong> makes one attack check. For the full combat sequence, <strong>Standard Attack (Targeted)</strong> needs exactly one targeted defender, an online GM and the separate STL Combat Workflow module.</p>
+      <p>Look in <strong>Compendium Packs → Player Actions — Hotbar Macros</strong> to drag only the shortcuts you want. Nothing is automatically placed on your hotbar.</p>
+      <p>You can open this walkthrough again using <strong>Quick Tutorial</strong> in either the Basic Actions or Use Magick window.</p>`
+  }
+]);
 
 const escape = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 const int = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback;
@@ -628,6 +660,15 @@ const BASIC_ROWS = [
     {id:"investigate",label:"Investigate",attr:"intelligence",ability:"Investigation",icon:"sherlock-holmes"},
     {id:"computer",label:"Computer",attr:"intelligence",ability:"Computer",icon:"laptop"},
     {id:"first-aid",label:"First Aid",attr:"intelligence",ability:"Medicine",icon:"first-aid-kit"}
+  ]},
+  // Optional modern-world presets. Alternatives are real Ability Items, never
+  // simulated ratings: if none are present the tile is disabled.
+  {label:"Modern Scenes", actions:[
+    {id:"drive-pursue",label:"Drive / Pursue",attr:"dexterity",abilities:["Drive"],icon:"steering-wheel"},
+    {id:"pick-lock",label:"Pick Lock",attr:"dexterity",abilities:["Security","Larceny"],icon:"lockpicks"},
+    {id:"tail-someone",label:"Tail Someone",attr:"wits",abilities:["Stealth"],icon:"spy"},
+    {id:"street-information",label:"Street Information",attr:"manipulation",abilities:["Streetwise"],icon:"talk"},
+    {id:"repair-equipment",label:"Repair Equipment",attr:"intelligence",abilities:["Technology","Crafts","Repair"],icon:"toolbox"}
   ]}
 ];
 const BASIC_ATTRIBUTE_ORDER = ["strength", "dexterity", "stamina", "charisma", "manipulation", "appearance", "perception", "intelligence", "wits"];
@@ -668,10 +709,11 @@ function basicAbilityByName(actor, requested) {
 }
 function basicActionTraits(actor, action) {
   const attr = basicAttributes(actor).find(a=>a.id === action.attr) ?? null;
+  const candidates = action.ability ? [action.ability] : (Array.isArray(action.abilities) ? action.abilities : []);
   const ability = action.abilityId ? basicAbilities(actor).find(i=>i.id === action.abilityId) ?? null
-    : action.ability ? basicAbilityByName(actor,action.ability) : null;
+    : candidates.map(name=>basicAbilityByName(actor,name)).find(Boolean) ?? null;
   const missing = !attr ? `Missing Attribute: ${basicTitle(action.attr)}` :
-    (action.abilityId || action.ability) && !ability ? `Missing Ability: ${action.ability || action.abilityId}` : "";
+    (action.abilityId || candidates.length) && !ability ? `Missing Ability: ${candidates.join(" / ") || action.abilityId}` : "";
   const rating = ability ? Math.max(0,int(ability.system?.value ?? ability.system?.permanent ?? ability.system?.rating)) : 0;
   return {attr, ability, rating, pool:(attr?.value ?? 0)+rating, missing};
 }
@@ -705,11 +747,11 @@ async function basicSaveSlot(actor, index, action) {
 }
 function basicTileHTML(actor, action, dataAttr, custom=false) {
   const t = basicActionTraits(actor,action);
-  const desc = `${basicTitle(action.attr)}${action.abilityId || action.ability ? ` + ${t.ability?.name || action.abilityId || action.ability}` : ""}`;
+  const desc = `${basicTitle(action.attr)}${action.abilityId || action.ability || action.abilities?.length ? ` + ${t.ability?.name || action.ability || action.abilities?.join(" / ") || action.abilityId}` : ""}`;
   const pool = t.missing ? "Not on sheet" : `${t.pool}d10`;
   const tooltip = `${action.label}: ${desc}${t.missing ? ` (${t.missing})` : ` = ${t.pool} dice`}`;
   const attrShort = basicShortTrait(t.attr?.label || action.attr, BASIC_ATTRIBUTE_SHORT);
-  const abilityName = t.ability?.name || action.ability || action.abilityId;
+  const abilityName = t.ability?.name || action.ability || action.abilities?.join("/") || action.abilityId;
   const pairShort = `${attrShort}${abilityName ? ` + ${basicShortTrait(abilityName,BASIC_ABILITY_SHORT)}` : ""}`;
   // Tint is a restrained cue only; show the actual pool number and full tooltip.
   // 0 dice -> red, 4 dice -> yellow, 7+ dice -> green (clamped).
@@ -741,7 +783,8 @@ function basicDashboardHTML(actor) {
   const wpLabel = left == null ? "Spend 1 Willpower" : `Spend 1 Willpower (${int(left)} left)`;
   return `<div class="wpa-root wpa-basic" aria-label="Basic Actions dashboard">
     <div class="wpa-basic-heading"><div><span>Rolling as</span><strong>${escape(actor.name)}</strong></div>
-      <button type="button" class="wpa-basic-change" title="Choose another character">Change Character</button>
+      <div class="wpa-basic-heading-actions"><button type="button" class="wpa-basic-resistance" title="Roll Willpower, a Virtue, or a standalone Attribute">Willpower / Resistance</button>
+      <button type="button" class="wpa-basic-change" title="Choose another character">Change Character</button></div>
     </div>
     ${groups}
     <section class="wpa-basic-row" aria-label="My Custom Actions"><h3>My Custom Actions <small>Click Configure to add; pencil to edit or clear</small></h3>
@@ -751,7 +794,8 @@ function basicDashboardHTML(actor) {
         <output data-basic-difficulty aria-live="polite">6</output>
         <button type="button" data-basic-step="1" aria-label="Increase difficulty">+</button></div>
       <label class="wpa-basic-willpower"><input type="checkbox" name="basicWillpower" ${disableWp ? "disabled" : ""}><span>${escape(wpLabel)}</span></label>
-    </div><div class="wpa-basic-status" role="status" aria-live="polite">Click an action to roll it immediately using WoD20.</div>
+    </div><div class="wpa-basic-status-row"><div class="wpa-basic-status" role="status" aria-live="polite">Click an action to roll it immediately using WoD20.</div>
+      <button type="button" class="wpa-tutorial-link" data-wpa-open-tutorial title="Reopen the quick walkthrough"><i class="fas fa-circle-question" aria-hidden="true"></i> Quick Tutorial</button></div>
   </div>`;
 }
 let basicCombatHelper = null;
@@ -908,6 +952,10 @@ async function openBasicActions(actor=null) {
   let busy = false;
   root.addEventListener("click",async event=>{
     const target = event.target;
+    if (target.closest?.("[data-wpa-open-tutorial]")) {
+      await openTutorial();
+      return;
+    }
     const step = target.closest?.("[data-basic-step]");
     if (step) {
       const output = root.querySelector("[data-basic-difficulty]");
@@ -916,6 +964,10 @@ async function openBasicActions(actor=null) {
       for (const b of root.querySelectorAll("[data-basic-step]")) {
         b.disabled = next + int(b.dataset.basicStep) < 2 || next + int(b.dataset.basicStep) > 10;
       }
+      return;
+    }
+    if (target.closest?.(".wpa-basic-resistance")) {
+      await openResistanceShortcut(actor);
       return;
     }
     if (target.closest?.(".wpa-basic-change")) {
@@ -1071,6 +1123,98 @@ async function openStandardAttackShortcut() {
   }
 }
 
+/** Read standalone traits without treating a temporary resource pool as a rating. */
+function resistanceTraits(actor) {
+  const results = [];
+  const virtueKeys = [
+    ["willpower","Willpower"],["courage","Courage"],["selfcontrol","Self-Control"],
+    ["conscience","Conscience"],["conviction","Conviction"],["instinct","Instinct"]
+  ];
+  for (const [key,label] of virtueKeys) {
+    const item = basicItems(actor).find(i=>["Advantage","Virtue"].includes(i.type) &&
+      [i.system?.id,i.system?.slug,i.name].some(v=>basicId(v)===key));
+    const system = actor.system?.advantages?.[key] ?? actor.system?.virtues?.[key] ?? actor.system?.[key];
+    const rating = int(item?.system?.permanent ?? item?.system?.value ?? item?.system?.rating ??
+      system?.permanent ?? system?.value ?? system?.rating ?? (typeof system === "number" ? system : 0));
+    if (rating > 0) results.push({id:`virtue:${key}`,label,pool:rating});
+  }
+  const attrs = basicAttributes(actor);
+  for (const attr of [...attrs.filter(a=>basicId(a.id)==="stamina"),...attrs.filter(a=>basicId(a.id)!=="stamina")]) {
+    if (attr.value > 0) results.push({id:`attribute:${attr.id}`,label:attr.label,pool:attr.value});
+  }
+  return results;
+}
+async function openResistanceShortcut(actor = null) {
+  actor ||= shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor = await chooseCharacter();
+  if (!actor) return;
+  const traits = resistanceTraits(actor);
+  if (!traits.length) return ui.notifications.warn("No standalone Willpower, Virtue, or Attribute rating was found on this character.");
+  const data = await foundry.applications.api.DialogV2.input({
+    window:{title:`Willpower / Resistance - ${actor.name}`},
+    content:`<div class="wpa-root wpa-basic wpa-utility">
+      <p>Roll a standalone trait for <strong>${escape(actor.name)}</strong>. The rating is read from the character sheet.</p>
+      <label>Trait<select name="trait">${traits.map(t=>`<option value="${escape(t.id)}">${escape(t.label)} (${t.pool}d10)</option>`).join("")}</select></label>
+      <label>Difficulty<input type="number" name="difficulty" min="2" max="10" value="6"></label>
+      <p class="wpa-note">This is a trait roll, not a Willpower expenditure or a soak/damage workflow. The Storyteller decides the applicable resistance and difficulty.</p>
+    </div>`,ok:{label:"Roll Trait"}
+  });
+  if (!data?.trait || !canUse(actor)) return;
+  // Re-read rating so a sheet edit while the dialog is open cannot roll stale dots.
+  const current = resistanceTraits(actor).find(t=>t.id===data.trait);
+  if (!current) return ui.notifications.warn("This trait is no longer available on that character.");
+  try {
+    return await runDice(actor,{title:`${current.label} - Resistance`,pool:current.pool,
+      difficulty:clamp(data.difficulty,2,10),kind:"general"});
+  } catch (error) {
+    console.error(`${MOD} | Resistance roll failed`,error);
+    ui.notifications.error(`Resistance roll failed: ${error.message}`);
+  }
+}
+
+async function openCountermagickShortcut(actor = null) {
+  actor ||= shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor = await chooseCharacter();
+  if (!actor) return;
+  if (!isMage(actor)) return ui.notifications.warn("Countermagick requires a Mage character.");
+  if (arete(actor) < 1) return ui.notifications.warn("This Mage has no Arete rating to roll.");
+  const spheres = sphereRatings(actor);
+  const known = SPHERES.filter(name=>spheres[name]>0);
+  const data = await foundry.applications.api.DialogV2.input({
+    window:{title:`Basic Countermagick - ${actor.name}`},
+    content:`<div class="wpa-root wpa-basic wpa-utility">
+      <p><strong>Arete ${arete(actor)}d10.</strong> Defensive countermagick against an incoming Effect (not a new spell).</p>
+      <label>Sphere involved in incoming Effect<select name="sphere">
+        <option value="">Storyteller adjudicates / not identified</option>
+        ${known.map(s=>`<option value="${escape(s)}">${escape(s)} (${spheres[s]} dots known)</option>`).join("")}
+      </select></label>
+      <label>Difficulty<input type="number" name="difficulty" min="2" max="10" value="7"></label>
+      <p class="wpa-note">M20 basic countermagick commonly uses difficulty 7; change for chronicle rules. The defender must perceive the Effect and have suitable Sphere knowledge. Each success can cancel one attacker success, subject to Storyteller adjudication.</p>
+      <p class="wpa-note">This roll does not cast magick, spend Quintessence, apply Paradox, or automatically reduce the attacker's successes.</p>
+    </div>`,ok:{label:"Roll Countermagick"}
+  });
+  if (!data || !canUse(actor)) return;
+  const selected = String(data.sphere || "");
+  const current = sphereRatings(actor);
+  if (selected && (!SPHERES.includes(selected) || current[selected] < 1))
+    return ui.notifications.warn("The chosen Sphere is no longer known to this character.");
+  if (arete(actor) < 1) return ui.notifications.warn("This Mage no longer has Arete dice.");
+  const extras = [
+    "Basic defensive countermagick (not spellcasting)",
+    selected ? `Sphere used: ${selected}` : "Sphere eligibility: Storyteller confirmation needed",
+    "Counter successes cancel incoming successes one-for-one (Storyteller adjudicates)"
+  ];
+  try {
+    return await runDice(actor,{title:"Countermagick - Arete",pool:arete(actor),
+      difficulty:clamp(data.difficulty,2,10),extras,kind:"general"});
+  } catch (error) {
+    console.error(`${MOD} | Countermagick failed`,error);
+    ui.notifications.error(`Countermagick failed: ${error.message}`);
+  }
+}
+
 async function openAnyCheckShortcut() {
   let actor=shortcutActor();
   if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
@@ -1132,8 +1276,11 @@ function catalogMacroDefinitions() {
     "dice-six-faces-one","rollCustomShortcut",i);
   add("dash-basic","Basic Actions","Dashboards","dice-six-faces-one","openBasicActions");
   add("any-check","Roll Any Check","Dashboards","dice-six-faces-one","openAnyCheckShortcut");
+  add("resistance","Willpower / Resistance","Dashboards","riot-shield","openResistanceShortcut");
   add("dash-magick","Use Magick","Magick","spell-book","openPanel");
   add("cast-improvised","Improvised Magick","Magick","crystal-ball","openImprovisedShortcut");
+  add("countermagick","Basic Countermagick","Magick","magic-shield","openCountermagickShortcut");
+  add("favorite-rotes","Favorite Rotes","Magick","bookmark","openFavoriteRotesShortcut");
   add("browse-rotes","Rotes & Powers","Magick","black-book","openPanel");
   add("standard-attack","Standard Attack (Targeted)","Combat","target-arrows","openStandardAttackShortcut");
   add("attack","Raw Attack (Choose Type)","Combat","crossed-swords","openAttackShortcut");
@@ -1260,6 +1407,73 @@ async function chooseCharacter(current = null) {
   return actor;
 }
 
+function favoriteRoteMap() {
+  try {
+    const data = JSON.parse(game.settings.get(MOD,FAVORITE_ROTES_SETTING) || "{}");
+    return data && typeof data === "object" && !Array.isArray(data) ? data : {};
+  } catch (error) {
+    console.warn(`${MOD} | Invalid Favorite Rotes configuration`,error);
+    return {};
+  }
+}
+function favoriteRoteIds(actor) {
+  const values = favoriteRoteMap()[actor.uuid];
+  return Array.isArray(values) ? values.filter(id=>typeof id === "string") : [];
+}
+async function toggleFavoriteRote(actor,itemId) {
+  if (!canUse(actor) || !basicItems(actor).some(i=>i.id===itemId && i.type==="Rote"))
+    throw new Error("That Rote is not available on your character.");
+  const map = favoriteRoteMap();
+  const ids = new Set(favoriteRoteIds(actor));
+  if (ids.has(itemId)) ids.delete(itemId);
+  else ids.add(itemId);
+  if (ids.size) map[actor.uuid] = [...ids];
+  else delete map[actor.uuid];
+  await game.settings.set(MOD,FAVORITE_ROTES_SETTING,JSON.stringify(map));
+  return ids.has(itemId);
+}
+function roteSectionsHTML(actor, rotes) {
+  const favoriteIds = new Set(favoriteRoteIds(actor));
+  const favorites = rotes.filter(i=>favoriteIds.has(i.id));
+  const remaining = rotes.filter(i=>!favoriteIds.has(i.id));
+  const rows = list => list.map(i=>`<div class="wpa-action" data-item-id="${escape(i.id)}">
+      <img src="${escape(icon(i))}" alt=""><span>${escape(i.name)}</span>
+      <button type="button" class="wpa-rote-favorite${favoriteIds.has(i.id)?" is-favorite":""}"
+        data-rote-favorite="${escape(i.id)}" aria-pressed="${favoriteIds.has(i.id)}"
+        aria-label="${favoriteIds.has(i.id)?"Remove":"Add"} ${escape(i.name)} ${favoriteIds.has(i.id)?"from":"to"} favorites"
+        title="${favoriteIds.has(i.id)?"Remove favorite":"Add to favorites"}">${favoriteIds.has(i.id)?"&#9733;":"&#9734;"}</button>
+      <button type="button" class="wpa-run" data-item-id="${escape(i.id)}" title="Cast this Rote">Cast</button>
+    </div>`).join("");
+  if (!rotes.length) return isMage(actor) ? '<p class="wpa-note">No Rotes found on this character. You can still cast improvised magick.</p>' : "";
+  return `${favorites.length?`<div class="wpa-list-heading">Favorite Rotes</div><div class="wpa-action-list">${rows(favorites)}</div>`:""}
+    ${remaining.length?`<div class="wpa-list-heading">Known Rotes <small>- select the star to add a favorite</small></div><div class="wpa-action-list">${rows(remaining)}</div>`:""}`;
+}
+async function openFavoriteRotesShortcut(actor = null) {
+  actor ||= shortcutActor();
+  if (!actor && game.user.isGM && (canvas?.tokens?.controlled?.length ?? 0)>1) return;
+  if (!canUse(actor)) actor = await chooseCharacter();
+  if (!actor) return;
+  const ids = new Set(favoriteRoteIds(actor));
+  const rotes = basicItems(actor).filter(i=>i.type==="Rote" && ids.has(i.id))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  if (!rotes.length) {
+    ui.notifications.info?.("Open Use Magick and select the star beside a Rote to add favorites.");
+    return openPanel(actor);
+  }
+  if (rotes.length===1) return quickCastRote(actor,rotes[0]);
+  const data = await foundry.applications.api.DialogV2.input({
+    window:{title:`Favorite Rotes - ${actor.name}`},
+    content:`<div class="wpa-root wpa-utility"><label>Quick cast a favorite Rote<select name="itemId">
+      ${rotes.map(i=>`<option value="${escape(i.id)}">${escape(i.name)}</option>`).join("")}
+    </select></label></div>`,ok:{label:"Cast Rote"}
+  });
+  if (!data?.itemId || !canUse(actor)) return;
+  const item = basicItems(actor).find(i=>i.id===data.itemId && i.type==="Rote");
+  if (!item || !favoriteRoteIds(actor).includes(item.id))
+    return ui.notifications.warn("That favorite Rote is no longer available.");
+  return quickCastRote(actor,item);
+}
+
 async function openPanel(actor = null) {
   actor ||= resolveActor();
   // Do not open a different character's action panel after warning the GM
@@ -1270,20 +1484,38 @@ async function openPanel(actor = null) {
   const items = actor.items.filter(supported).sort((a,b) => a.name.localeCompare(b.name));
   const rotes = items.filter(i => i.type === "Rote");
   const powers = items.filter(i => i.type === "Power");
-  const rows = list => list.map(i => `<div class="wpa-action" data-item-id="${escape(i.id)}"><img src="${escape(icon(i))}" alt=""><span>${escape(i.name)}</span><button type="button" class="wpa-run" data-item-id="${escape(i.id)}" title="${i.type === "Rote" ? "Cast this Rote" : "Use this Power"}">${i.type === "Rote" ? "Cast" : "Use"}</button></div>`).join("");
+  const powerRows = list => list.map(i => `<div class="wpa-action" data-item-id="${escape(i.id)}"><img src="${escape(icon(i))}" alt=""><span>${escape(i.name)}</span><button type="button" class="wpa-run" data-item-id="${escape(i.id)}" title="Use this Power">Use</button></div>`).join("");
   const Dialog = foundry.applications.api.DialogV2;
   const panel = new Dialog({window:{title:`Use Magick • ${actor.name}`}, position:{width:620}, content:
     `<div class="wpa-root wpa-panel">
       <div class="wpa-panel-header"><div><small>Casting as</small><strong>${escape(actor.name)}</strong></div>
-      <button type="button" class="wpa-change-character"><i class="fas fa-users"></i> Change Character</button></div>
-      ${isMage(actor) ? `<button type="button" class="wpa-improvise"><i class="fas fa-wand-magic-sparkles"></i> Improvised Magick</button>` : '<p class="wpa-note">This character is not configured as a Mage. Choose a Mage for improvised casting.</p>'}
-      ${rotes.length ? `<div class="wpa-list-heading">Known Rotes</div><div class="wpa-action-list">${rows(rotes)}</div>` : (isMage(actor) ? '<p class="wpa-note">No Rotes found on this character. You can still cast improvised magick.</p>' : '')}
-      ${powers.length ? `<details class="wpa-powers"><summary>Other Powers (${powers.length})</summary><div class="wpa-action-list">${rows(powers)}</div></details>` : ""}
+      <div class="wpa-panel-header-actions"><button type="button" class="wpa-tutorial-link" data-wpa-open-tutorial title="Reopen the quick walkthrough"><i class="fas fa-circle-question" aria-hidden="true"></i> Quick Tutorial</button>
+      <button type="button" class="wpa-change-character"><i class="fas fa-users"></i> Change Character</button></div></div>
+      ${isMage(actor) ? `<div class="wpa-magick-utilities"><button type="button" class="wpa-improvise"><i class="fas fa-wand-magic-sparkles"></i> Improvised Magick</button>
+        <button type="button" class="wpa-countermagick"><i class="fas fa-shield"></i> Countermagick</button></div>` : '<p class="wpa-note">This character is not configured as a Mage. Choose a Mage for improvised casting.</p>'}
+      <div data-wpa-rotes>${roteSectionsHTML(actor,rotes)}</div>
+      ${powers.length ? `<details class="wpa-powers"><summary>Other Powers (${powers.length})</summary><div class="wpa-action-list">${powerRows(powers)}</div></details>` : ""}
     </div>`, buttons:[{action:"close",label:"Close"}]});
   await panel.render({force:true});
   const root = panel.element;
   if (!root) return;
   root.addEventListener("click",async e=>{
+    if (e.target.closest?.("[data-wpa-open-tutorial]")) {
+      await openTutorial();
+      return;
+    }
+    const star=e.target.closest?.("[data-rote-favorite]");
+    if (star) {
+      try {
+        await toggleFavoriteRote(actor,star.dataset.roteFavorite);
+        const section=root.querySelector("[data-wpa-rotes]");
+        if (section) section.innerHTML=roteSectionsHTML(actor,rotes);
+      } catch(error) {
+        console.error(`${MOD} | Could not update Favorite Rotes`,error);
+        ui.notifications.error(`Favorite Rote not saved: ${error.message}`);
+      }
+      return;
+    }
     const run=e.target.closest(".wpa-run");
     if (run) { await execute(actor.uuid, run.dataset.itemId); return; }
     if (e.target.closest(".wpa-change-character")) {
@@ -1292,7 +1524,83 @@ async function openPanel(actor = null) {
       return;
     }
     if (e.target.closest(".wpa-improvise")) await guidedCast(actor);
+    if (e.target.closest(".wpa-countermagick")) await openCountermagickShortcut(actor);
   });
+}
+
+function tutorialPageHTML(index) {
+  const step = clamp(index,0,TUTORIAL_STEPS.length-1);
+  const entry = TUTORIAL_STEPS[step];
+  const last = step === TUTORIAL_STEPS.length-1;
+  return `<div class="wpa-tutorial-step" aria-live="polite" data-wpa-tutorial-step="${step}">
+    <div class="wpa-tutorial-count">Step ${step+1} of ${TUTORIAL_STEPS.length}</div>
+    <h2>${entry.title}</h2>
+    <div class="wpa-tutorial-body">${entry.body}</div>
+    <div class="wpa-tutorial-navigation">
+      <button type="button" data-wpa-tutorial-action="back" ${step===0 ? "disabled" : ""}>Back</button>
+      ${last ? `<button type="button" class="wpa-tutorial-finish" data-wpa-tutorial-action="dismiss">Don't show again</button>`
+        : `<button type="button" class="wpa-tutorial-next" data-wpa-tutorial-action="next">Next</button>`}
+    </div>
+    ${last ? `<p class="wpa-tutorial-hint">Choose “Don't show again” to hide this on future logins. Closing the window instead will offer it again next time.</p>` : ""}
+  </div>`;
+}
+
+async function openTutorial() {
+  if (tutorialDialog?.rendered) {
+    tutorialDialog.bringToFront?.();
+    return tutorialDialog;
+  }
+  const Dialog = foundry.applications.api.DialogV2;
+  const viewportWidth = Number(globalThis.innerWidth) || 820;
+  const dialog = new Dialog({
+    window: {title:"Player Actions — Quick Tutorial"},
+    position: {width:Math.min(530,Math.max(310,viewportWidth-44))},
+    content:`<div class="wpa-root wpa-tutorial" aria-label="Player Actions quick tutorial"><div data-wpa-tutorial-page>${tutorialPageHTML(0)}</div></div>`,
+    buttons:[{action:"close",label:"Close for now"}]
+  });
+  tutorialDialog = dialog;
+  try { await dialog.render({force:true}); }
+  catch(error) { tutorialDialog = null; throw error; }
+  const root = dialog.element?.querySelector?.(".wpa-tutorial");
+  if (!root) return dialog;
+  let index = 0;
+  let saving = false;
+  root.addEventListener("click",async event=>{
+    const button = event.target.closest?.("[data-wpa-tutorial-action]");
+    if (!button || saving) return;
+    const action = button.dataset.wpaTutorialAction;
+    if (action === "dismiss") {
+      saving = true;
+      button.disabled = true;
+      try {
+        // User-scope Foundry setting: per-player, per-world, survives relogin.
+        // The preference is changed ONLY by this explicit opt-out button.
+        await game.settings.set(MOD,TUTORIAL_DISMISSED_SETTING,true);
+        await dialog.close();
+      } catch(error) {
+        console.warn(`${MOD} | Could not save tutorial preference`,error);
+        ui.notifications.error("Could not save 'Don't show again'; try once more.");
+        button.disabled = false;
+      } finally { saving = false; }
+      return;
+    }
+    if (action === "back") index = Math.max(0,index-1);
+    else if (action === "next") index = Math.min(TUTORIAL_STEPS.length-1,index+1);
+    else return;
+    const page = root.querySelector("[data-wpa-tutorial-page]");
+    if (page) {
+      page.innerHTML = tutorialPageHTML(index);
+      page.querySelector("[data-wpa-tutorial-action='next'],[data-wpa-tutorial-action='dismiss'],[data-wpa-tutorial-action='back']:not(:disabled)")?.focus?.();
+    }
+  });
+  return dialog;
+}
+
+function offerFirstLoginTutorial() {
+  // Foundry v14's user-scoped setting is a Boolean. Check for the registered
+  // default explicitly so other modules' mocked/unfinished init cannot prompt.
+  if (game.settings.get(MOD,TUTORIAL_DISMISSED_SETTING) !== false) return;
+  void openTutorial().catch(error=>console.warn(`${MOD} | Tutorial could not open`,error));
 }
 
 function elementOf(html) {
@@ -1355,6 +1663,16 @@ Hooks.once("init", () => {
     name:"Custom Basic Actions by character",
     hint:"Five per-character, per-player custom quick actions; no Actor data is changed.",
     scope:"user",config:false,type:String,default:"{}"
+  });
+  game.settings.register(MOD, FAVORITE_ROTES_SETTING, {
+    name:"Favorite Rotes by character",
+    hint:"Private per-player Rote favorites, stored by Actor UUID and Rote Item ID; no Actor or shared macro is modified.",
+    scope:"user",config:false,type:String,default:"{}"
+  });
+  game.settings.register(MOD, TUTORIAL_DISMISSED_SETTING, {
+    name:"Do not automatically show Player Actions tutorial",
+    hint:"Per-user onboarding preference; the tutorial can still be opened manually from either Player Actions window.",
+    scope:"user",config:false,type:Boolean,default:false
   });
   game.settings.register(MOD, MACRO_CATALOG_SETTING, {
     name:"Player Actions macro catalog creation ledger",
@@ -1433,7 +1751,8 @@ Hooks.once("ready", () => {
   game.modules.get(MOD).api = {
     execute,openPanel,guidedCast,openBasicActions,
     rollPresetAction,rollCustomShortcut,rollCombatShortcut,
-    openAttackShortcut,openStandardAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut
+    openAttackShortcut,openStandardAttackShortcut,openAnyCheckShortcut,rollInitiativeShortcut,openImprovisedShortcut,openSheetShortcut,
+    openResistanceShortcut,openCountermagickShortcut,openFavoriteRotesShortcut,openTutorial
   };
   // The first Actors-directory render often precedes ready; backfill it immediately.
   ensureDirectoryButton();
@@ -1444,5 +1763,8 @@ Hooks.once("ready", () => {
     console.error(`${MOD} | Macro compendium setup failed`,error);
     ui.notifications?.warn?.("Player Actions Macro compendium setup failed; see console.");
   });
+  // Show on login until this user explicitly clicks "Don't show again".
+  // Keep it after module setup and outside any character/token permission path.
+  void Promise.resolve().then(offerFirstLoginTutorial);
   console.log(`${MOD} | Ready. Actors tab: Use Magick; shortcut: Shift+J.`);
 });
