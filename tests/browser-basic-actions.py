@@ -96,6 +96,7 @@ with sync_playwright() as p:
     assert compact['tileHeight']<=65,(width,compact)
     assert compact['panelHeight']<=(660 if width>=820 else 790),(width,compact)
     assert not compact['clipping'],(width,compact)
+    assert page.locator('.wpa-basic-footer').evaluate('(el) => getComputedStyle(el).position')==('static' if width==430 else 'sticky')
     if width==820:
       (ROOT.parent/'preview-basic-actions-820.png').parent.mkdir(parents=True,exist_ok=True)
       page.screenshot(path=str(ROOT.parent/'preview-basic-actions-820.png'),full_page=True)
@@ -123,6 +124,7 @@ with sync_playwright() as p:
     page.evaluate(async_config)
     assert page.locator('.wpa-basic-tile.is-custom').count()==1
     assert page.locator('.wpa-basic-tile.is-custom strong').inner_text()=='Find Clues'
+    assert page.locator('.wpa-basic-tile.is-custom .wpa-basic-pair').inner_text()=='Per + Invest'
     assert page.locator('.wpa-basic-tile.is-custom img').get_attribute('src').endswith('eye-target.svg')
     assert page.locator('[data-basic-difficulty]').inner_text()=='6','reopens with default difficulty'
     page.locator('[data-basic-custom="0"]').click()
