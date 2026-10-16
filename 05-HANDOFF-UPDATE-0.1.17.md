@@ -2,7 +2,7 @@
 
 **Owner:** Player Actions 05.2; repository `rebsiot/M20-player-actions`; module ID `wod20-player-actions`.
 **Previous verified GitHub release:** v0.1.16 (merged/published 2026-10-16), full runtime retained.
-**v0.1.17 status:** New source and packaged build; automated tests only, no live Foundry verification or server deployment.
+**v0.1.17 status:** Merged as PR #13 and published 2026-10-16 via GitHub Actions run 38955801932 (success); installable `wod20-player-magick-0.1.17.zip` is attached to the public v0.1.17 release. Automated tests passed; no live Foundry verification or server deployment.
 
 ## Requested behavior
 
@@ -18,7 +18,7 @@ Last tutorial page offers four independent checkboxes, all initially unchecked: 
 
 ## Test and deployment plan
 
-Run Node syntax, all 19 Node/mock tests, the tutorial Chromium fixture at 1440/820/430, and full package ZIP CRC/path checks. Label all non-live tests automated/mock-tested. No live test has occurred in Foundry.
+Automated Node syntax, all 19 Node/mock suites, tutorial Chromium fixture at 1440/820/430 and full ZIP CRC/path checks passed. The GitHub Actions release job applied a SHA-256-checked v0.1.17 runtime patch to the committed v0.1.16 source, verified the resulting runtime, reran the Node suites, packaged the complete ZIP, committed the verified runtime to `main`, and published the release asset. Published ZIP SHA-256: `62292d111fbe3e876f83a91e1456311e36d19fea697d573ff01f013f9ee099b3`. No live test has occurred in Foundry.
 
 In a backed-up Foundry test world: GM login provisions the third world launcher, compendium persists with 48 macros. Fresh player login: go through four pages, leave all unchecked and Finish (nothing changes; tutorial will return), then return, check Basic/Use Magick/Combat and verify only free hotbar slots are populated. Existing assignments and duplicates must remain untouched. Try no free slots, missing Combat Workflow (the launcher warns), opening Macro Compendium with checkbox, relog after explicit Don't show again, manual reopen from either panel. Run real Arete/Paradox and Combat Workflow smoke tests separately; those were not modified here.
 
