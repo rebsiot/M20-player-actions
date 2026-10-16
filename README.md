@@ -2,7 +2,7 @@
 
 **Quick native WoD20 checks, Use Magick and optional attack workflow from Foundry VTT.**
 
-**Current version:** v0.1.17 (opt-in hotbar setup at the end of the Quick Tutorial)  
+**Current version:** v0.1.18 (Pick Lock works with standard Mage Crafts and Vampire Larceny)  
 **Requires:** Foundry VTT v14 and `worldofdarkness` (WoD20) v7.3.1 or later in the verified system series.  
 **Optional for targeted combat:** [STL Combat Workflow](https://github.com/rebsiot/combat-workflow) v0.1.4+.
 
@@ -47,7 +47,7 @@ The macro options require the GM to have logged in once after updating. The modu
 
 ### Modern scene actions
 
-**Drive / Pursue**, **Pick Lock**, **Tail Someone**, **Street Information** and **Repair Equipment** appear as a fifth preset group. They use actual Ability Items on the character, accepting available alternatives for a few actions (e.g. Security or Larceny for Pick Lock). If the character lacks the required Ability, the button is unavailable rather than silently adding dots.
+**Drive / Pursue**, **Pick Lock**, **Tail Someone**, **Street Information** and **Repair Equipment** appear as a fifth preset group. They read the character's actual Ability Items. For a physical **Pick Lock** check, the preset prefers **Dexterity + Larceny** (the standard Vampire V20 Skill), accepts **Security** when that optional Skill exists, and falls back to **Dexterity + Crafts** (the standard Mage M20 Skill, stored internally as `craft`). The chosen Ability and actual dice pool appear on the button; no missing Skill is invented. Other approaches, such as bypassing electronic security with Technology or Computer, are Storyteller decisions using **Roll Any Check**.
 
 The Storyteller may request another Attribute/Ability pairing or adjust difficulty. Existing custom slots and the native character sheet remain available.
 
@@ -75,12 +75,12 @@ Players use their selected/remembered eligible Actor. When a GM opens an unbound
 - The GM provisions the existing native world Macro pack and its new entries; players can read/drag reference macros but not edit masters.
 - Existing world compendiums, hotbar assignments, characters, customization and local preferences are not reset. The optional tutorial setup fills only empty slots on the logged-in user's hotbar and never creates a character or changes another player's shortcuts.
 - Back up the entire world (the Macro compendium is world data) and `Z:\Data\modules\wod20-player-actions`. Stop Foundry for file replacement through Samba, restart, enable in the intended world and hard-refresh clients.
-- Roll back the code to your backed-up v0.1.16 installation and restore the matching world backup if you must undo newly created world launcher documents or player hotbar assignments. Reverting module files alone does not undo User document hotbar updates or in-game damage/resources.
+- Roll back the code to your backed-up v0.1.17 installation. No data migration is performed in v0.1.18; reverting module files does not undo gameplay changes or prior hotbar assignments.
 
 ## Verification and references
 
 Automated tests and archive checks are documented in [TEST-REPORT.md](TEST-REPORT.md); full live Foundry/Paradox/Combat Workflow testing is **not yet confirmed**. The installation has not been changed by generating this ZIP.
 
-Historical technical details: [technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md), [technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md), and [developer handoffs](05-HANDOFF-UPDATE-0.1.17.md).
+Historical technical details: [technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md), [technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md), and [archived chat handoffs](docs/handoffs/05-HANDOFF-UPDATE-0.1.17.md).
 
 This is an unofficial personal-use World of Darkness utility, not an official WoD20/Foundry product.

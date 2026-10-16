@@ -2,6 +2,13 @@
 
 Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
+## v0.1.18 - Pick Lock uses abilities on your sheet
+
+- Fixed **Pick Lock** for standard Mage characters: it uses **Dexterity + Crafts** when Security and Larceny are not on the sheet. Supports localized/internal `craft` ability IDs.
+- Standard Vampire characters use **Dexterity + Larceny**; optional custom **Security** is still recognized when present. The dashboard displays the real selected trait and dice pool.
+- No skills, dots, Actors, hotbars, or compendium entries are created or overwritten. The native WoD20 dice and chat path is unchanged.
+- Archived older ChatGPT development handoffs in `docs/handoffs/` and excluded them from the installable module ZIP; no new handoff was generated for this release.
+
 ## v0.1.17 - Optional first-login hotbar setup
 
 - The Quick Tutorial now has independent checkboxes for Use Magick, Combat (Standard Attack), Basic Actions, and opening the Macro Compendium.

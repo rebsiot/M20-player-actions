@@ -1,0 +1,18 @@
+--- a/scripts/player-actions.js
++++ b/scripts/player-actions.js
+@@ -1,4 +1,4 @@
+-/* WoD20 Player Actions v0.1.17: Optional first-login hotbar setup. */
++/* WoD20 Player Actions v0.1.18: Match Pick Lock to sheet-supported skills. */
+ const MOD = "wod20-player-actions";
+ const SYSTEM_ID = "worldofdarkness";
+ const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
+@@ -666,7 +666,8 @@
+   // simulated ratings: if none are present the tile is disabled.
+   {label:"Modern Scenes", actions:[
+     {id:"drive-pursue",label:"Drive / Pursue",attr:"dexterity",abilities:["Drive"],icon:"steering-wheel"},
+-    {id:"pick-lock",label:"Pick Lock",attr:"dexterity",abilities:["Security","Larceny"],icon:"lockpicks"},
++    // Prefer core V20 Larceny, retain optional Security, and support standard M20 Crafts (internal ID craft).
++    {id:"pick-lock",label:"Pick Lock",attr:"dexterity",abilities:["Larceny","Security","Crafts","Craft"],icon:"lockpicks"},
+     {id:"tail-someone",label:"Tail Someone",attr:"wits",abilities:["Stealth"],icon:"spy"},
+     {id:"street-information",label:"Street Information",attr:"manipulation",abilities:["Streetwise"],icon:"talk"},
+     {id:"repair-equipment",label:"Repair Equipment",attr:"intelligence",abilities:["Technology","Crafts","Repair"],icon:"toolbox"}
