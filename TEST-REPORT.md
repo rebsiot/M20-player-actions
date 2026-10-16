@@ -1,11 +1,12 @@
 # v0.1.19 Test Report - Quick Resources (2026-10-16)
 
-**Owner:** Player Actions 05.2. **Status:** Local test candidate, not published or deployed. No new handoff document. Older chat handoffs are source-only under `docs/handoffs/`.
+**Owner:** Player Actions 05.2. **Status:** v0.1.19 merged in PR #15 and published on GitHub on 2026-10-16; GitHub Actions run 38963458902 completed successfully. No Foundry server deployment or live in-world test has been performed. No new handoff document; historical chat handoffs remain source-only under `docs/handoffs/`.
 
 - **Scope:** Real-time changes to native WoD20 Advantage Item `system.temporary` or legacy `system.advantages` resources; separate physical/Chimerical `system.health.damage` fields; guarded per-window Undo Last, Refresh, and fifth opt-in tutorial checkbox. No changes to native spell, combat, soak or Paradox calculations.
 - **Static/Node/mock tests:** PASS: Node syntax check plus 21 Node/mock suites, including `quick-resources.cjs`, hotbar tutorial setup, macros/catalog permissions, Paradox/chat contract, and existing action/Combat Workflow regressions. Tests cover native Item vs Actor updates, separate damage severity and Chimerical track, temporary vs permanent resources, max boundaries, shared Quintessence/Paradox pool, guarding undo from external changes, and absent/hidden Traits.
 - **Browser Chromium fixtures:** PASS: five Chromium scripts at 1440 / 820 / 430px for Basic Actions, first-login tutorial checkboxes, full magick, Rote quick cast, and new Quick Resources direct click/update/undo behavior. No horizontal clipping in simulated browser UI.
 - **ZIP integrity:** PASS: complete module-root ZIP with 162 curated Game Icons, 21 Node suites, 5 browser fixtures, manifest/version consistency, CRC/path safety. All chat handoffs excluded from installed files.
+- **Published GitHub release:** PASS — [v0.1.19](https://github.com/rebsiot/M20-player-actions/releases/tag/v0.1.19), installable `wod20-player-magick-0.1.19.zip`; GitHub-provided asset digest `sha256:b3b86f158a294aa678cd732ec595d4ae045228ea745ce3411d328fc3338c06ab`. The verified full runtime was committed to `main`.
 - **Live Foundry v14 and installed WoD20 7.3.x:** NOT VERIFIED. Cross-module resource/Paradox/Combat interactions require a backed-up test world.
 
 **Installation:** Back up world and `Z:\Data\modules\wod20-player-actions` before upgrade; let GM enter the world to seed new player-readable Macro. **Rollback:** restore backed-up v0.1.18 folder and matching world snapshot to revert any newly created world/user documents or gameplay changes.
