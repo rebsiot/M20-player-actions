@@ -26,9 +26,9 @@ optional=[]
 for pattern in ('05-HANDOFF-UPDATE-*.md','icons/*.svg','tests/*.cjs','tests/*.py'):
     optional += [str(f.relative_to(ROOT)) for f in ROOT.glob(pattern) if f.is_file()]
 icons=[f for f in optional if f.startswith('icons/') and f.endswith('.svg')]
-if len(icons)!=36:raise SystemExit(f'Expected 36 curated icons, found {len(icons)}.')
+if len(icons)!=162:raise SystemExit(f'Expected 162 curated icons, found {len(icons)}.')
 tests=[f for f in optional if f.startswith('tests/') and f.endswith('.cjs')]
-if len(tests)<12:raise SystemExit(f'Expected at least 12 regression tests, found {len(tests)}.')
+if len(tests)<13:raise SystemExit(f'Expected at least 13 regression tests, found {len(tests)}.')
 paths=sorted(set(required+optional))
 for rel in paths:
     p=ROOT/rel

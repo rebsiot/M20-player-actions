@@ -1,4 +1,4 @@
-/* WoD20 Player Actions v0.1.11: Basic Actions and Player Magick, native WoD20 dice path. */
+/* WoD20 Player Actions v0.1.12: Basic Actions and Player Magick, native WoD20 dice path. */
 const MOD = "wod20-player-actions";
 const SYSTEM_ID = "worldofdarkness";
 const PREFERRED_ACTOR_SETTING = "preferredActorUuid";
@@ -585,15 +585,21 @@ async function activatePower(actor, item) {
 // Basic Actions: one 5x5 dashboard; native WoD20 Attribute + Ability rolls.
 // Icon filenames are a curated whitelist of Game-icons.net SVG files bundled in this module.
 const BASIC_ACTIONS_SETTING = "basicActionsByActor";
-const BASIC_ICONS = [
-  "binoculars", "crystal-ball", "magnifying-glass", "face-to-face", "alarm-clock",
-  "footsteps", "mountain-climbing", "running-shoe", "jump-across", "deer-track",
-  "charm", "double-face-mask", "angry-eyes", "chat-bubble", "crown",
-  "spell-book", "archive-research", "sherlock-holmes", "laptop", "first-aid-kit",
-  "fist", "dodge", "eye-target", "spyglass", "light-bulb", "bandage-roll",
-  "pencil", "gears", "brain", "healing", "crossroad", "keyboard",
-  "book-pile", "compass", "dice-six-faces-one", "direction-sign"
-];
+// Curated, locally-bundled Game Icons from the supplied source archive. The icon
+// picker searches these local assets; neither roll nor picker requires network access.
+const BASIC_ICON_GROUPS = [
+  {label:"Featured", names:["binoculars", "crystal-ball", "magnifying-glass", "face-to-face", "alarm-clock", "footsteps", "mountain-climbing", "running-shoe", "jump-across", "deer-track", "charm", "double-face-mask", "angry-eyes", "chat-bubble", "crown", "spell-book", "archive-research", "sherlock-holmes", "laptop", "first-aid-kit", "fist", "dodge", "eye-target", "spyglass", "light-bulb", "bandage-roll", "pencil", "gears", "brain", "healing", "crossroad", "keyboard", "book-pile", "compass", "dice-six-faces-one", "direction-sign"]},
+  {label:"Senses & Investigation", names:["eyeball", "cyber-eye", "eye-shield", "radar-sweep", "radar-dish", "earbuds", "spy", "finger-print", "footprint", "flashlight", "lock-spy", "door-watcher", "secret-door", "crime-scene-tape", "metal-detector", "handcuffs", "eye-of-horus", "cctv-camera", "night-vision"]},
+  {label:"Movement & Travel", names:["run", "running-ninja", "wingfoot", "barefoot", "swimfins", "parachute", "diving-helmet", "stairs", "rope-bridge", "walk", "steering-wheel", "car-wheel", "cartwheel", "palm-tree", "road"]},
+  {label:"Social & Performance", names:["shaking-hands", "talk", "megaphone", "conversation", "heart-inside", "heart-bottle", "heart-beats", "heart-key", "hand-ok", "fingers-crossed", "hand-grip", "poker-hand", "shrug", "musical-notes", "drama-masks"]},
+  {label:"Study & Learning", names:["open-book", "black-book", "secret-book", "notebook", "bookmark", "quill-ink", "scroll-unfurled", "scroll-quill", "newspaper", "bookshelf", "microscope", "dna2", "brainstorm", "idea", "lightning-frequency"]},
+  {label:"Technology & Tools", names:["smartphone", "usb-key", "radio-tower", "microchip", "circuitry", "computer-fan", "robot-golem", "toolbox", "key", "lockpicks", "lock-picking", "combination-lock", "security-gate", "watch", "watchtower", "lockers"]},
+  {label:"Magick & Occult", names:["magic-swirl", "magic-potion", "magic-shield", "flame", "wizard-face", "rune-stone", "pentacle", "portal", "sparkles", "aura", "witch-flight", "magic-lamp", "potion-ball", "open-treasure-chest", "uncertainty"]},
+  {label:"Combat & Defense", names:["punch", "boxing-glove", "shield", "riot-shield", "shield-bash", "target-arrows", "on-target", "arrow-scope", "crossed-swords", "sword-clash", "helmet", "crosshair", "body-balance", "slashed-shield", "shield-disabled", "quick-slash"]},
+  {label:"Healing & Nature", names:["medical-pack", "health-increase", "bandaged", "medicine-pills", "campfire", "tree-growth", "wolf-head", "paw-print", "watering-can", "health-potion", "medical-thermometer", "ambulance", "doctor-face", "stethoscope", "health-capsule"]},
+ ];
+const BASIC_ICONS = BASIC_ICON_GROUPS.flatMap(group => group.names);
+const BASIC_ICON_GROUP_BY_NAME = new Map(BASIC_ICON_GROUPS.flatMap(group => group.names.map(name => [name, group.label])));
 const BASIC_ROWS = [
   {label:"Awareness", actions:[
     {id:"notice",label:"Notice",attr:"perception",ability:"Alertness",icon:"binoculars"},
@@ -705,8 +711,12 @@ function basicTileHTML(actor, action, dataAttr, custom=false) {
   const attrShort = basicShortTrait(t.attr?.label || action.attr, BASIC_ATTRIBUTE_SHORT);
   const abilityName = t.ability?.name || action.ability || action.abilityId;
   const pairShort = `${attrShort}${abilityName ? ` + ${basicShortTrait(abilityName,BASIC_ABILITY_SHORT)}` : ""}`;
+  // Tint is a restrained cue only; show the actual pool number and full tooltip.
+  // 0 dice -> red, 4 dice -> yellow, 7+ dice -> green (clamped).
+  const level = clamp(t.pool,0,7);
+  const hue = Math.round(level <= 4 ? level * 13 : 52 + (level - 4) * 68 / 3);
   return `<button type="button" class="wpa-basic-tile${custom ? " is-custom" : ""}" ${dataAttr}
-    aria-label="${escape(tooltip)}" title="${escape(tooltip)}"${t.missing ? " disabled" : ""}>
+    style="--wpa-pool-hue:${hue}" aria-label="${escape(tooltip)}" title="${escape(tooltip)}"${t.missing || t.pool <= 0 ? " disabled" : ""}>
     <span class="wpa-basic-tile-main"><img src="${basicIcon(action.icon)}" alt="" loading="lazy"><strong>${escape(action.label)}</strong></span>
     <span class="wpa-basic-tile-meta"><span class="wpa-basic-pair">${escape(pairShort)}</span>
       <span class="wpa-basic-pool${t.missing ? " unavailable" : ""}">${escape(pool)}</span></span>
@@ -744,24 +754,54 @@ function basicDashboardHTML(actor) {
     </div><div class="wpa-basic-status" role="status" aria-live="polite">Click an action to roll it immediately using WoD20.</div>
   </div>`;
 }
+let basicCombatHelper = null;
+async function loadBasicCombatHelper() {
+  if (basicCombatHelper) return basicCombatHelper;
+  const helper = await import(`/systems/${SYSTEM_ID}/module/scripts/combat-helpers.js`);
+  if (typeof helper.default?.ignoresPain !== "function") throw new Error("WoD20 CombatHelper.ignoresPain unavailable");
+  basicCombatHelper = helper.default;
+  return basicCombatHelper;
+}
+function basicNativeAttributeLabel(attr) {
+  const cfg = globalThis.CONFIG?.worldofdarkness;
+  const names = cfg?.attributeSettings === "20th" ? cfg.attributes20 : cfg?.attributeSettings === "5th" ? cfg.attributes : null;
+  const key = names?.[attr.id];
+  return (key ? game.i18n?.localize?.(key) : null) || attr.label;
+}
 async function performBasicAction(actor, action, difficulty=6, willpower=false) {
   if (!canUse(actor)) throw new Error("You no longer control this character.");
   const {attr,ability,pool,missing} = basicActionTraits(actor,action);
   if (missing) throw new Error(missing + ". Configure the action or update the character sheet.");
   if (pool <= 0) throw new Error("This action has no dice to roll.");
-  const target = clamp(difficulty, 2, 10);
-  const options = {difficulty:target, bonus:0, useWillpower:!!willpower};
-  // Roll via the native WoD20 Actor API when available so it owns Willpower and chat behavior.
-  if (ability && typeof actor.api?.rollAbility === "function") {
-    await actor.api.rollAbility(ability.id,attr.id,options);
-  } else if (!ability && typeof actor.api?.rollAttribute === "function") {
-    await actor.api.rollAttribute(attr.id,options);
-  } else {
-    // Native WoD20 DiceRoller also works for some NPC Actors without the PC roll API.
-    await runDice(actor,{title:action.label,pool,difficulty:target,
-      extras:[`Attribute: ${attr.label} ${attr.value}`,...(ability ? [`Ability: ${ability.name} ${Math.max(0,int(ability.system?.value ?? ability.system?.permanent ?? ability.system?.rating))}`] : [])],
-      willpower:!!willpower,kind:"general"});
-  }
+  const target = clamp(difficulty,2,10);
+  // WoD20's rollAbility deliberately titles chat cards with abilityName (e.g.
+  // "Alertness"). To display the clicked action ("Notice"), populate the same
+  // native DiceRollContainer fields used by that API, then call DiceRoller once.
+  // This retains WoD20 difficulty, wound, speciality, Willpower, and roller/chat.
+  const {DiceRoller,DiceRollContainer} = await loadDice();
+  const diceRoll = new DiceRollContainer(actor);
+  const score = ability ? Math.max(0,int(ability.system?.value)) : 0;
+  const attrName = basicNativeAttributeLabel(attr);
+  const abilityName = ability ? (game.i18n?.localize?.(ability.system?.label) || ability.name) : "";
+  const hasSpeciality = !!(ability && score >= 4 && ability.system?.speciality);
+  // Respect the native WoD20 ignoresPain calculation, rather than deducting
+  // wound dice unconditionally. Only load the helper if there is a penalty.
+  const injury = int(actor.system?.health?.damage?.woundpenalty,0);
+  const combat = injury < 0 ? await loadBasicCombatHelper() : null;
+  const woundPenalty = combat?.ignoresPain(actor) ? 0 : injury;
+  diceRoll.action = String(action.label || "Action").slice(0,32);
+  diceRoll.attribute = attr.id;
+  diceRoll.ability = ability?.id || "noselected";
+  diceRoll.dicetext = [`${attrName} (${attr.value})`,...(ability ? [`${abilityName} (${score})`] : [])];
+  diceRoll.bonus = 0;
+  diceRoll.origin = "general";
+  diceRoll.numDices = attr.value + score;
+  diceRoll.woundpenalty = woundPenalty;
+  diceRoll.difficulty = target;
+  diceRoll.speciality = hasSpeciality;
+  diceRoll.usewillpower = !!willpower;
+  diceRoll.specialityText = hasSpeciality ? ability.system.speciality : "";
+  return DiceRoller(diceRoll);
 }
 async function basicConfigureSlot(actor,index,onSaved) {
   if (!canUse(actor) || index < 0 || index >= 5) return;
@@ -772,9 +812,10 @@ async function basicConfigureSlot(actor,index,onSaved) {
   const selection = current?.attr && attributes.some(a=>a.id === current.attr) ? current.attr : attributes[0].id;
   const abilityId = current?.abilityId || "";
   const chosenIcon = current?.icon ?? "dice-six-faces-one";
-  const choices = BASIC_ICONS.map(name=>`<label class="wpa-basic-icon-choice" title="${escape(basicTitle(name))}">
+  const choices = BASIC_ICONS.map(name=>`<label class="wpa-basic-icon-choice" title="${escape(basicTitle(name))}"
+      data-icon-category="${escape(BASIC_ICON_GROUP_BY_NAME.get(name))}" data-icon-search="${escape(basicTitle(name).toLowerCase())}">
     <input type="radio" name="icon" value="${name}"${name === chosenIcon ? " checked" : ""}>
-    <span><img src="${basicIcon(name)}" alt=""><small>${escape(basicTitle(name))}</small></span></label>`).join("");
+    <span><img src="${basicIcon(name)}" loading="lazy" alt=""><small>${escape(basicTitle(name))}</small></span></label>`).join("");
   const form = `<div class="wpa-root wpa-basic wpa-basic-editor">
     <p>Configure action ${index+1} for <strong>${escape(actor.name)}</strong>.</p>
     <label>Button label<input type="text" name="label" maxlength="32" placeholder="e.g. Find Clues" value="${escape(current?.label || "")}"></label>
@@ -783,7 +824,17 @@ async function basicConfigureSlot(actor,index,onSaved) {
       </select></label><label>Ability<select name="abilityId"><option value="">Attribute only</option>
       ${abilities.map(a=>`<option value="${escape(a.id)}"${abilityId === a.id ? " selected" : ""}>${escape(a.name)} (${Math.max(0,int(a.system?.value ?? a.system?.permanent ?? a.system?.rating))})</option>`).join("")}
       </select></label></div>
-    <fieldset class="wpa-basic-icon-picker"><legend>Button icon</legend><div class="wpa-basic-icon-grid">${choices}</div></fieldset>
+    <fieldset class="wpa-basic-icon-picker"><legend>Button icon</legend>
+      <div class="wpa-basic-icon-tools">
+        <label>Search icons<input type="search" data-basic-icon-search placeholder="e.g. shield, book, eye" autocomplete="off"></label>
+        <label>Category<select data-basic-icon-category><option value="">All categories</option>
+          ${BASIC_ICON_GROUPS.map(group=>`<option value="${escape(group.label)}">${escape(group.label)}</option>`).join("")}
+        </select></label>
+      </div>
+      <div class="wpa-basic-icon-selection"><span>Selected: <strong data-basic-selected-icon>${escape(basicTitle(chosenIcon))}</strong></span>
+        <span data-basic-icon-count>${BASIC_ICONS.length} icons</span></div>
+      <div class="wpa-basic-icon-grid">${choices}</div>
+    </fieldset>
   </div>`;
   const editor = new foundry.applications.api.DialogV2({
     window:{title:`Custom Action ${index+1}`},position:{width:640},content:form,
@@ -813,6 +864,31 @@ async function basicConfigureSlot(actor,index,onSaved) {
     }
   });
   await editor.render({force:true});
+  const root = editor.element;
+  const search = root?.querySelector?.("[data-basic-icon-search]");
+  const category = root?.querySelector?.("[data-basic-icon-category]");
+  const count = root?.querySelector?.("[data-basic-icon-count]");
+  const labels = Array.from(root?.querySelectorAll?.(".wpa-basic-icon-choice") || []);
+  const filterIcons = () => {
+    const query = String(search?.value || "").trim().toLowerCase();
+    const group = category?.value || "";
+    let visible = 0;
+    for (const label of labels) {
+      label.hidden = !!((group && label.dataset.iconCategory !== group) ||
+        (query && !label.dataset.iconSearch.includes(query)));
+      if (!label.hidden) visible++;
+    }
+    if (count) count.textContent = `${visible} of ${BASIC_ICONS.length} icons`;
+  };
+  search?.addEventListener("input",filterIcons);
+  category?.addEventListener("change",filterIcons);
+  root?.addEventListener?.("change",event=>{
+    if (event.target?.matches?.('input[type="radio"][name="icon"]')) {
+      const selected = root.querySelector("[data-basic-selected-icon]");
+      if (selected) selected.textContent = basicTitle(event.target.value);
+    }
+  });
+  filterIcons();
 }
 async function openBasicActions(actor=null) {
   actor ||= resolveActor();

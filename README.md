@@ -1,12 +1,12 @@
 # WoD20 Player Actions (Player Magick + Basic Actions)
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.11 (2026-10-15)  
+**Release:** v0.1.12 (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
 
-## Basic Actions dashboard (new in v0.1.11)
+## Basic Actions dashboard (v0.1.12 improvements)
 
 From the **Macro Directory**, run **Player Basic Actions**, or drag that optional launcher Macro to your own hotbar. The module creates it once for GM-run worlds, but **never populates anyone's hotbar**. The existing **Player Magick** launcher, Actors sidebar button, and **Shift+J** remain intact. You can also invoke `game.modules.get("wod20-player-actions").api.openBasicActions()` from an existing macro.
 
@@ -19,13 +19,13 @@ The Basic Actions window shows **four rows of five illustrated preset actions** 
 | Social | Charm, Deceive, Intimidate, Negotiate, Lead | Charisma + Expression; Manipulation + Subterfuge; Manipulation + Intimidation; Manipulation + Etiquette; Charisma + Leadership |
 | Knowledge | Occult, Research, Investigate, Computer, First Aid | Intelligence + Occult; Intelligence + Academics; Intelligence + Investigation; Intelligence + Computer; Intelligence + Medicine |
 
-Each compact preset button shows a **19px Game Icons SVG**, its action name, an abbreviated **Attribute + Ability** pairing (such as `Per + Alert`), and the character's computed pool (`5d10`). Hover for the full Attribute/Ability names. The dashboard is 770px wide on desktop, with reduced padding, gaps and button height; it remains responsive. **Click the button to roll immediately** using the installed WoD20 Actor API (`rollAbility`/`rollAttribute`) where available; supported NPCs use the existing native WoD20 DiceRoller as a fallback. Standard actions requiring an Ability absent from the sheet are labeled **Not on sheet** and disabled rather than silently substituting another Ability. **Sense Magick** here is the basic Perception + Awareness roll; it does not cast Sphere magick.
+Each compact preset button shows a **19px Game Icons SVG**, its action name, an abbreviated **Attribute + Ability** pairing (such as `Per + Alert`), and the character's computed pool (`5d10`). Hover for the full Attribute/Ability names. The dashboard is 770px wide on desktop, with reduced padding, gaps and button height; it remains responsive. **Click the button to roll immediately** through the same native WoD20 `DiceRollContainer`/`DiceRoller` used by the system. WoD20's Actor `rollAbility` method labels the chat card with the Ability (e.g. **Alertness**); this version supplies the **dashboard button name** (e.g. **Notice**) as the action title while retaining the native Attribute/Ability detail, wound penalty, specialty, difficulty, Willpower and dice results. No second chat message or dice engine is introduced. Standard actions requiring an Ability absent from the sheet are labeled **Not on sheet** and disabled rather than silently substituting another Ability. **Sense Magick** here is the basic Perception + Awareness roll; it does not cast Sphere magick.
 
 **Custom buttons:** Click **Configure** in any of the five empty slots; choose a label, a real Attribute from the selected character, an Ability from that character (or Attribute only), and an icon from the curated set. Save. Click the resulting button to roll; use the small **pencil** on the button to reconfigure or **Clear Slot**. Your custom settings are stored **per player and per Actor UUID**, in the hidden user-scoped Foundry setting `basicActionsByActor`, not in the Actor. Five custom slots for Eli won't overwrite five for Chloe. Changing a character's sheet Traits can make an existing custom action unavailable until edited.
 
 **Difficulty / Willpower:** The footer offers a 2-10 difficulty rocker, default 6, and an optional **Spend 1 Willpower** checkbox. WoD20 handles Willpower using its native rolling mechanism; the checkbox resets after rolling. This module does not run another success or resource engine. GM Basic Actions use the same selected-token / previous-token priority as Player Magick. Multiple selected GM tokens must be narrowed to one rather than selecting an arbitrary Actor.
 
-**Game Icons:** The release bundles 36 selected SVGs from the supplied `game-icons.net.svg.zip`, NOT the entire archive. Attribution and license are included in `ICONS-CREDITS.md` and `icons/LICENSE.txt`; the original authors are credited as required by the archive's CC BY 3.0 license terms. Only the five custom actions have editable icons; presets use fixed, legible defaults.
+**Game Icons:** The release bundles **162 curated SVGs** from the supplied `game-icons.net.svg.zip`, NOT the entire 4,180-SVG archive. The custom icon chooser supports **name search** and **category filtering** with a scrollable gallery; existing icon selections remain valid. Attribution and license are included in `ICONS-CREDITS.md` and `icons/LICENSE.txt`; the original authors are credited as required by the archive's CC BY 3.0 license terms. Only the five custom actions have editable icons; presets use fixed, legible defaults. Each action button has a **very light** dice-pool tint from red (0 dice) through yellow (4 dice) to green (7+ dice); the numeric dice count remains the authoritative cue. The tint is based on the raw Attribute + Ability pool, before situational wound penalties.
 
 ## What the player sees
 
@@ -110,7 +110,7 @@ Player Magick **does not** read, roll, update, or account for Paradox and does n
 
 ## Rollback
 
-Restore your backed-up `wod20-player-actions` module directory or the published v0.1.10 ZIP, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
+Restore your backed-up `wod20-player-actions` module directory or the published v0.1.11 ZIP, then restart Foundry and refresh browsers. This release performs no automatic Actor migration or hotbar modifications. It creates one world Macro for optional manual drag-and-drop. Any cast a player actually makes may spend in-game resources; restoring module code does not reverse those in-world changes.
 
 ## Testing and known limits
 
@@ -132,4 +132,4 @@ The manifest's `download` field points at the matching versioned GitHub Release 
 
 ## v0.1.11 test status
 
-The Basic Actions dashboard has an additional Node contract test and a real Chromium HTML/CSS/interaction fixture (1440, 820, 430 px) for preset icons and pools, native API routing, Difficulty/Willpower, custom action save/clear and responsive layout. **No live Foundry v14 client test has been performed for v0.1.11**; static and mock test reports are in `TEST-REPORT.md`.
+The Basic Actions dashboard has Node contract tests and a Chromium HTML/CSS/interaction fixture at 1440, 820 and 430px for live pool tints, the 162-SVG searchable chooser, native roll payloads, Difficulty/Willpower, custom save/clear and responsive layout. The v0.1.11 dashboard was shown working in a real Foundry screenshot supplied by the user, which also exposed the original Ability-name chat heading mismatch. **The updated v0.1.12 chat title and icon gallery are not yet verified inside live Foundry v14**; see `TEST-REPORT.md`.
