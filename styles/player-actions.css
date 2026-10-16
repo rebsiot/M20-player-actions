@@ -492,3 +492,58 @@
 }
 .wpa-basic .wpa-basic-icon-choice {display:block;position:relative;margin:0;}
 .wpa-basic .wpa-basic-icon-choice input[type=radio] {position:absolute;opacity:0;width:1px;min-width:1px;min-height:1px;height:1px;padding:0;margin:0;}
+
+/* v0.1.16: compact, discoverable utility actions. Keep existing dashboards intact. */
+.wpa-basic-heading-actions {display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.wpa-basic button.wpa-basic-resistance {
+  width:auto;min-height:27px;flex:none;padding:3px 8px;font-size:11px;font-weight:650;
+  border:1px solid #6e88ae;border-radius:5px;background:#32435b;color:#f0f4fc;cursor:pointer;
+}
+.wpa-basic button.wpa-basic-resistance:hover,
+.wpa-basic button.wpa-basic-resistance:focus-visible {background:#425b7e;}
+.wpa-panel .wpa-magick-utilities {display:grid;grid-template-columns:2fr 1fr;gap:7px;}
+.wpa-panel .wpa-magick-utilities button {min-height:38px;margin:0;padding:6px 9px;font-weight:700;}
+.wpa-panel .wpa-magick-utilities .wpa-improvise {width:100%;min-height:38px;}
+.wpa-panel button.wpa-rote-favorite {
+  width:35px;min-width:35px;min-height:31px;margin:0;padding:3px;
+  border:1px solid #77869b;border-radius:5px;background:#283348;color:#dce7f8;
+  font-size:20px;line-height:1;cursor:pointer;
+}
+.wpa-panel button.wpa-rote-favorite.is-favorite {color:#ffd97b;border-color:#c3a46e;background:#3c3741;}
+.wpa-panel button.wpa-rote-favorite:hover,
+.wpa-panel button.wpa-rote-favorite:focus-visible {border-color:#d7eaff;background:#3e5573;}
+.wpa-panel .wpa-list-heading small {font-weight:400;font-size:11px;opacity:.85;}
+.wpa-utility {padding:12px;gap:12px;}
+.wpa-utility p {margin:0;line-height:1.4;}
+.wpa-utility label {gap:5px;font-weight:650;}
+.wpa-utility input:not([type=checkbox]),.wpa-utility select {
+  box-sizing:border-box;background:#263347;color:#f4f8fd;
+  border:1px solid #8094b2;border-radius:4px;min-height:34px;
+}
+@media (max-width:520px) {
+  .wpa-panel .wpa-magick-utilities {grid-template-columns:1fr;}
+  .wpa-basic-heading-actions {justify-content:flex-start;}
+}
+
+/* First-login help is optional and always reopenable, not another gameplay launcher. */
+.wpa-basic-status-row {display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+.wpa-basic-status-row .wpa-basic-status {flex:1;min-width:0;}
+.wpa-panel .wpa-panel-header > .wpa-panel-header-actions {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;}
+.wpa-root button.wpa-tutorial-link {flex:none;width:auto;min-height:26px;padding:2px 7px;margin:0;border:0;border-radius:4px;background:transparent;color:var(--color-text-hyperlink,#a8caff);text-decoration:underline;text-underline-offset:2px;font-size:11px;cursor:pointer;}
+.wpa-root button.wpa-tutorial-link:hover,.wpa-root button.wpa-tutorial-link:focus-visible {color:var(--color-text-primary,#fff);background:var(--color-bg-option,#324359);}
+.wpa-tutorial {padding:12px;gap:8px;max-height:min(72vh,650px);font-size:13px;line-height:1.5;}
+.wpa-tutorial-step {display:grid;gap:10px;min-width:0;}
+.wpa-tutorial-count {font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.75;}
+.wpa-tutorial-step h2 {margin:0;font-size:19px;line-height:1.25;}
+.wpa-tutorial-body {display:grid;gap:10px;}
+.wpa-tutorial-body p {margin:0;}
+.wpa-tutorial-body kbd {font:inherit;font-weight:700;padding:1px 4px;border:1px solid var(--color-border-light-tertiary,#777);border-radius:3px;}
+.wpa-tutorial-navigation {display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:5px;}
+.wpa-tutorial-navigation button {width:auto;min-width:94px;min-height:35px;padding:6px 12px;margin:0;cursor:pointer;}
+.wpa-tutorial-navigation button:disabled {opacity:.4;cursor:default;}
+.wpa-tutorial-navigation .wpa-tutorial-next,.wpa-tutorial-navigation .wpa-tutorial-finish {font-weight:700;}
+.wpa-tutorial-hint {margin:0;font-size:11px;opacity:.8;line-height:1.4;}
+@media (max-width:520px) {
+  .wpa-panel .wpa-panel-header > .wpa-panel-header-actions {justify-content:flex-start;}
+  .wpa-tutorial {padding:8px;}
+}

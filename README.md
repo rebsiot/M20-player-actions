@@ -1,87 +1,79 @@
 # WoD20 Player Actions
 
-**A faster way to make common rolls, cast Magick and launch combat from Foundry VTT.**
+**Quick native WoD20 checks, Use Magick and optional attack workflow from Foundry VTT.**
 
-**Current version:** v0.1.15 (release-notes cleanup; gameplay unchanged from v0.1.14)  
-**Requires:** Foundry VTT v14 and the `worldofdarkness` (WoD20) system v7.3.1  
-**Optional for targeted combat:** [STL Combat Workflow](https://github.com/rebsiot/combat-workflow) v0.1.4 or later
+**Current version:** v0.1.16 (four new gameplay utilities and first-login Quick Tutorial)  
+**Requires:** Foundry VTT v14 and `worldofdarkness` (WoD20) v7.3.1 or later in the verified system series.  
+**Optional for targeted combat:** [STL Combat Workflow](https://github.com/rebsiot/combat-workflow) v0.1.4+.
 
-[What's in this release](RELEASE-NOTES.md) · [Full version history](CHANGELOG.md) · [Technical details](docs/README-TECHNICAL-THROUGH-v0.1.14.md)
+[What's in this release](RELEASE-NOTES.md) | [Full version history](CHANGELOG.md) | [Technical details](docs/README-TECHNICAL-THROUGH-v0.1.14.md)
 
 ## Start here
 
-1. Install the module in Foundry using its [manifest URL](https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json) or the [latest ZIP](https://github.com/rebsiot/M20-player-actions/releases/latest). Enable **WoD20 Player Actions** in your world.
-2. Have a **GM enter the world once** to create the **Player Actions — Hotbar Macros** compendium. Existing player hotbars are not changed.
-3. Open **Compendium Packs**, find **Player Actions — Hotbar Macros**, and drag the shortcuts you want onto your own hotbar.
-4. Or use **Basic Actions** from the macro to open the 25-button dashboard. The **Use Magick** launcher is also available on the Actors sidebar; Shift+J opens it.
+1. Back up the world and installed module, then install the full versioned ZIP into `Z:\Data\modules\wod20-player-actions`; restart Foundry and enable the module for the desired world.
+2. A GM enters the world once to add new, optional shortcuts to the existing **Player Actions - Hotbar Macros** world compendium. The module does not assign or replace hotbar slots.
+3. Players can drag individual macros from Compendium Packs or open the existing **Player Basic Actions** and **Use Magick** launchers.
+4. The **Actors** sidebar offers Use Magick; Shift+J opens it. Player Basic Actions opens the standalone dashboard.
+5. On the first login after this update, each user is offered a **four-step Quick Tutorial** about rolling, Magick, combat and optional hotbar shortcuts. No character needs to be selected to read it.
 
-## What players can do
+### First-login Quick Tutorial
 
-| Feature | What it does |
+Use **Next** and **Back** to move through the four short pages. On the last page, **Don't show again** saves a private per-user preference for this world, so the walkthrough does not pop up on later logins. Closing it without choosing that option will offer it again on the next login.
+
+The tutorial remains available at any time through the small **Quick Tutorial** link in **Basic Actions** (under the roll controls) and **Use Magick** (beside Change Character). Reopening it does not clear the saved preference. The tutorial is informational only: it does not roll dice, spend resources, modify characters, change world content or assign hotbar shortcuts.
+
+## Available actions
+
+| Feature | What players can do |
 |---|---|
-| **Basic Actions** | Opens 20 ready-to-roll checks for noticing, moving, social interactions and investigating |
-| **My Custom Actions** | Adds five personal shortcuts with a label, Attribute, optional Ability and chosen icon |
-| **Use Magick** | Opens improvised Mage casting and quick Rote casting with native WoD20 rolls |
-| **Raw Attack** | Rolls Brawl, Melee or Firearms as a simple check; no target or automatic damage |
-| **Standard Attack (Targeted)** | Requires one target and launches the separate STL Combat Workflow |
-| **Dodge / Block / Parry** | Quickly rolls a defensive check; Storyteller rules still apply |
-| **Initiative** | Invokes WoD20's native initiative handling |
-| **Roll Any Check / Character Sheet** | Opens the broader Attribute + Ability picker or the native sheet |
+| **Basic Actions** | Roll 25 presets in Awareness, Movement, Social, Knowledge and Modern Scenes, with computed native dice pools. |
+| **My Custom Actions** | Configure five personal Attribute/Ability buttons, separately per player and character. |
+| **Willpower / Resistance** | Select a standalone Willpower, Virtue or Attribute rating and an adjustable difficulty. No Willpower spending. |
+| **Countermagick** | For a Mage, make a defensive Arete roll (default difficulty 7) and record a relevant Sphere for Storyteller adjudication. Not a spell cast. |
+| **Use Magick** | Improvised Mage Effects and Quick Rote casting; stars mark favorite Rotes in a separate section. |
+| **Favorite Rotes** | One optional hotbar macro opens favorites for the current character, directly quick-casting when only one favorite exists. |
+| **Raw Attack** | Perform a single Brawl/Melee/Firearms check without applying damage or requiring a target. |
+| **Standard Attack (Targeted)** | Target exactly one token to hand off to the independent STL Combat Workflow module. |
+| **Dodge / Block / Parry and Initiative** | Native defensive checks and WoD20's own initiative behavior. |
 
-There are **40 draggable macros** in the current compendium. They're optional: nothing is automatically assigned to a hotbar. The source icon selection includes **162 locally bundled Game Icons**, with [attribution](ICONS-CREDITS.md).
+**48 draggable Script Macros** are supplied (25 preset actions, five custom slots and 18 other actions/utilities). The 162 bundled Game Icons and [attribution](ICONS-CREDITS.md) remain intact. No macros are automatically assigned to your hotbar.
 
-### Basic Actions and custom slots
+### Modern scene actions
 
-The dashboard displays five buttons per row on wider screens and rearranges them on narrower screens. Each preset shows its actual base dice pool, with a light red-to-green tint to help scan relative strengths. A tint never affects dice, difficulty or successes.
+**Drive / Pursue**, **Pick Lock**, **Tail Someone**, **Street Information** and **Repair Equipment** appear as a fifth preset group. They use actual Ability Items on the character, accepting available alternatives for a few actions (e.g. Security or Larceny for Pick Lock). If the character lacks the required Ability, the button is unavailable rather than silently adding dots.
 
-The five custom slots are saved for **each player and character**. Select **Configure** to choose an Attribute, Ability, label and icon. Use the edit pencil to revise or clear a saved slot. Compendium shortcuts for Custom Actions 1–5 use the configuration for whichever character you're currently controlling.
+The Storyteller may request another Attribute/Ability pairing or adjust difficulty. Existing custom slots and the native character sheet remain available.
 
-### Raw Attack versus Standard Attack
+### Willpower, resistance and countermagick
 
-**Raw Attack** is a quick native WoD20 Attribute + Ability check. It doesn't need a targeted token and **does not** start defenses, damage or soak. Use it when the Storyteller wants a single test.
+Standalone resistance rolls read the character's rated Willpower, Virtues and Attributes; they **do not consume Willpower**, apply armor/soak, or replace combat defenses. If a character has no recorded rating, that trait will not be offered. Use the appropriate difficulty according to Storyteller ruling.
 
-**Standard Attack (Targeted)** is different:
+Basic Countermagick requires a Mage with Arete. It uses the native WoD20 general roll type rather than the `magic` cast origin, so it is not submitted as an ordinary Effect to the separate Paradox listener. It does not spend resources, automatically cancel the attacker's successes, or determine whether the Mage knows enough Spheres; the Storyteller decides. Live integration testing with the actual Paradox module is still required.
 
-1. Enable **STL Combat Workflow v0.1.4+** in the same world, and have an **online GM**.
-2. Use Foundry targeting to target **exactly one defending token**.
-3. Click the **Standard Attack (Targeted)** macro. Player Actions passes your current Actor to Combat Workflow.
-4. Combat Workflow then handles weapon or unarmed selection, attack, defense, damage, soak and GM health Apply/Undo.
+### Favorite Rotes
 
-If Combat Workflow is missing or no single target is selected, the shortcut warns you. It does not silently roll Raw Attack instead. Combat Workflow owns its rules, chat stages and health updates; Player Actions does not duplicate them.
+In **Use Magick**, click a star next to a Rote to add/remove it from **Favorite Rotes**. Favorites are saved by the logged-in user and character; they do not change the Actor, Rote or any world Macro. Drag the **Favorite Rotes** shortcut from Compendium Packs to your hotbar to access your own selection. Missing/deleted Rotes are ignored.
 
-### Use Magick
+### Raw Attack vs. Standard Attack
 
-**Use Magick** opens the existing Mage casting interface. Select Spheres and Reality, adjust Quintessence, Willpower and other available options, then use WoD20's native casting roll. Known Rotes can use the smaller Quick Rote dialog. The optional **Effect / Focus description** starts collapsed in the improvised editor.
-
-Magick rolls preserve the localized labels required by the independent Dice Improvements / Paradox handling. Player Actions itself doesn't manage Paradox.
+Raw Attack is a simple native dice check, with no targeting or automatic damage. Standard Attack requires exactly one targeted defender, enabled **STL Combat Workflow v0.1.4+**, and a GM online. Player Actions passes the current Actor to Combat Workflow, which owns weapon selection, defense, damage, soak and GM Apply/Undo. If the prerequisites are missing, the shortcut warns instead of rolling a substitute attack.
 
 ### Which character is used?
 
-For a player, the module uses the chosen eligible character, remembering a deliberate change. When a GM opens an unbound launcher, it prefers the **currently selected token** and then the **previously selected token**, including unlinked NPC tokens. Explicitly Actor-bound shortcuts remain bound to their chosen Actor.
+Players use their selected/remembered eligible Actor. When a GM opens an unbound action, the module uses the current token and then the last selected token (including unlinked NPC token Actors). Explicitly Actor-bound Rote macros keep their original binding.
 
-## Setup, permissions and safety
+## Permissions, backups, upgrade and rollback
 
-- The compendium is created on a GM's first login, not by every player. Its reference macros are **player-readable**, not player-editable.
-- Players need Foundry permission to execute Script Macros and to control the characters they're rolling for.
-- Existing hotbar positions and customized macro entries are preserved. A GM-deleted compendium shortcut is not automatically recreated.
-- The module uses native WoD20 rolls; it doesn't introduce a second dice engine, weapon system or Paradox tracker.
-- The **world compendium is persistent world data**, separate from the installed module's files.
+- Players need Foundry permission to run Script Macros and to control the Actor being rolled.
+- The GM provisions the existing native world Macro pack and its new entries; players can read/drag reference macros but not edit masters.
+- Existing world compendiums, user hotbars, characters, customization and local preferences are not reset.
+- Back up the entire world (the Macro compendium is world data) and `Z:\Data\modules\wod20-player-actions`. Stop Foundry for file replacement through Samba, restart, enable in the intended world and hard-refresh clients.
+- To return to the current live baseline, restore the last known working v0.1.14 installation (or your exact backed-up v0.1.15 files) and the matching world backup if you need to undo newly added world Macro documents. Code rollback alone does not delete new compendium entries or reverse gameplay resource changes.
 
-## Install, update or roll back
+## Verification and references
 
-**Before an update:** Back up both your **Foundry world** and the existing module folder `Z:\Data\modules\wod20-player-actions`. If replacing files manually through Samba, stop Foundry first, replace the complete module folder, then restart Foundry and hard-refresh clients.
+Automated tests and archive checks are documented in [TEST-REPORT.md](TEST-REPORT.md); full live Foundry/Paradox/Combat Workflow testing is **not yet confirmed**. The installation has not been changed by generating this ZIP.
 
-**To roll back v0.1.15:** Restore the previous **v0.1.14** module installation. This documentation-only update does not change gameplay state or world data. However, an existing world Macro compendium remains when you roll back, and reverting code never undoes damage, spent resources or other actions taken during play. Restore a matching world backup if you must undo world-document changes.
+Historical technical details: [technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md), [technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md), and [developer handoffs](05-HANDOFF-UPDATE-0.1.16.md).
 
-**First live check:** As a player, drag **Notice** onto a hotbar and roll it. For targeted combat, have the GM online, select exactly one defender, and use **Standard Attack (Targeted)** with Combat Workflow enabled. Confirm that the resulting attack progresses through defense, damage, soak and optional GM Apply/Undo. That complete cross-module sequence still requires live Foundry verification.
-
-## Documentation and licenses
-
-- [Readable release history](CHANGELOG.md)
-- [Latest release summary](RELEASE-NOTES.md)
-- [Historic technical README](docs/README-TECHNICAL-THROUGH-v0.1.14.md) and [historic developer changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md)
-- [Automated test report](TEST-REPORT.md)
-- [Game Icons contributors and license](ICONS-CREDITS.md)
-- [Development handoff v0.1.15](05-HANDOFF-UPDATE-0.1.15.md)
-
-This is a personal-use, unofficial World of Darkness utility. Do not assume it is officially supported by the game publisher, Foundry or the WoD20 system author.
+This is an unofficial personal-use World of Darkness utility, not an official WoD20/Foundry product.
