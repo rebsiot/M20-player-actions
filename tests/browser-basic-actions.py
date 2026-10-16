@@ -60,6 +60,7 @@ with sync_playwright() as p:
     page.set_content('<!doctype html><html><head><meta charset="utf-8"><base href="http://foundry.local/"><style>'+DOC_CSS+CSS+'</style></head><body></body></html>')
     page.evaluate(SETUP)
     page.add_script_tag(content=SRC)
+    page.add_script_tag(content='''wodDice={DiceRollContainer:class {constructor(actor){this.actor=actor;}},DiceRoller:async roll=>{window.__basicTest.rolls.push({actor:roll.actor.uuid,action:roll.action,id:roll.ability,attr:roll.attribute,opts:{difficulty:roll.difficulty,useWillpower:roll.usewillpower},woundpenalty:roll.woundpenalty,numDices:roll.numDices});return 2;}};''')
     page.evaluate('window.__runHooks()')
     page.evaluate("game.modules.get('wod20-player-actions').api.openBasicActions(window.__basicTest.actor)")
     grid=page.locator('.wpa-basic-grid')
@@ -82,6 +83,9 @@ with sync_playwright() as p:
     # Compact v0.1.11 revision: full action titles and actual dice pools remain
     # readable alongside meaningful abbreviated Attribute + Ability pairs.
     assert page.locator('.wpa-basic-pair').count()==20
+    assert page.locator('[data-basic-preset="notice"]').get_attribute('style')=='--wpa-pool-hue:75', '5-dice Notice is between yellow and green'
+    assert page.locator('[data-basic-preset="sense-magick"]').get_attribute('style')=='--wpa-pool-hue:97', '6 dice trends green'
+    assert page.locator('[data-basic-preset="search"]').get_attribute('style')=='--wpa-pool-hue:120', '7+ is green'
     assert page.locator('[data-basic-preset="notice"] .wpa-basic-pair').inner_text()=='Per + Alert'
     assert page.locator('[data-basic-preset="occult"] .wpa-basic-pair').inner_text()=='Int + Occ'
     assert 'Perception + Alertness' in page.locator('[data-basic-preset="notice"]').get_attribute('title')
@@ -110,12 +114,22 @@ with sync_playwright() as p:
     page.locator('input[name="basicWillpower"]').check()
     page.locator('[data-basic-preset="notice"]').click()
     rolls=page.evaluate('window.__basicTest.rolls')
-    assert len(rolls)==1 and rolls[0]['id']=='a0' and rolls[0]['attr']=='perception' and rolls[0]['opts']['difficulty']==7 and rolls[0]['opts']['useWillpower']
+    assert len(rolls)==1 and rolls[0]['id']=='a0' and rolls[0]['attr']=='perception' and rolls[0]['opts']['difficulty']==7 and rolls[0]['opts']['useWillpower'] and rolls[0]['action']=='Notice'
     assert not page.locator('input[name="basicWillpower"]').is_checked()
     # Blank action opens the config editor with curated icons.
     page.locator('[data-basic-config="0"]').click()
-    assert page.locator('.wpa-basic-icon-choice').count()==36
-    page.wait_for_function('''() => [...document.querySelectorAll('.wpa-basic-icon-choice img')].every(x=>x.complete&&x.naturalWidth>0)''')
+    assert page.locator('.wpa-basic-icon-choice').count()==162
+    # The icon picker scrolls lazily; filter/category rather than loading all 162 thumbnails.
+    assert page.locator('[data-basic-icon-count]').inner_text()=='162 of 162 icons'
+    page.locator('[data-basic-icon-search]').fill('shield')
+    assert 2 < page.locator('.wpa-basic-icon-choice:visible').count() < 25
+    assert page.locator('.wpa-basic-icon-choice:visible').count()==int(page.locator('[data-basic-icon-count]').inner_text().split(' ')[0])
+    if width==820:
+      page.screenshot(path=str(ROOT.parent/'preview-custom-icon-picker.png'),full_page=True)
+    page.locator('[data-basic-icon-search]').fill('')
+    page.locator('[data-basic-icon-category]').select_option('Healing & Nature')
+    assert page.locator('.wpa-basic-icon-choice:visible').count()==15
+    page.locator('[data-basic-icon-category]').select_option('')
     async_config='''async () => {
       const d=window.__basicTest.dialogues.at(-1);
       await d.options.submit({label:'Find Clues',attribute:'perception',abilityId:'a2',icon:'eye-target'});
@@ -129,7 +143,7 @@ with sync_playwright() as p:
     assert page.locator('[data-basic-difficulty]').inner_text()=='6','reopens with default difficulty'
     page.locator('[data-basic-custom="0"]').click()
     rolls=page.evaluate('window.__basicTest.rolls')
-    assert len(rolls)==2 and rolls[-1]['id']=='a2'
+    assert len(rolls)==2 and rolls[-1]['id']=='a2' and rolls[-1]['action']=='Find Clues'
     # Edit and clear should restore an empty configurable slot without touching the sheet.
     page.locator('.wpa-basic-edit[data-basic-config="0"]').click()
     page.evaluate('''async () => {const d=window.__basicTest.dialogues.at(-1);await d.options.submit({clear:true});await d.close();}''')

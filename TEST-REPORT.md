@@ -1,3 +1,26 @@
+# v0.1.12 Test Report — 2026-10-15
+
+**Live evidence:** The user supplied a real Foundry v14 screenshot of published v0.1.11: Basic Actions 20+5 dashboard, native chat rolls and Ability-only headings such as **Alertness** (instead of the clicked **Notice**). That screenshot does **not** verify the new v0.1.12 behavior.
+
+## Local verification
+
+- JavaScript syntax: `node --check scripts/player-actions.js` passed.
+- **13 Node/mock tests**: previous 12 plus `basic-chat-labels.cjs`. The new test verifies **Notice**, **Search**, custom button labels and Attribute-only labels in the native `DiceRollContainer.action`, one native `DiceRoller` call per click, Attribute/Ability details, native wound penalties/ignore-pain, specialties, native Willpower option and final Difficulty.
+- `basic-actions.cjs` now checks 162 whitelisted icons and color scale thresholds (0 red, 4 yellow, 7+ green) as well as existing per-user/Actor custom persistence, missing traits and native roll path.
+- **3 Chromium fixtures** at **1440, 820 and 430px**: Basic Actions tests live tile color values/legibility, 162-icon editor, category and text filtering (search `shield`), saved custom button name and native mock roll title, 19px icons, native controls, custom edits/clear and no horizontal overflow. Improvised Mage and Quick Rote fixtures remain unchanged and pass.
+- Curated **162 SVGs** from the user-provided Game Icons archive validated as XML with no scripts or external loads; `ICONS-CREDITS.md` and original `icons/LICENSE.txt` included. Entire 4,180-SVG archive not shipped.
+- Complete installable v0.1.12 ZIP checked for CRC, safe paths, manifest/version/download URL, root module ID, source/scripts/styles, creators and all icon files.
+
+## Not verified live
+
+Actual WoD20 v7.3.x's roll-container/chat template in the user's Foundry installation, Pain/Ignored Pain effects, specialty treatment, Willpower deductions and icon gallery on Foundry DialogV2 still require a live smoke test. The Mage/Paradox integration is unchanged and existing regressions are mocks, not live system tests.
+
+## First test and rollback
+
+Back up the world and current module folder; install v0.1.12 in a test world. Click **Notice** and verify the chat heading reads **Notice**, while the detail row still says **Perception + Alertness**, wound penalty and successes are correct. Then open Configure and search `shield`, and verify a low/medium/high dice pool button has soft red/yellow/green tint. Restore the v0.1.11 module directory/ZIP if any live discrepancy appears. No character data migration occurs, but prior rolls/Willpower deductions are not undone by rolling back code.
+
+---
+
 # v0.1.10 Test Report — 2026-10-15
 
 ## v0.1.11 - Basic Actions with Game Icons (2026-10-15)

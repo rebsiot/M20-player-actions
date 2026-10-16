@@ -405,12 +405,17 @@
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:3px; width:100%; min-width:0; min-height:55px; margin:0;
   padding:4px 3px; box-sizing:border-box;
-  background:#253145; color:#f4f8ff; border:1px solid #526987;
+  /* 0 dice = very soft red; 4 = yellow; 7+ = green. Keep all tiles legible. */
+  background:linear-gradient(hsl(var(--wpa-pool-hue, 0) 62% 62% / .12),hsl(var(--wpa-pool-hue, 0) 62% 62% / .12)),#253145;
+  color:#f4f8ff; border:1px solid #526987;
   border-radius:6px; cursor:pointer; font:inherit; text-align:center;
   transition:background .1s, border-color .1s, transform .1s;
 }
 .wpa-basic button.wpa-basic-tile:hover:not(:disabled),
-.wpa-basic button.wpa-basic-tile:focus-visible {background:#365074;border-color:#abcfff;transform:translateY(-1px);outline-offset:1px;}
+.wpa-basic button.wpa-basic-tile:focus-visible {
+  background:linear-gradient(hsl(var(--wpa-pool-hue, 0) 65% 65% / .17),hsl(var(--wpa-pool-hue, 0) 65% 65% / .17)),#365074;
+  border-color:#abcfff;transform:translateY(-1px);outline-offset:1px;
+}
 .wpa-basic button.wpa-basic-tile:disabled {opacity:.56;cursor:not-allowed;}
 .wpa-basic-tile-main {display:flex;align-items:center;justify-content:center;gap:5px;max-width:100%;min-width:0;}
 .wpa-basic-tile img {width:19px;height:19px;flex:none;object-fit:contain;border-radius:2px;}
@@ -420,7 +425,10 @@
 .wpa-basic-pool {font-size:10px;color:#b9d7ff;white-space:nowrap;}
 .wpa-basic-pool.unavailable {color:#ffc0b7;white-space:normal;}
 .wpa-basic-custom-cell {position:relative;min-width:0;}
-.wpa-basic button.wpa-basic-tile.is-custom {padding-right:20px;border-color:#c1a46a;background:#383546;}
+.wpa-basic button.wpa-basic-tile.is-custom {
+  padding-right:20px;border-color:#c1a46a;
+  background:linear-gradient(hsl(var(--wpa-pool-hue, 0) 62% 62% / .12),hsl(var(--wpa-pool-hue, 0) 62% 62% / .12)),#383546;
+}
 .wpa-basic button.wpa-basic-tile.is-empty {border-style:dashed;background:#242a38;color:#ecf2fd;}
 .wpa-basic-plus {display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:300;line-height:1;width:19px;height:19px;color:#c8d8f4;}
 .wpa-basic button.wpa-basic-edit {position:absolute;top:3px;right:3px;min-width:22px;width:22px;height:23px;padding:2px;background:#1a2638;color:#fff;border:1px solid #7c91ad;border-radius:4px;cursor:pointer;font-size:10px;}
@@ -447,7 +455,15 @@
 .wpa-basic-editor-traits {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
 .wpa-basic-icon-picker {min-width:0;border:1px solid #5c6d84;border-radius:7px;padding:10px;}
 .wpa-basic-icon-picker legend {font-size:12px;font-weight:750;padding:0 5px;color:#f4f8ff;}
-.wpa-basic-icon-grid {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;}
+.wpa-basic-icon-tools {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.wpa-basic-icon-tools label {min-width:0;font-size:11px;}
+.wpa-basic-icon-selection {display:flex;gap:8px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;font-size:11px;color:#c8d8eb;margin:0 0 7px;}
+.wpa-basic-icon-selection strong {color:#fff;}
+.wpa-basic-icon-selection [data-basic-icon-count] {color:#a7bdd5;}
+.wpa-basic .wpa-basic-icon-choice[hidden] {display:none !important;}
+.wpa-basic-icon-grid {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;
+  max-height:270px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:2px 4px 2px 2px;}
 .wpa-basic-icon-choice {display:block;position:relative;min-width:0;cursor:pointer;}
 .wpa-basic-icon-choice input[type=radio] {position:absolute;width:1px;height:1px;opacity:0;}
 .wpa-basic-icon-choice >span {display:grid;gap:4px;place-items:center;min-height:77px;box-sizing:border-box;padding:6px 3px;background:#222e40;border:1px solid #596b84;border-radius:6px;}
@@ -470,7 +486,7 @@
   .wpa-basic-row h3 small {display:block;margin-left:0;margin-top:2px;}
   /* Avoid obscuring the last two custom slots in a scrollable 3-column panel. */
   .wpa-basic-footer {gap:7px;position:static;}
-  .wpa-basic-editor-traits {grid-template-columns:1fr;}
+  .wpa-basic-editor-traits,.wpa-basic-icon-tools {grid-template-columns:1fr;}
 }
 .wpa-basic .wpa-basic-icon-choice {display:block;position:relative;margin:0;}
 .wpa-basic .wpa-basic-icon-choice input[type=radio] {position:absolute;opacity:0;width:1px;min-width:1px;min-height:1px;height:1px;padding:0;margin:0;}

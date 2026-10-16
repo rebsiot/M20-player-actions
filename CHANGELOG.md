@@ -1,5 +1,14 @@
 # Changes — WoD20 Player Magick
 
+## v0.1.12 — 2026-10-15 (Basic Actions clarity and icon expansion)
+
+- **Correct chat card title:** Clicking **Notice**, **Search**, **React**, or any custom button now titles the native WoD20 chat card with that **action label**, not the underlying Ability name. The original Attribute + Ability breakdown, difficulty, wound penalty, specialties, native Willpower handling, rolled dice, and successes remain. This uses WoD20's existing `DiceRollContainer` and `DiceRoller` once, with no duplicate ChatMessage or altered dice engine.
+- **More custom SVGs:** Increased the bundled Game Icons library from **36 to 162** locally served SVGs, including Senses/Investigation, Movement, Social, Study, Technology/Tools, Magick, Combat/Defense, and Healing/Nature groups. Added searchable names, category filtering and a scrollable picker. Existing saved icon choices remain valid; the archive license and per-artist attribution are retained.
+- **Subtle pool strength cues:** Apply a restrained background tint on action buttons using the **base Attribute + Ability pool** (0 red, 4 yellow, 7+ green), with intermediate values interpolated and full text/dice counts preserved. The color never changes roll math or overrides the distinct custom-button controls.
+- **Compatibility:** Preserves the 20+5 compact layout, GM token precedence, user-scoped custom slots, Rotes and Player Magick, native `magic` rolls/Paradox markers, and manual-only hotbar use. No Actor migrations or changes to existing settings.
+- **Verification:** JavaScript syntax; 13 Node/mock tests including native chat-heading/wound/specialty/Willpower regression; 3 Chromium fixtures at widths 1440, 820, 430; 162 licensed SVG XML checks, packaging and ZIP CRC. Real Foundry **v0.1.12** behavior not yet tested. The v0.1.11 screenshot supplied by the user confirms why the original chat title needs correction.
+- **Upgrade / rollback:** Back up the world and `Z:\Data\modules\wod20-player-actions`, install the full v0.1.12 ZIP, restart Foundry and refresh. Roll back by restoring the v0.1.11 directory/ZIP; neither release migrates Actors.
+
 ## v0.1.11 - 2026-10-15 (Basic Actions and Game Icons)
 
 - **Pre-release compactness refinement:** Reduced preset SVGs from 38px to 19px; changed action tile composition to an inline icon/title and a concise roll row (`Per + Alert` / `5d10`). Reduced button heights, row gutters, section padding, header and footer spacing, and maximum dashboard width from 890px to 770px. Full Attribute/Ability labels are retained in tooltips/accessibility labels; five custom slots receive the same compact layout, with edit and clear preserved. On narrow viewports, the bottom controls no longer overlay custom slots.
