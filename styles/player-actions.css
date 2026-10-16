@@ -562,3 +562,39 @@
   .wpa-tutorial-finish-actions button {min-width:0;flex:1;}
   .wpa-tutorial-choices {padding:8px;}
 }
+
+/* v0.1.19: one compact, live-saving resources/health dashboard. */
+.wpa-basic button.wpa-basic-resources {width:auto;min-height:27px;flex:none;padding:3px 8px;font-size:11px;font-weight:650;border:1px solid #6e88ae;border-radius:5px;background:#32435b;color:#f0f4fc;cursor:pointer;}
+.wpa-basic button.wpa-basic-resources:hover,.wpa-basic button.wpa-basic-resources:focus-visible{background:#425b7e;}
+.wpa-resources{padding:10px 12px;gap:8px;max-height:min(75vh,680px);overflow-y:auto;box-sizing:border-box;}
+.wpa-resource-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0;margin-bottom:10px;}
+.wpa-resource-heading>div{display:grid;gap:2px;min-width:0;}
+.wpa-resource-heading small{font-size:11px;color:#aebdd2;}
+.wpa-resource-heading strong{font-size:15px;overflow-wrap:anywhere;}
+.wpa-resources button[data-wpa-resource-action="change"]{width:auto;min-height:28px;font-size:11px;flex:none;padding:4px 8px;}
+.wpa-resource-stack{display:grid;gap:11px;min-width:0;}
+.wpa-resource-section{border:1px solid #52647e;border-radius:7px;overflow:hidden;background:#1c2635;min-width:0;}
+.wpa-resource-section h3{font-size:12px;font-weight:750;letter-spacing:.01em;margin:0;padding:9px 11px;background:#2a3850;color:#f0f5fb;}
+.wpa-resource-section-title{display:flex;justify-content:space-between;align-items:center;gap:7px;background:#2a3850;padding-right:10px;}
+.wpa-resource-section-title h3{background:transparent;}
+.wpa-resource-section-title>span{font-size:11px;color:#bfd0e7;white-space:nowrap;}
+.wpa-resource-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;min-width:0;border-top:1px solid #40536a;}
+.wpa-resource-section>h3+.wpa-resource-row{border-top:0;}
+.wpa-resource-row:first-of-type{border-top:0;}
+.wpa-resource-trait{display:grid;gap:2px;min-width:0;flex:1;}
+.wpa-resource-trait>strong{font-size:12.5px;font-weight:600;color:#f0f5ff;overflow-wrap:anywhere;}
+.wpa-resource-trait>small{font-size:10px;color:#b6c9e1;}
+.wpa-resource-mark{display:inline-grid;place-items:center;border-radius:3px;min-width:19px;height:19px;margin-right:5px;border:1px solid #66778e;background:#384559;font-size:12px;}
+.wpa-resource-controls{display:flex;align-items:center;gap:5px;flex:none;}
+.wpa-resources .wpa-resource-controls button{margin:0;width:31px;min-width:31px;min-height:31px;padding:2px;line-height:1;font-size:20px;font-weight:700;border:1px solid #71849f;border-radius:5px;background:#2c3c54;color:#f8fbff;cursor:pointer;}
+.wpa-resources .wpa-resource-controls button:hover:not(:disabled){background:#476488;}
+.wpa-resources .wpa-resource-controls button:disabled{opacity:.4;cursor:not-allowed;}
+.wpa-resource-value{min-width:66px;font-size:15px;font-weight:750;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.wpa-resource-value span{font-size:11px;font-weight:400;color:#c0d0e4;}
+.wpa-resource-empty{padding:8px 11px;margin:0;color:#b6c9df;font-size:12px;}
+.wpa-resource-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+.wpa-resource-status{font-size:11px;color:#c5d6ea;flex:1;min-width:175px;}
+.wpa-resource-footer-actions{display:flex;gap:6px;}
+.wpa-resources .wpa-resource-footer-actions button{width:auto;min-height:28px;margin:0;padding:4px 8px;font-size:11px;}
+.wpa-resource-hint{margin:0;color:#afc1d9;font-size:10.5px;line-height:1.35;}
+@media(max-width:520px){.wpa-resources{padding:7px;}.wpa-resource-row{gap:4px;padding:7px 5px;}.wpa-resource-trait>strong{font-size:12px;}.wpa-resource-controls{gap:3px;}.wpa-resources .wpa-resource-controls button{width:29px;min-width:29px;min-height:31px;}.wpa-resource-value{min-width:55px;}}

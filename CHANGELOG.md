@@ -2,6 +2,14 @@
 
 Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
+## v0.1.19 - Quick Resources and health adjustments
+
+- Added **Quick Resources**, a compact window with immediate `+` and `-` changes to **temporary** Willpower, Quintessence, Paradox, Blood Pool and supported existing consumable pools. Permanent ratings are not edited.
+- Added separate **Bashing, Lethal, and Aggravated** damage controls, plus a separate Chimerical track when present. Uses native Actor/Advantage Item fields so the WoD20 sheet remains authoritative for wound penalties and state.
+- Added bounded resource updates, shared Quintessence/Paradox wheel capacity, a Refresh control and guarded **Undo Last**. No health damage auto-conversions, repeated Paradox accounting or automatic combat/soak logic.
+- Added **Quick Resources** to the Basic Actions window, created one optional GM-provisioned world launcher and one new compendium Macro (49 total), and added a fifth unchecked tutorial hotbar choice. Existing hotbars are not changed except when the player opts in.
+- Archived chat handoffs remain in `docs/handoffs/` in source only. No per-release handoff generated, no migration and no change to external module contracts.
+
 ## v0.1.18 - Pick Lock uses abilities on your sheet
 
 - Fixed **Pick Lock** for standard Mage characters: it uses **Dexterity + Crafts** when Security and Larceny are not on the sheet. Supports localized/internal `craft` ability IDs.

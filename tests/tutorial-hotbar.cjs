@@ -64,7 +64,7 @@ const choose=async(dialog,key,checked=true)=>{
 (async()=>{
   hooks.init();prefs.set('tutorialDontShowAgain',true); // no automatic display in this fixture
   assert.match(tutorialPageHTML(3),/Would you like me to add shortcuts to your hotbar/);
-  for(const key of ['magick','combat','basic','compendium']) assert.match(tutorialPageHTML(3),new RegExp(`data-wpa-tutorial-choice="${key}"`));
+  for(const key of ['magick','combat','basic','resources','compendium']) assert.match(tutorialPageHTML(3),new RegExp(`data-wpa-tutorial-choice="${key}"`));
   assert.doesNotMatch(tutorialPageHTML(3),/" checked/);
   assert.match(tutorialPageHTML(3,new Set(['basic','compendium'])),/data-wpa-tutorial-choice="basic" checked/);
   assert.doesNotMatch(tutorialPageHTML(3,new Set(['basic'])),/data-wpa-tutorial-choice="magick" checked/);
@@ -72,15 +72,16 @@ const choose=async(dialog,key,checked=true)=>{
   const magick=worldMacro('m1','Use Magick','api.openPanel()','launcher');
   const combat=worldMacro('m2','Player Combat (Targeted)','api.openStandardAttackShortcut()','combatLauncher');
   const basic=worldMacro('m3','Player Basic Actions','api.openBasicActions()','basicLauncher');
-  const selected=new Set(['magick','combat','basic']);
+  const resources=worldMacro('m4','Player Quick Resources','api.openQuickResources()','resourcesLauncher');
+  const selected=new Set(['magick','combat','basic','resources']);
   const first=await add(selected);
-  assert.equal(first.added,3);
-  assert.deepEqual(assignments.map(a=>a.slot),[13,14,15],'use empty slots on visible page first');
-  assert.deepEqual(assignments.map(a=>a.id),[magick.id,combat.id,basic.id]);
+  assert.equal(first.added,4);
+  assert.deepEqual(assignments.map(a=>a.slot),[13,14,15,16],'use empty slots on visible page first');
+  assert.deepEqual(assignments.map(a=>a.id),[magick.id,combat.id,basic.id,resources.id]);
   assert.equal(user.hotbar[1],'existing0');assert.equal(user.hotbar[11],'existing11');assert.equal(user.hotbar[12],'existing12');
   const again=await add(selected);
-  assert.equal(again.already,3,'no duplicate on repeated selection');
-  assert.equal(assignments.length,3);
+  assert.equal(again.already,4,'no duplicate on repeated selection');
+  assert.equal(assignments.length,4);
   const copied=worldMacro('copy1','A saved player macro',basic.command,null);
   user.hotbar[16]=copied.id;delete user.hotbar[15];
   assert.equal((await add(new Set(['basic']))).already,1,'same script already on bar counts even from a different world macro');
@@ -91,10 +92,16 @@ const choose=async(dialog,key,checked=true)=>{
   macros.push(imported);user.hotbar[17]=imported.id;delete user.hotbar[15];
   assert.equal((await add(new Set(['basic']))).already,1,'imported compendium copy is not installed again');
   delete user.hotbar[17];user.hotbar[15]=basic.id;
+  // Existing compendium copy of Quick Resources prevents duplicate setup.
+  const resourceCopy={id:'res-copy',name:'Quick Resources',command:'customized script',
+    getFlag:(ns,key)=>ns===mod&&key==='catalogId'?'dash-resources':undefined};
+  macros.push(resourceCopy);user.hotbar[19]=resourceCopy.id;delete user.hotbar[16];
+  assert.equal((await add(new Set(['resources']))).already,1);
+  delete user.hotbar[19];user.hotbar[16]=resources.id;
   macros.splice(macros.indexOf(combat),1);
   const missing=await add(new Set(['combat']));
   assert.equal(missing.missing,1,'missing GM launcher produces a friendly warning');
-  assert.equal(assignments.length,3);
+  assert.equal(assignments.length,4);
   macros.push(combat);
   const oldHotbar=user.hotbar;user.hotbar=Object.fromEntries(Array.from({length:50},(_,i)=>[i+1,`busy-${i+1}`]));
   assert.equal((await add(new Set(['combat']))).full,1,'full hotbar does not replace anything');
@@ -114,7 +121,7 @@ const choose=async(dialog,key,checked=true)=>{
   const a=dialogs.at(-1);
   for(let i=0;i<3;i++)await nav(a,'next');
   assert.match(a.root.page.innerHTML,/Open the Player Actions Macro Compendium/);
-  assert.equal(assignments.length,3,'opening tutorial never assigns');
+  assert.equal(assignments.length,4,'opening tutorial never assigns');
   await choose(a,'magick');await choose(a,'compendium');
   await nav(a,'back');await nav(a,'next');
   assert.match(a.root.page.innerHTML,/data-wpa-tutorial-choice="magick" checked/,'choices retained across back/next');
@@ -131,10 +138,11 @@ const choose=async(dialog,key,checked=true)=>{
   user.hotbar={1:'existing0'};prefs.set('tutorialDontShowAgain',false);
   await openTutorial();const c=dialogs.at(-1);
   for(let i=0;i<3;i++)await nav(c,'next');
-  await choose(c,'basic');await choose(c,'compendium');
+  await choose(c,'basic');await choose(c,'resources');await choose(c,'compendium');
   await nav(c,'dismiss');
   assert.equal(prefs.get('tutorialDontShowAgain'),true);
   assert.equal(user.hotbar[11],basic.id,'on page 2, first empty slot is 11');
+  assert.equal(user.hotbar[12],resources.id,'second opt-in shortcut uses next free slot');
   assert.equal(activated,4);
   assert.ok(infos.some(s=>s.includes('Added')));
   assert.ok(warnings.length>=2);
