@@ -1,12 +1,26 @@
+# v0.1.20 Test Report — Quick Resources compactness and Chimerical gating (2026-10-16)
+
+**Source basis:** Published v0.1.19, exact runtime SHA-256 `1f2f5716287c09f037e0d963aeff4f5d643fdb9fa8d472e724d506b306ece6b4`. **Status:** Release candidate; published release to be verified separately. No Foundry server installation or live in-world verification.
+
+- **Changes:** Show Chimerical damage for newer PCs only when `system.settings.usechimerical` is enabled, and for compatible enabled legacy Changeling sheets. Compact the resource dialog to 328px on desktop with a responsive narrow layout. No migration, gameplay mechanics change, new hotbar option or new macro.
+- **Node syntax and regression tests:** PASS, 21 of 21 suites. Quick Resources unit tests cover inactive vs active Chimerical tracking on Mage PCs, legacy Changeling handling, refusal to edit hidden tracks, preserving data, one-click native resource/health writes, capacity constraints, guarded Undo and permissions. All other suites preserve 49 macro and tutorial contracts.
+- **Chromium browser fixture tests:** PASS, five fixtures. Quick Resources verified at 1440, 820, 430 and 320px for no clipping, narrow popup, immediate write, Undo, toggling the sheet Chimerical setting and Refresh. Four other fixtures at desktop/tablet/mobile widths.
+- **Full installation ZIP:** PASS, 162 curated icons, 21 Node suites and 5 browser fixtures. Versioned manifest, ZIP root/CRC/path integrity checked. 13 archived ChatGPT handoff files remain source-only and are excluded from the installed ZIP.
+- **Live Foundry v14 / installed WoD20:** NOT VERIFIED. Test at least one Mage with disabled/enabled Chimerical checkbox plus a resource adjustment and one heal in a backed-up test world before claiming live success.
+
+**Upgrade:** Back up world and `Z:\Data\modules\wod20-player-actions`; replace module files with v0.1.20, restart and refresh Foundry. **Rollback:** restore v0.1.19 module, and the matching world backup if the intention is to reverse character resource/damage changes rather than only revert source code.
+
+---
+
 # v0.1.19 Test Report - Quick Resources (2026-10-16)
 
-**Owner:** Player Actions 05.2. **Status:** v0.1.19 merged in PR #15 and published on GitHub on 2026-10-16; GitHub Actions run 38963458902 completed successfully. No Foundry server deployment or live in-world test has been performed. No new handoff document; historical chat handoffs remain source-only under `docs/handoffs/`.
+**Owner:** Player Actions 05.2. **Status:** v0.1.19 merged through PR #15 and published on GitHub on 2026-10-16; GitHub Actions run 38963458902 completed successfully. No live Foundry installation or in-world testing was performed. No handoff document was generated. Historical chat handoffs stay source-only under `docs/handoffs/`.
 
 - **Scope:** Real-time changes to native WoD20 Advantage Item `system.temporary` or legacy `system.advantages` resources; separate physical/Chimerical `system.health.damage` fields; guarded per-window Undo Last, Refresh, and fifth opt-in tutorial checkbox. No changes to native spell, combat, soak or Paradox calculations.
 - **Static/Node/mock tests:** PASS: Node syntax check plus 21 Node/mock suites, including `quick-resources.cjs`, hotbar tutorial setup, macros/catalog permissions, Paradox/chat contract, and existing action/Combat Workflow regressions. Tests cover native Item vs Actor updates, separate damage severity and Chimerical track, temporary vs permanent resources, max boundaries, shared Quintessence/Paradox pool, guarding undo from external changes, and absent/hidden Traits.
 - **Browser Chromium fixtures:** PASS: five Chromium scripts at 1440 / 820 / 430px for Basic Actions, first-login tutorial checkboxes, full magick, Rote quick cast, and new Quick Resources direct click/update/undo behavior. No horizontal clipping in simulated browser UI.
 - **ZIP integrity:** PASS: complete module-root ZIP with 162 curated Game Icons, 21 Node suites, 5 browser fixtures, manifest/version consistency, CRC/path safety. All chat handoffs excluded from installed files.
-- **Published GitHub release:** PASS — [v0.1.19](https://github.com/rebsiot/M20-player-actions/releases/tag/v0.1.19), installable `wod20-player-magick-0.1.19.zip`; GitHub-provided asset digest `sha256:b3b86f158a294aa678cd732ec595d4ae045228ea745ce3411d328fc3338c06ab`. The verified full runtime was committed to `main`.
+- **Published GitHub release:** PASS — [v0.1.19](https://github.com/rebsiot/M20-player-actions/releases/tag/v0.1.19), installable `wod20-player-magick-0.1.19.zip`; SHA-256 `b3b86f158a294aa678cd732ec595d4ae045228ea745ce3411d328fc3338c06ab`. Full runtime committed to `main`.
 - **Live Foundry v14 and installed WoD20 7.3.x:** NOT VERIFIED. Cross-module resource/Paradox/Combat interactions require a backed-up test world.
 
 **Installation:** Back up world and `Z:\Data\modules\wod20-player-actions` before upgrade; let GM enter the world to seed new player-readable Macro. **Rollback:** restore backed-up v0.1.18 folder and matching world snapshot to revert any newly created world/user documents or gameplay changes.

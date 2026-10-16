@@ -2,6 +2,12 @@
 
 Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
 
+## v0.1.20 - Compact Quick Resources and Chimerical visibility
+
+- Reduced **Quick Resources** to a 328px-wide desktop popup with denser rows, clearer +/- controls and a compact Undo/Refresh footer; full accessible labels, immediate writes and mobile responsiveness remain.
+- **Chimerical damage** now follows the sheet's enabled setting. Normal Mage characters with dormant Chimerical-shaped data no longer see an irrelevant track; an explicitly enabled Mage or legacy Changeling retains its Chimerical controls. Hidden data is not deleted or changed.
+- Retained separate Bashing, Lethal, and Aggravated damage and the existing 49 macros, tutorial hotbar options, resources, combat/Paradox integrations, permissions and world data. No migrations or additional ChatGPT handoffs.
+
 ## v0.1.19 - Quick Resources and health adjustments
 
 - Added **Quick Resources**, a compact window with immediate `+` and `-` changes to **temporary** Willpower, Quintessence, Paradox, Blood Pool and supported existing consumable pools. Permanent ratings are not edited.

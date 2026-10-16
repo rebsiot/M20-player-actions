@@ -1,22 +1,17 @@
-# Player Actions v0.1.19
+# Player Actions v0.1.20
 
-## Quick Resources: adjust pools and damage in one window
+## Compact Quick Resources and correctly gated Chimerical damage
 
-Open **Quick Resources** from Basic Actions, drag its Macro from **Player Actions - Hotbar Macros**, or select its unchecked box on the last page of the first-login Quick Tutorial. The Game Master must enter the world once after the upgrade to make the new optional launcher available. Nothing is automatically placed on player hotbars.
+- **Smaller Quick Resources panel:** The live-saving window is now approximately 328px wide on desktop, remains responsive at 320px viewports, and uses tighter rows, shorter visible labels, smaller +/- controls and a simpler footer. Full descriptions remain in accessible labels and tooltips. **+ / - apply immediately**, and **Undo**, **Refresh** and **Change Character** continue to work without a Save button.
+- **Chimerical damage is opt-in, not automatically inferred from stored fields:** For current WoD20 PC actors, show the Chimerical damage track only when the character sheet's `system.settings.usechimerical` option is enabled. Legacy Changeling sheets keep their supported enabled track. A Mage with an inactive/dormant Chimerical data object shows only ordinary **Bashing, Lethal, and Aggravated** damage. Disabling the Chimerical track does **not** delete or rewrite its stored damage.
+- All existing resource controls, 49 optional macros, five tutorial choices, native WoD20 fields, per-player hotbar assignments, and the independent Combat Workflow/Paradox module responsibilities remain unchanged. No new migration, background resource processing, automatic hotbar changes, or chat handoff file was introduced.
 
-- Tap **+** or **-** to update the real WoD20 character **immediately**, with no Save button. Temporary Willpower, Quintessence, temporary Paradox, Blood Pool and other available consumable pools appear only when the character actually has them. Permanent traits remain unchanged.
-- Record **Bashing, Lethal, and Aggravated** damage separately. Chimerical damage appears separately when the sheet contains it. WoD20 itself remains responsible for wound levels and penalties.
-- **Undo Last** reverses a single previous click if the value has not been changed by something else; **Refresh** reads the latest sheet values. Existing maximums and Mage's shared Quintessence/Paradox wheel capacity are respected.
-- The Quick Tutorial now offers a fifth independent checkbox for **Quick Resources**. Leaving it unchecked does nothing. Checked shortcuts fill only free slots, never overwriting or duplicating existing player hotbar entries.
+## Install / upgrade and rollback
 
-The protected Macro Compendium now has **49 optional shortcuts**. Existing actions, characters, Rotes, world macros, hotbar assignments and the separate Combat Workflow and Paradox rules are preserved. No schema migration or additional resource storage is introduced.
+Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry while replacing the previous module with the **complete v0.1.20 release ZIP**, restart Foundry, enable it in the intended world and hard-refresh browser clients. Existing world launcher macros and the reference compendium are retained unchanged; no new provisioning is needed for this specific update.
 
-## Install / upgrade
+To roll back, restore your backed-up **v0.1.19** module folder. Code rollback alone does not undo character resource/damage adjustments made during play; a matching world snapshot is needed if you want to restore those values.
 
-Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry while replacing the existing module folder from the complete v0.1.19 ZIP, then restart Foundry, enable it in the intended world and hard-refresh browsers. Enter the world as GM once to seed the new Macro and world launcher. Older customized or intentionally removed entries will not be overwritten or silently reintroduced.
-
-To roll back, restore the backed-up **v0.1.18** module folder and (if reversing a session's adjustments or new world Macros/hotbar assignments) the matching world backup. Restoring module code alone does not undo gameplay changes.
-
-**Testing:** 21 Node/mock regression suites and five Chromium fixtures passed locally across desktop, tablet and mobile widths. Live Foundry v14, actual WoD20 7.3.x resources and cross-module Paradox/Combat integration remain **unverified** until tested in the user's game.
+**Automated verification:** Node syntax and all 21 Node/mock suites pass. Five Chromium browser fixtures pass, including a Quick Resources popup check at 1440, 820, 430 and 320px and a simulated one-click native save/Undo. The installable ZIP passes version, CRC, path and content checks; historical chat handoffs are excluded. **Live Foundry v14 / installed WoD20 and cross-module verification: NOT PERFORMED.**
 
 [Full version history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md)
