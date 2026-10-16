@@ -1,7 +1,25 @@
+# WoD20 Player Actions v0.1.14 (test build)
+
+**Module:** `wod20-player-actions` | **Foundry:** v14 | **System:** WoD20 7.3.1 | **Published baseline:** v0.1.13.
+
+**New:** **Standard Attack (Targeted)** launches the *independent* STL Combat Workflow **v0.1.4+** (`stl-combat-workflow`) and requires **exactly one targeted defender token**. It passes the current Actor using the published `game.modules.get("stl-combat-workflow").api.open({attackerActor: actor})` interface. Combat Workflow owns its attack, defense, damage, soak, GM health application and Undo; Player Actions does not roll separate attack dice or duplicate its mechanics. Combat Workflow must be **enabled in the same world**, with an online GM for its multiplayer flow. If it is unavailable, Standard Attack warns and does not start a substitute combat procedure.
+
+**Raw Attack (Choose Type)**, plus **Raw Brawl/Melee/Firearms Attack** shortcuts, make only an ordinary Dexterity + Ability check and require no target. They do not do weapon damage. **Use Magick** replaces the shipped default Player Magick label on the Actors sidebar, Shift+J action, the world launcher and the catalog; it does not change Magick API identifiers or delete customized shortcuts.
+
+**UI:** The Basic Actions dashboard is approximately 15% wider (770 to 885 px maximum) with higher-contrast action names and slightly larger Attribute/Ability and pool text. No extra rows or permanent controls. Improvised Magick's optional **Effect / Focus description** starts collapsed in a small expander like the Rote editor. Existing difficulty, Sphere rules, Paradox markers and casting rolls are unchanged.
+
+**Compendium:** This version offers **40 macro catalog entries** (up from 39). On GM login, the new Standard Attack shortcut is added once. Only unchanged original module-provided macro names are updated to **Use Magick** and **Raw Attack** wording; renamed, re-scripted and re-iconed GM macros stay as they are. Existing hotbars are never assigned, replaced or relabeled. A GM-deleted shortcut is not recreated. Back up the **world data** along with the module folder before testing the compendium upgrade.
+
+**First test:** As GM in a backed-up test world, enable *STL Combat Workflow v0.1.4+* and *Player Actions*. Target exactly one defender; drag **Standard Attack (Targeted)** from **Player Actions - Hotbar Macros** to the hotbar and run it. Verify Combat Workflow's weapon dialog and then the defender/soak/health chat stages, including Apply/Undo. Without a target, Standard Attack should warn and never roll. **Raw Attack** should still work without a target. Test Use Magick and the collapsed optional description. This release is automated/mock-tested, not verified live in Foundry.
+
+**Upgrade:** Back up the world and `Z:\Data\modules\wod20-player-actions`; stop Foundry; replace the entire module folder with the v0.1.14 ZIP; restart and hard-refresh all clients. **Rollback:** restore v0.1.13 module folder and a matching world backup if you need to reverse world compendium changes. Neither rolling back a module nor disabling it undoes wounds/resources already changed by a completed combat.
+
+---
+
 
 ## Draggable player Macro compendium (v0.1.13)
 
-The GM's **first world login with v0.1.13 enabled** provisions a new native **world** Macro compendium named **Player Actions — Hotbar Macros**. It contains **39 ready-to-drag Script Macros**, with artwork from the bundled licensed SVG icons. Open **Compendium Packs**, locate that name and drag any desired Macro to your own Hotbar. Foundry also supports importing individual Macros from a compendium. The module **never assigns a hotbar slot**, deletes prior world Macros, modifies Actors or changes existing hotbar settings.
+The GM's **first GM login with v0.1.13 or later enabled** provisions a new native **world** Macro compendium named **Player Actions — Hotbar Macros**. It contains **40 ready-to-drag Script Macros in v0.1.14**, with artwork from the bundled licensed SVG icons. Open **Compendium Packs**, locate that name and drag any desired Macro to your own Hotbar. Foundry also supports importing individual Macros from a compendium. The module **never assigns a hotbar slot**, deletes prior world Macros, modifies Actors or changes existing hotbar settings.
 
 | Category | Macros | Use |
 |---|---|---|
@@ -11,28 +29,28 @@ The GM's **first world login with v0.1.13 enabled** provisions a new native **wo
 | Basic Knowledge (5) | Occult, Research, Investigate, Computer, First Aid | Same native Basic Actions check |
 | Custom (5) | Custom Action 1–5 | Roll that player's saved slot for the *current* Actor. A blank slot opens its Configure editor. |
 | Dashboards (2) | Basic Actions, Roll Any Check | Open the 25-button panel or choose any sheet Attribute and Ability |
-| Magick (3) | Player Magick, Improvised Magick, Rotes & Powers | Existing Mage casting tools; Rotes & Powers opens the Player Magick panel |
-| Combat and sheet (9) | Attack (Choose Type), Brawl Attack, Melee Attack, Firearms Attack, Dodge, Block, Parry, Initiative, Character Sheet (Weapon / Soak) | See combat limitations below |
+| Magick (3) | Use Magick, Improvised Magick, Rotes & Powers | Existing Mage casting tools; Rotes & Powers opens the Use Magick panel |
+| Combat and sheet (10) | Standard Attack (Targeted), Raw Attack (Choose Type), Raw Brawl/Melee/Firearms Attack, Dodge, Block, Parry, Initiative, Character Sheet (Weapon / Soak) | Standard Attack delegates to STL Combat Workflow; Raw actions are simple checks |
 
-**Attack (Choose Type)** opens a small menu (Brawl / Melee / Firearms, difficulty, optional Willpower) and makes **one** native WoD20 *attack check*, not damage or soak. The dedicated Brawl/Melee/Firearms buttons make the listed Dexterity + Ability check immediately at default difficulty 6. **Dodge** uses Dexterity + Athletics, **Block** Dexterity + Brawl, and **Parry** Dexterity + Melee; these are check shortcuts only, subject to Storyteller rulings. **Initiative** calls WoD20's own `CombatHelper.RollInitiative` rather than inventing a roll. The **Character Sheet (Weapon / Soak)** macro opens the native sheet for equipment-specific rolls rather than guessing weapon damage, armor, or soak.
+**Raw Attack (Choose Type)** opens a small menu (Brawl / Melee / Firearms, difficulty, optional Willpower) and makes **one** native WoD20 *attack check*, not damage or soak. The dedicated Raw Brawl/Melee/Firearms buttons make the listed Dexterity + Ability check immediately at default difficulty 6. **Dodge** uses Dexterity + Athletics, **Block** Dexterity + Brawl, and **Parry** Dexterity + Melee; these are check shortcuts only, subject to Storyteller rulings. **Initiative** calls WoD20's own `CombatHelper.RollInitiative` rather than inventing a roll. The **Character Sheet (Weapon / Soak)** macro opens the native sheet for equipment-specific rolls rather than guessing weapon damage, armor, or soak.
 
 The presets, direct combat checks and Custom slots use the **current Actor every time**: players use their assigned/remembered character; GMs use the selected token or last selected token, including unlinked NPCs. Shortcut rolls default to difficulty **6**, with situational adjustments via the Basic Actions dashboard or the freeform/Attack picker. Native WoD20 wounds, specialty rules and Willpower apply to these checks. There is no automatic damage or Paradox handling.
 
 **Permissions and persistence:** The world compendium is player/Trusted Player **OBSERVER** (read/drag), GM **OWNER** and locked after initial seeding. The GM can unlock/customize its masters if desired; this module **never overwrites existing macro documents** or restores individual macros that the GM deleted. Its world setting records previously shipped identifiers; future updates may add new identifiers only. The compendium **persists with the world** if the module is later disabled or removed. Back up the **world data**, not just the module directory, before upgrading. Foundry's global **Use Script Macros** permission must allow player Script Macros (a standard core permission, not a new module gate). Players cannot edit the reference compendium.
 
-If another pack already uses the reserved world ID `world.wod20-player-actions-macros`, the module leaves it untouched and logs a warning rather than replacing anything. **No world pack is created by player logins**; the GM must enter the world once after upgrading. An existing Macro Directory `Player Magick` / `Player Basic Actions` launcher is left untouched. **Live Foundry v14 testing of new compendium creation and drag-and-roll remains pending.**
+If another pack already uses the reserved world ID `world.wod20-player-actions-macros`, the module leaves it untouched and logs a warning rather than replacing anything. **No world pack is created by player logins**; the GM must enter the world once after upgrading. The original unmodified Macro Directory `Player Magick` launcher may be renamed to `Use Magick`; user-edited macros are left intact. The Basic Actions launcher remains unchanged. **Live Foundry v14 testing of new compendium creation and drag-and-roll remains pending.**
 
-# WoD20 Player Actions (Player Magick + Basic Actions)
+# WoD20 Player Actions (Use Magick + Basic Actions)
 
 **Module ID:** `wod20-player-actions`  
-**Release:** v0.1.12 (2026-10-15)  
+**Release:** v0.1.14 test build (2026-10-15)  
 **Repository:** https://github.com/rebsiot/M20-player-actions
 
 A focused, player-facing Mage: The Ascension 20th Anniversary casting interface for Foundry VTT v14 and the `worldofdarkness` (WoD20) system. The existing module ID is unchanged for compatibility.
 
 ## Basic Actions dashboard (v0.1.12 improvements)
 
-From the **Macro Directory**, run **Player Basic Actions**, or drag that optional launcher Macro to your own hotbar. The module creates it once for GM-run worlds, but **never populates anyone's hotbar**. The existing **Player Magick** launcher, Actors sidebar button, and **Shift+J** remain intact. You can also invoke `game.modules.get("wod20-player-actions").api.openBasicActions()` from an existing macro.
+From the **Macro Directory**, run **Player Basic Actions**, or drag that optional launcher Macro to your own hotbar. The module creates it once for GM-run worlds, but **never populates anyone's hotbar**. The launcher and Actors sidebar action are now labeled **Use Magick**; **Shift+J** is unchanged. You can also invoke `game.modules.get("wod20-player-actions").api.openBasicActions()` from an existing macro.
 
 The Basic Actions window shows **four rows of five illustrated preset actions** and a **fifth row of five configurable buttons**. The 20 presets use these suggested Attribute + Ability combinations (the Storyteller may choose different combinations as circumstances warrant):
 
@@ -43,7 +61,7 @@ The Basic Actions window shows **four rows of five illustrated preset actions** 
 | Social | Charm, Deceive, Intimidate, Negotiate, Lead | Charisma + Expression; Manipulation + Subterfuge; Manipulation + Intimidation; Manipulation + Etiquette; Charisma + Leadership |
 | Knowledge | Occult, Research, Investigate, Computer, First Aid | Intelligence + Occult; Intelligence + Academics; Intelligence + Investigation; Intelligence + Computer; Intelligence + Medicine |
 
-Each compact preset button shows a **19px Game Icons SVG**, its action name, an abbreviated **Attribute + Ability** pairing (such as `Per + Alert`), and the character's computed pool (`5d10`). Hover for the full Attribute/Ability names. The dashboard is 770px wide on desktop, with reduced padding, gaps and button height; it remains responsive. **Click the button to roll immediately** through the same native WoD20 `DiceRollContainer`/`DiceRoller` used by the system. WoD20's Actor `rollAbility` method labels the chat card with the Ability (e.g. **Alertness**); this version supplies the **dashboard button name** (e.g. **Notice**) as the action title while retaining the native Attribute/Ability detail, wound penalty, specialty, difficulty, Willpower and dice results. No second chat message or dice engine is introduced. Standard actions requiring an Ability absent from the sheet are labeled **Not on sheet** and disabled rather than silently substituting another Ability. **Sense Magick** here is the basic Perception + Awareness roll; it does not cast Sphere magick.
+Each compact preset button shows a **19px Game Icons SVG**, its action name, an abbreviated **Attribute + Ability** pairing (such as `Per + Alert`), and the character's computed pool (`5d10`). Hover for the full Attribute/Ability names. The dashboard is up to 885px wide on desktop, with reduced padding, gaps and button height; it remains responsive. **Click the button to roll immediately** through the same native WoD20 `DiceRollContainer`/`DiceRoller` used by the system. WoD20's Actor `rollAbility` method labels the chat card with the Ability (e.g. **Alertness**); this version supplies the **dashboard button name** (e.g. **Notice**) as the action title while retaining the native Attribute/Ability detail, wound penalty, specialty, difficulty, Willpower and dice results. No second chat message or dice engine is introduced. Standard actions requiring an Ability absent from the sheet are labeled **Not on sheet** and disabled rather than silently substituting another Ability. **Sense Magick** here is the basic Perception + Awareness roll; it does not cast Sphere magick.
 
 **Custom buttons:** Click **Configure** in any of the five empty slots; choose a label, a real Attribute from the selected character, an Ability from that character (or Attribute only), and an icon from the curated set. Save. Click the resulting button to roll; use the small **pencil** on the button to reconfigure or **Clear Slot**. Your custom settings are stored **per player and per Actor UUID**, in the hidden user-scoped Foundry setting `basicActionsByActor`, not in the Actor. Five custom slots for Eli won't overwrite five for Chloe. Changing a character's sheet Traits can make an existing custom action unavailable until edited.
 
@@ -53,7 +71,7 @@ Each compact preset button shows a **19px Game Icons SVG**, its action name, an 
 
 ## What the player sees
 
-1. Open **Actors > Player Magick** or press **Shift+J**.
+1. Open **Actors > Use Magick** or press **Shift+J**.
 2. **Players:** Start with the character assigned in Foundry User Configuration (`game.user.character`). After manually choosing another, remember that Actor with the existing per-user preference until changed again, including across reconnects. **GMs:** Use a *single currently selected token* first; if none is selected, use the most recently controlled token (including an unlinked NPC token). Only if that token is no longer available fall back to the remembered/assigned Actor or character chooser. Do not guess when multiple tokens are selected.
 3. Click **Improvised Magick**, or choose a **Known Rote** and click Cast. The panel retains its existing **Change Character** control, but the casting window now presents **Casting as [character dropdown]**, so you can switch directly without a second dialog.
 4. In the wider casting dialog, pick Sphere ranks using large 0-to-known-rating buttons. Rank-by-rank help is collapsed unless requested. Review the **live Difficulty displayed in the top header** and roll using WoD20's native dice roller.
@@ -95,7 +113,7 @@ The module does **not** persist the individual casting-choice checkboxes between
 
 ## Macros and hotbar
 
-**One world Macro called `Player Magick` is created once by the GM, available in the Macro Directory. No hotbar installation is performed.** Players can drag that launcher Macro onto their hotbars if they want. The panel no longer exposes per-Rote Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but no new per-Rote macros are offered from the UI. Hotbar workflows may return in a separate later enhancement.
+**One world Macro called `Use Magick` is created once by the GM, available in the Macro Directory. No hotbar installation is performed.** Players can drag that launcher Macro onto their hotbars if they want. The panel no longer exposes per-Rote Macro buttons, sheet pin controls, or drag-to-hotbar shortcuts. Existing hotbar layouts are untouched. Previous macros created by v0.1.3 are **not deleted** and can continue to call the stable module API `game.modules.get('wod20-player-actions').api.execute(...)`, but no new per-Rote macros are offered from the UI. Hotbar workflows may return in a separate later enhancement.
 
 ## Cleaner native roll cards (v0.1.7)
 
@@ -120,8 +138,8 @@ Player Magick **does not** read, roll, update, or account for Paradox and does n
 1. Back up the Foundry world, and copy the installed `Z:\Data\modules\wod20-player-actions` directory before replacing it. This update does not run data migrations or modify Actors on load.
 2. Stop Foundry before replacing server files.
 3. Extract the release ZIP so that `Z:\Data\modules\wod20-player-actions\module.json` exists immediately inside the module directory. Do **not** create a second nested `wod20-player-actions` directory.
-4. Restart Foundry. Enable the existing **WoD20 Player Magick** module in the desired world and hard-refresh connected browsers.
-5. From a player's account, open Actors > Player Magick; confirm the correct default character and test a basic improvised cast in a test world or copied character.
+4. Restart Foundry. Enable the existing **WoD20 Player Actions** module in the desired world and hard-refresh connected browsers.
+5. From a player's account, open Actors > Use Magick; confirm the correct default character and test a basic improvised cast in a test world or copied character.
 
 ## Roll and resource behavior
 

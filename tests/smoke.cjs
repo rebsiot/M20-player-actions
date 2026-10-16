@@ -38,14 +38,14 @@ const ctx={
   vm.runInNewContext(script,ctx);
   hooks.init();
   hooks.ready();
-  assert.match(hooks.keybinding.name,/Player Magick/);
+  assert.match(hooks.keybinding.name,/Use Magick/);
   assert.equal(typeof mod.api.openPanel,'function');
   assert.equal(typeof mod.api.execute,'function','legacy pre-existing hotbar commands retain execution API');
   assert.equal(mod.api.createMacro,undefined,'no macro creation exposed');
   assert.equal(hooks.hotbarDrop,undefined,'no hotbar interception installed');
   assert.equal(hooks.renderActorSheet,undefined,'no automatic character-sheet pin buttons');
   await mod.api.openPanel();
-  assert.match(dialogs[0].window.title,/Player Magick.*Sample Mage/);
+  assert.match(dialogs[0].window.title,/Use Magick.*Sample Mage/);
   assert.match(dialogs[0].content,/Casting as/);
   assert.match(dialogs[0].content,/Improvised Magick/);
   assert.match(dialogs[0].content,/Known Rotes/);

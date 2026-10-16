@@ -46,11 +46,11 @@ const clickTarget = { closest(selector) { return selector === '.wpa-change-chara
 (async()=>{
   vm.runInNewContext(script + "\n;globalThis.__resolveActor=resolveActor;", context);
   hooks.init(); hooks.ready();
-  assert.match(bindings.open.name,/Player Magick/);
+  assert.match(bindings.open.name,/Use Magick/);
   assert.equal(registrations[0].details.scope,'user','preferred Mage is stored for each Foundry user');
   await mod.api.openPanel();
   assert.equal(dialogs.length, 1);
-  assert.match(dialogs[0].options.window.title,/Player Magick.*Assigned Mage/,'Assigned Mage wins over selected token');
+  assert.match(dialogs[0].options.window.title,/Use Magick.*Assigned Mage/,'Assigned Mage wins over selected token');
   assert.match(dialogs[0].options.content,/Casting as/);
   assert.match(dialogs[0].options.content,/Change Character/);
   assert.equal(warnings.length, 0);
