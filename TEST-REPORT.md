@@ -4,7 +4,8 @@
 
 - **Change:** Rename module display title to **WoD20 Player Magick & Actions**; retain module ID `wod20-player-actions`, reference macros, saved hotbar slots, Actor data, URL/release conventions and full script runtime. Shorten README while preserving the detailed guide.
 - **Provenance guard:** Publication workflow checks the exact unchanged runtime SHA-256 `60e66c3bd7b0408be904b76de21725805b72c61ac100f6a1c81b4c073338e95e`.
-- **Automated checks:** Pending GitHub publication workflow; must pass Node syntax, all 21 Node/mock regression suites and complete package ZIP verification. Do not treat these as real Foundry tests.
+- **Automated checks:** PASS in GitHub Actions [run 39140498682](https://github.com/rebsiot/M20-player-actions/actions/runs/39140498682): unchanged-runtime guard, JavaScript syntax, all 21 Node/mock suites and versioned ZIP packaging/integrity. These are not real Foundry tests.
+- **Published release:** [v0.1.21](https://github.com/rebsiot/M20-player-actions/releases/tag/v0.1.21) on 2026-10-18, full ZIP `wod20-player-magick-0.1.21.zip`, GitHub asset SHA-256 `859fb0ec3c2a4a6f933524e7f07a2edc12aebc8412b77ed881fe55e77639c31c`; release asset remains immutable and contains the candidate-era prepublication test report, with this postpublication GitHub report recording final results.
 - **Live Foundry v14 checks:** NOT RUN. Verify the displayed title and unchanged enabled state after upgrade. Then use one Mage cast to check the native ChatMessage, permissions, hotbar opt-in and exactly-once Paradox processing with the installed integrations.
 - **Upgrade:** Back up the world and `Data/modules/wod20-player-actions`, update the full ZIP, restart Foundry and refresh clients. **Rollback:** Restore v0.1.20 files; matching world backup needed to undo any actual gameplay data adjustments.
 - **Software license:** No repository-level software license is declared; existing Game Icons terms and credits remain unchanged.
