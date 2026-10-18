@@ -1,6 +1,19 @@
+# v0.1.21 Test Report — Display name and reader-first README (2026-10-18)
+
+**Source:** Verified published GitHub v0.1.20, derived from exact `main` commit `aa75f80635c10e04742a5010813e7ef1f5fbefc3` and runtime blob `64357a5ebfd079cff9334c150b32229aec737054`. **Installed build:** Not inspected.
+
+- **Change:** Rename module display title to **WoD20 Player Magick & Actions**; retain module ID `wod20-player-actions`, reference macros, saved hotbar slots, Actor data, URL/release conventions and full script runtime. Shorten README while preserving the detailed guide.
+- **Provenance guard:** Publication workflow checks the exact unchanged runtime SHA-256 `60e66c3bd7b0408be904b76de21725805b72c61ac100f6a1c81b4c073338e95e`.
+- **Automated checks:** Pending GitHub publication workflow; must pass Node syntax, all 21 Node/mock regression suites and complete package ZIP verification. Do not treat these as real Foundry tests.
+- **Live Foundry v14 checks:** NOT RUN. Verify the displayed title and unchanged enabled state after upgrade. Then use one Mage cast to check the native ChatMessage, permissions, hotbar opt-in and exactly-once Paradox processing with the installed integrations.
+- **Upgrade:** Back up the world and `Data/modules/wod20-player-actions`, update the full ZIP, restart Foundry and refresh clients. **Rollback:** Restore v0.1.20 files; matching world backup needed to undo any actual gameplay data adjustments.
+- **Software license:** No repository-level software license is declared; existing Game Icons terms and credits remain unchanged.
+
+---
+
 # v0.1.20 Test Report — Quick Resources compactness and Chimerical gating (2026-10-16)
 
-**Source basis:** Published v0.1.19, exact runtime SHA-256 `1f2f5716287c09f037e0d963aeff4f5d643fdb9fa8d472e724d506b306ece6b4`. **Status:** Merged as PR #16 and published 2026-10-16 via GitHub Actions run 38975833181 (success). Public installable `wod20-player-magick-0.1.20.zip` is on [release v0.1.20](https://github.com/rebsiot/M20-player-actions/releases/tag/v0.1.20), GitHub asset SHA-256 `6144ccd4eb12969c920e35e591a662190afd4e2c352131f3c183ce3cf81a40df`. Full runtime was committed to `main`. No Foundry server deployment or live in-world verification.
+**Source basis:** Published v0.1.19, exact runtime SHA-256 `1f2f5716287c09f037e0d963aeff4f5d643fdb9fa8d472e724d506b306ece6b4`. **Status:** Release candidate; published release to be verified separately. No Foundry server installation or live in-world verification.
 
 - **Changes:** Show Chimerical damage for newer PCs only when `system.settings.usechimerical` is enabled, and for compatible enabled legacy Changeling sheets. Compact the resource dialog to 328px on desktop with a responsive narrow layout. No migration, gameplay mechanics change, new hotbar option or new macro.
 - **Node syntax and regression tests:** PASS, 21 of 21 suites. Quick Resources unit tests cover inactive vs active Chimerical tracking on Mage PCs, legacy Changeling handling, refusal to edit hidden tracks, preserving data, one-click native resource/health writes, capacity constraints, guarded Undo and permissions. All other suites preserve 49 macro and tutorial contracts.
