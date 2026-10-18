@@ -1,6 +1,12 @@
-# Release Notes - WoD20 Player Actions
+# Release Notes - WoD20 Player Magick & Actions
 
 Changes players will notice, newest first. For development and detailed historical tests, see [the archived technical changelog](docs/CHANGELOG-TECHNICAL-THROUGH-v0.1.14.md).
+
+## v0.1.21 - Clearer Foundry Module Manager name
+
+- Renamed the display title to **WoD20 Player Magick & Actions** while retaining the permanent module ID `wod20-player-actions`.
+- Shortened and reorganized the public README, preserving the full previous guide in `docs/PLAYER-GUIDE.md`.
+- No script behavior, 49 macros, player hotbars, Actor data, native dice, Paradox or Combat Workflow integrations changed. No migration.
 
 ## v0.1.20 - Compact Quick Resources and Chimerical visibility
 

@@ -25,23 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply verified v0.1.20 runtime delta
+      - name: Verify unchanged v0.1.21 runtime
         shell: bash
         run: |
           set -euo pipefail
           version=$(python3 -c 'import json;print(json.load(open("module.json"))["version"])')
-          if [[ "$version" == "0.1.20" ]]; then
-            old_sha="1f2f5716287c09f037e0d963aeff4f5d643fdb9fa8d472e724d506b306ece6b4"
-            new_sha="60e66c3bd7b0408be904b76de21725805b72c61ac100f6a1c81b4c073338e95e"
-            actual_sha=$(sha256sum scripts/player-actions.js | cut -d' ' -f1)
-            if [[ "$actual_sha" == "$old_sha" ]]; then
-              git apply --check patches/v0.1.20-runtime.patch
-              git apply patches/v0.1.20-runtime.patch
-            elif [[ "$actual_sha" != "$new_sha" ]]; then
-              echo "Unexpected runtime source SHA; refusing to build v0.1.20"
-              exit 1
-            fi
-            test "$(sha256sum scripts/player-actions.js | cut -d' ' -f1)" = "$new_sha"
+          if [[ "$version" == "0.1.21" ]]; then
+            test "$(sha256sum scripts/player-actions.js | cut -d' ' -f1)" = "60e66c3bd7b0408be904b76de21725805b72c61ac100f6a1c81b4c073338e95e"
           fi
       - name: Verify JavaScript and regression tests
         shell: bash
@@ -60,7 +50,7 @@ jobs:
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add scripts/player-actions.js
-            git commit -m 'build: commit verified v0.1.20 Player Actions runtime'
+            git commit -m 'build: commit verified v0.1.21 Player Magick runtime'
             git push origin HEAD:main
           fi
       - name: Publish GitHub Release with installable ZIP
@@ -77,6 +67,6 @@ jobs:
           else
             gh release create "$tag" "$zip" \
               --target "$(git rev-parse HEAD)" \
-              --title "WoD20 Player Actions $tag" \
+              --title "WoD20 Player Magick & Actions $tag" \
               --notes-file RELEASE-NOTES.md
           fi

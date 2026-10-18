@@ -15,7 +15,7 @@ name = f'wod20-player-magick-{version}.zip'
 if not version or not manifest.get('manifest') or not manifest.get('download','').endswith(f'/v{version}/{name}'):
     raise SystemExit('Version/manifest/download mismatch.')
 notes = (ROOT/'RELEASE-NOTES.md').read_text(encoding='utf-8')
-if not notes.startswith(f'# Player Actions v{version}\n'):
+if not notes.startswith(f'# WoD20 Player Magick & Actions v{version}\n'):
     raise SystemExit('Release notes heading does not match module version.')
 required = [
     'module.json','README.md','CHANGELOG.md','RELEASE-NOTES.md','TEST-REPORT.md','ICONS-CREDITS.md',

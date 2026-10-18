@@ -1,8 +1,8 @@
 {
   "id": "wod20-player-actions",
-  "title": "WoD20 Player Actions",
-  "description": "Native WoD20 actions and 49 optional macros; compact Quick Resources, sheet-gated Chimerical damage and opt-in hotbar shortcuts.",
-  "version": "0.1.20",
+  "title": "WoD20 Player Magick & Actions",
+  "description": "Use Magick, native WoD20 checks, Quick Resources and optional targeted combat, with 49 opt-in macros.",
+  "version": "0.1.21",
   "authors": [
     {
       "name": "Community tools"
@@ -33,5 +33,5 @@
   "readme": "README.md",
   "url": "https://github.com/rebsiot/M20-player-actions",
   "manifest": "https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json",
-  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.20/wod20-player-magick-0.1.20.zip"
+  "download": "https://github.com/rebsiot/M20-player-actions/releases/download/v0.1.21/wod20-player-magick-0.1.21.zip"
 }

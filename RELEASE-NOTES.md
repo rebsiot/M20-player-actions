@@ -1,17 +1,17 @@
-# Player Actions v0.1.20
+# WoD20 Player Magick & Actions v0.1.21
 
-## Compact Quick Resources and correctly gated Chimerical damage
+The module now appears as **WoD20 Player Magick & Actions** in Foundry's Module Manager, making it easier to identify and check whether it is enabled.
 
-- **Smaller Quick Resources panel:** The live-saving window is now approximately 328px wide on desktop, remains responsive at 320px viewports, and uses tighter rows, shorter visible labels, smaller +/- controls and a simpler footer. Full descriptions remain in accessible labels and tooltips. **+ / - apply immediately**, and **Undo**, **Refresh** and **Change Character** continue to work without a Save button.
-- **Chimerical damage is opt-in, not automatically inferred from stored fields:** For current WoD20 PC actors, show the Chimerical damage track only when the character sheet's `system.settings.usechimerical` option is enabled. Legacy Changeling sheets keep their supported enabled track. A Mage with an inactive/dormant Chimerical data object shows only ordinary **Bashing, Lethal, and Aggravated** damage. Disabling the Chimerical track does **not** delete or rewrite its stored damage.
-- All existing resource controls, 49 optional macros, five tutorial choices, native WoD20 fields, per-player hotbar assignments, and the independent Combat Workflow/Paradox module responsibilities remain unchanged. No new migration, background resource processing, automatic hotbar changes, or chat handoff file was introduced.
+## What's changed
 
-## Install / upgrade and rollback
+- Renamed the **display title**. The internal module ID stays `wod20-player-actions`, preserving existing settings, enabled state, Actors, user macros, hotbar slots and integrations.
+- Reorganized the GitHub README around Use Magick, Basic Actions, Quick Resources and optional combat. The previous detailed instructions remain in `docs/PLAYER-GUIDE.md`.
+- **No gameplay changes:** all 49 macros, resource/damage adjustments, native dice, Combat Workflow and Paradox responsibilities behave as in v0.1.20.
 
-Back up the Foundry world and `Z:\Data\modules\wod20-player-actions`. Stop Foundry while replacing the previous module with the **complete v0.1.20 release ZIP**, restart Foundry, enable it in the intended world and hard-refresh browser clients. Existing world launcher macros and the reference compendium are retained unchanged; no new provisioning is needed for this specific update.
+## Upgrade and rollback
 
-To roll back, restore your backed-up **v0.1.19** module folder. Code rollback alone does not undo character resource/damage adjustments made during play; a matching world snapshot is needed if you want to restore those values.
+Back up your world and `Data/modules/wod20-player-actions`. Update via the [Foundry manifest](https://raw.githubusercontent.com/rebsiot/M20-player-actions/main/module.json) or the complete versioned ZIP, restart Foundry, and refresh browser clients. Existing installations retain their enabled state because the module ID did not change.
 
-**Automated verification:** Node syntax and all 21 Node/mock suites pass. Five Chromium browser fixtures pass, including a Quick Resources popup check at 1440, 820, 430 and 320px and a simulated one-click native save/Undo. The installable ZIP passes version, CRC, path and content checks; historical chat handoffs are excluded. **Live Foundry v14 / installed WoD20 and cross-module verification: NOT PERFORMED.**
+For rollback, restore v0.1.20 module files. No migration was added. Rolling back code alone does not reverse changes made to character resources during play.
 
-[Full version history](https://github.com/rebsiot/M20-player-actions/blob/main/CHANGELOG.md)
+**Verification:** The published build must pass 21 existing Node/mock regression suites and ZIP integrity checks. A real Foundry v14 installation, native ChatMessage, GM/player permissions and exactly-once Paradox behavior remain **unverified by this naming release**.
